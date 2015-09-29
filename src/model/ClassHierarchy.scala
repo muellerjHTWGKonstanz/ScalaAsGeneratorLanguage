@@ -9,6 +9,7 @@ sealed class ClassHierarchy[T <% { def toString :String; val name:String}](rootC
 val root = Node(rootClass)
   var nodeView:Map[String, Node] = Map(root.data.name -> root)
 
+  /*several apply methods to simplify acces on elements*/
   def apply(parent:Node, className:T) = parent isInheritedBy className
   def apply(parent:T, className:T) = nodeView(parent.name).isInheritedBy(className)
   def apply(parent:String, className:T) = nodeView(parent).isInheritedBy(className)
