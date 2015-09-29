@@ -4,7 +4,7 @@ package model
  * Created by julian on 24.09.15.
  */
 
-sealed class ClassHierarchy[T <% { def toString():String; val name:String}](rootClass:T){
+sealed class ClassHierarchy[T <% { def toString :String; val name:String}](rootClass:T){
 
 val root = Node(rootClass)
   var nodeView:Map[String, Node] = Map(root.data.name -> root)
@@ -16,7 +16,7 @@ val root = Node(rootClass)
   def apply(className:String) = nodeView(className)
   override def toString = root toString
 
-  def newBaseClass(className:T) = root isInheritedBy(className)
+  def newBaseClass(className:T) = root isInheritedBy className
   def get(styleName:T) = nodeView(styleName.name)
   def get(styleName:String) = nodeView(styleName)
   def setRelation(parent:T, child:T) = nodeView(parent.name) isInheritedBy child

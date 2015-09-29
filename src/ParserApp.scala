@@ -29,8 +29,8 @@ object ParserApp extends App {
                 }"""
 
 
-  val newStyle = StringToObjectParser toStyleInstance(classUno, diagram)
-  val anotherStyle = StringToObjectParser toStyleInstance(classDuo, diagram)
+  val newStyle = StringToObjectParser toStyle(classUno, diagram)
+  val anotherStyle = StringToObjectParser toStyle(classDuo, diagram)
 
   diagram.styleHierarchy.root.rPrint()
   //println(diagram.styleHierarchy(newStyle).data.lineColor)
@@ -40,7 +40,7 @@ object ParserApp extends App {
     """style yetAnotherStyle extends BpmnExtending{
       font-size = 10
       }"""
-  val yetAnotherStyle = StringToObjectParser toStyleInstance(classTres, diagram)
+  val yetAnotherStyle = StringToObjectParser toStyle(classTres, diagram)
   //println(diagram.styleHierarchy(newStyle).data.       fontSize)
   //println(diagram.styleHierarchy(anotherStyle).data.   fontSize)
   //println(diagram.styleHierarchy(yetAnotherStyle).data.fontSize)
@@ -52,13 +52,13 @@ object ParserApp extends App {
     """style A{
       font-size = 20
       }""".stripMargin
-  val A = StringToObjectParser toStyleInstance(differentStyle, diagram)
+  val A = StringToObjectParser toStyle(differentStyle, diagram)
 
   differentStyle =
   """style B extends A{
     line-color = blue
     }"""
-  val B = StringToObjectParser toStyleInstance(differentStyle, diagram)
+  val B = StringToObjectParser toStyle(differentStyle, diagram)
 
   differentStyle =
     """style C extends B{
@@ -74,7 +74,7 @@ object ParserApp extends App {
       font-italic = yes
       gradient-orientation = horizontal
       }"""
-  val C = StringToObjectParser toStyleInstance(differentStyle, diagram)
+  val C = StringToObjectParser toStyle(differentStyle, diagram)
 
   println(diagram.styleHierarchy(A).data.lineColor)
   println(diagram.styleHierarchy(B).data.lineColor)
