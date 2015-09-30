@@ -1,7 +1,7 @@
 package util
 
 import java.awt.Color
-import model.{Diagram, Style}
+import model.{Shape, Diagram, Style}
 
 /**
  * Created by julian on 9/3/15.
@@ -26,7 +26,7 @@ object StringToObjectParser {
     /*argument splitting*/
     val argArray = string.split("\\{|\\}") //to get header (class name) and attributes(foo = bar)
     val styleHead: Array[String] = argArray(0).split(" ")
-    val styleAttributes: Array[String] = argArray(1).trim.split("\n")
+    val styleAttributes: Array[String] = if(argArray.size > 1)argArray(1).trim.split("\n") else Array()
 
     //mapping and defaults
     var name = styleHead(1)
@@ -53,7 +53,7 @@ object StringToObjectParser {
     }
 
     styleAttributes.foreach { line => line.trim.split(" = ")(0) match {
-        case x if x == "name" => name = x
+        //case x if x == "name" => name = x
         case x if x == "key" => key = line.trim.split(" = ")(1).toLong
         case x if x == "description" => description = Some(line.trim.split(" = ")(1))
         case x if x == "transparency" => transparency = Some(line.trim.split(" = ")(1).toDouble)
@@ -145,7 +145,43 @@ object StringToObjectParser {
   }
 
 
-  //def toShape(shape:String): Shape ={
+  def toShape(shape:String, diagram:Diagram): Shape ={
+    val argArray = shape.split("\\{|\\}") //to get header (class name) and attributes(foo = bar)
+    val shapeHead: Array[String] = argArray(0).split(" ")
+    val shapeAttributes: Array[String] = if(argArray.size > 1)argArray(1).trim.split("\n") else Array()
 
-  //}
+    var extendedShape:Option[Shape] = None
+
+    /*check if shape extends another Shape*/
+    if(shapeHead.size > 2 && shapeHead.contains("extends")){
+      extendedShape = Some(diagram.shapeHierarchy(shapeHead(shapeHead.indexOf("extends")+1)).data)
+    }
+
+    var name:String = shapeHead(1)
+    var key:Long = 0L
+    var style:Option[Style] = None
+
+    /*TODO convert string body (shapeAttributes) to Option[Attributes]*/
+    shapeAttributes.foreach{line => line.trim.split(" = ")(0) match {
+      case x:String if x=="style" => style = Some(diagram.styleHierarchy(line.trim.split(" = ")(1)).data)
+      case x => println("[util.StringToObjectParser|toShape]: attribute -> " + x + " in shape '" + shapeHead(1) + "' was ignored")
+    }}
+
+    def getSuperData(parent: Option[Shape]) = diagram.shapeHierarchy(parent.get.name).data
+
+    val ret = Shape(name, key, style match {
+      case x:Some[Style] => x
+      case None if extendedShape.isDefined => getSuperData(extendedShape).style
+      case _ => None
+    },
+    if(extendedShape.isDefined)extendedShape else None)
+
+    if (extendedShape.isDefined) {
+      diagram.shapeHierarchy(extendedShape.get.name, ret)
+    } else {
+      diagram.shapeHierarchy.newBaseClass(ret)
+    }
+
+    ret
+  }
 }

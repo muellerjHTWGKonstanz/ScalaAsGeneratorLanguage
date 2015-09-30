@@ -1,4 +1,4 @@
-import model.{ClassHierarchy, Style, Diagram}
+import model.{Shape, ClassHierarchy, Style, Diagram}
 import util.StringToObjectParser
 
 /**
@@ -7,7 +7,7 @@ import util.StringToObjectParser
  */
 object ParserApp extends App {
 
-  val diagram = Diagram(new ClassHierarchy[Style](new Style(name = "root")))
+  val diagram = Diagram(new ClassHierarchy[Style](new Style(name = "root")), new ClassHierarchy[Shape](new Shape(name = "root")))
 
   val classUno = """style BpmnDefaultStyle {
                   description = "The default style of the petrinet diagram type."
@@ -84,5 +84,23 @@ object ParserApp extends App {
   println(diagram.styleHierarchy(B).data.fontSize)
   println(diagram.styleHierarchy(C).data.fontSize)
 
+
+  println("_________________________Shapes_____________________________________________________________________")
+
+  val shapeString =
+    """shape S {
+        key = 12
+        style = BpmnDefaultStyle
+      }"""
+
+  val S = StringToObjectParser.toShape(shapeString, diagram)
+
+  val shapeString2 =
+    """shape T extends S """
+
+  val T = StringToObjectParser.toShape(shapeString2, diagram)
+
+  println(diagram.shapeHierarchy(T).data.style)
+  diagram.shapeHierarchy.root.rPrint()
 }
 
