@@ -1,3 +1,4 @@
+import generators.StyleGenerator
 import model.{Shape, ClassHierarchy, Style, Diagram}
 import util.StringToObjectParser
 
@@ -76,13 +77,15 @@ object ParserApp extends App {
       }"""
   val C = StringToObjectParser toStyle(differentStyle, diagram)
 
-  println(diagram.styleHierarchy(A).data.lineColor)
-  println(diagram.styleHierarchy(B).data.lineColor)
-  println(diagram.styleHierarchy(C).data.lineColor)
+  println(diagram.styleHierarchy(A).data.line_color)
+  println(diagram.styleHierarchy(B).data.line_color)
+  println(diagram.styleHierarchy(C).data.line_color)
 
-  println(diagram.styleHierarchy(A).data.fontSize)
-  println(diagram.styleHierarchy(B).data.fontSize)
-  println(diagram.styleHierarchy(C).data.fontSize)
+  println(diagram.styleHierarchy(A).data.font_size)
+  println(diagram.styleHierarchy(B).data.font_size)
+  println(diagram.styleHierarchy(C).data.font_size)
+
+  println(StyleGenerator.compileDia(A))
 
 
   println("_________________________Shapes_____________________________________________________________________")

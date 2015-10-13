@@ -1,7 +1,6 @@
 package util
 
-import java.awt.Color
-import model.{Shape, Diagram, Style}
+import model._
 
 /**
  * Created by julian on 9/3/15.
@@ -10,8 +9,25 @@ import model.{Shape, Diagram, Style}
 
 object StringToObjectParser {
 
-  val knownColors = Map("green" -> Color.green, "blue" -> Color.blue, "red" -> Color.red, "yellow" -> Color.yellow,
-    "orange" -> Color.orange, "black" -> Color.black, "white" -> Color.white, "pink" -> Color.pink, "gray" -> Color.gray)
+  val knownColors = Map(
+    "white" -> WHITE,
+    "light-light-gray" -> LIGHT_LIGHT_GRAY,
+    "light-gray" -> LIGHT_GRAY,
+    "gray" -> GRAY,
+    "black" -> BLACK,
+    "red" -> RED,
+    "light-orange" -> LIGHt_ORANGE,
+    "orange" -> ORANGE,
+    "dark-orange" -> DARK_ORANGE,
+    "yellow" -> YELLOW,
+    "green" -> GREEN,
+    "light-green" -> LIGHT_GREEN,
+    "dark-green" -> DARK_GREEN,
+    "cyan" -> CYAN,
+    "light-blue" -> LIGHT_BLUE,
+    "blue" -> BLUE,
+    "dark-blue" -> DARK_BLUE,
+    "transparent" -> Transparent)
 
   def matchBoolean(b: String): Boolean = b match {
     case `b` if b.matches("yes|true|y") => true
@@ -22,159 +38,134 @@ object StringToObjectParser {
   /**
    * param string style class in string form to be parsed
    * param diagram for inheritance information*/
-  def toStyle(string: String, diagram: Diagram): Style = {
+  def toStyle(input: String, diagram: Diagram): Style = {
     /*argument splitting*/
-    val argArray = string.split("\\{|\\}") //to get header (class name) and attributes(foo = bar)
+    val argArray = input.split("\\{|\\}") //to get header (class name) and attributes(foo = bar)
     val styleHead: Array[String] = argArray(0).split(" ")
-    val styleAttributes: Array[String] = if(argArray.size > 1)argArray(1).trim.split("\n") else Array()
+    val styleAttributes: Array[String] = if (argArray.size > 1) argArray(1).trim.split("\n") else Array()
+    var extendedStyle: List[Style] = List()
 
-    //mapping and defaults
-    var name = styleHead(1)
-    var key = 0L
-    var description: Option[String] = None
-    var transparency: Option[Double] = None
-    var background_color: Option[Color] = None
-    var line_color: Option[Color] = None
-    var line_style: Option[String] = None /*TODO type?*/
-    var line_width: Option[Int] = None
-    var font_color: Option[Color] = None
-    var font_name: Option[String] = None
-    var font_size: Option[Int] = None
-    var font_bold: Option[Boolean] = None
-    var font_italic: Option[Boolean] = None
-    var gradient_orientation: Option[String] = None /*TODO type?*/
-    var extendedStyle: Option[Style] = None
-
-
-    /*find if class extends other class*/
+    /*check if class extends other class*/
     if (styleHead.contains("extends")) {
-      /*look up the extended class in diagram's classHierarchy and get it*/
-      extendedStyle = Some(diagram.styleHierarchy(styleHead(styleHead.indexOf("extends") + 1)).data)
+      /*look up the extended classes in diagram's classHierarchy and push them on the stack*/
+      styleHead.splitAt(3)._2.map(s => s.replace(",", "")).foreach(elem =>
+        if(diagram.styleHierarchy.contains(elem)){extendedStyle = diagram.styleHierarchy(elem).data :: extendedStyle})/*TODO if class was not found, to be inherited tell Logger*/
     }
 
-    styleAttributes.foreach { line => line.trim.split(" = ")(0) match {
-        //case x if x == "name" => name = x
-        case x if x == "key" => key = line.trim.split(" = ")(1).toLong
-        case x if x == "description" => description = Some(line.trim.split(" = ")(1))
-        case x if x == "transparency" => transparency = Some(line.trim.split(" = ")(1).toDouble)
-        case x if x.matches("background.?color") => background_color = Some(knownColors.getOrElse(line.trim.split(" = ")(1), Color.gray))
-        case x if x.matches("line.?color") => line_color = Some(knownColors.getOrElse(line.trim.split(" = ")(1), Color.white))
-        case x if x.matches("line.?style") => line_style = Some(line.trim.split(" = ")(1))
-        case x if x.matches("line.?width") => line_width = Some(line.trim.split(" = ")(1).toInt)
-        case x if x.matches("font.?color") => font_color = Some(knownColors.getOrElse(line.trim.split(" = ")(1), Color.black))
-        case x if x.matches("font.?name") => font_name = Some(line.trim.split(" = ")(1))
-        case x if x.matches("font.?size") => font_size = Some(line.trim.split(" = ")(1).toInt)
-        case x if x.matches("font.?bold") => font_bold = Some(matchBoolean(line.trim.split(" = ")(1)))
-        case x if x.matches("font.?italic") => font_italic = Some(matchBoolean(line.trim.split(" = ")(1)))
-        case x if x.matches("gradient.?orientation") => gradient_orientation = Some(line.trim.split(" = ")(1))
-        case x => println("[util.StringToObjectParser|toStyleInstance]: attribute -> " + x + " in style '" + styleHead(1) + "' was ignored")
+    /*fill the "mapping and defaults" with extended information or with None values if necessary*/
+    def mostRelevant[T <: Any](f: Style => Option[T]):Option[T] = {
+      val stack = extendedStyle
+      for (i <- stack) {
+          if(f(i).isDefined)
+            return f(i) /*according to plan when a "Some" was found the for loop should break - hopefully*/
       }
+      None
     }
 
-    def getSuperData(parent: Option[Style]) = diagram.styleHierarchy(parent.get.name).data
+    /*mapping and defaults*/
+    val name:String = styleHead(1)
+    var key = 0L
+    var description: Option[String]                         = mostRelevant((i: Style) => i.description)
+    var transparency: Option[Double]                        = mostRelevant((i: Style) => i.transparency)
+    var background_color: Option[ColorOrGradient]           = mostRelevant((i: Style) => i.background_color)
+    var line_color: Option[Color]                           = mostRelevant((i: Style) => i.line_color)
+    var line_style: Option[LineStyle]                       = mostRelevant((i: Style) => i.line_style)
+    var line_width: Option[Int]                             = mostRelevant((i: Style) => i.line_width)
+    var font_color: Option[ColorOrGradient]                 = mostRelevant((i: Style) => i.font_color)
+    var font_name: Option[String]                           = mostRelevant((i: Style) => i.font_name)
+    var font_size: Option[Int]                              = mostRelevant((i: Style) => i.font_size)
+    var font_bold: Option[Boolean]                          = mostRelevant((i: Style) => i.font_bold)
+    var font_italic: Option[Boolean]                        = mostRelevant((i: Style) => i.font_italic)
+    var gradient_orientation: Option[GradientAlignment]     = mostRelevant((i: Style) => i.gradient_orientation)
+    var gradient_area_color: Option[ColorOrGradient]        = mostRelevant((i: Style) => i.gradient_area_color)
+    var gradient_area_offset: Option[Double]                = mostRelevant((i: Style) => i.gradient_area_offset)
+    var selected_highlighting: Option[ColorOrGradient]      = mostRelevant((i: Style) => i.selected_highlighting)
+    var multiselected_highlighting:Option[ColorOrGradient]  = mostRelevant((i: Style) => i.multiselected_highlighting)
+    var allowed_highlighting:Option[ColorOrGradient]        = mostRelevant((i: Style) => i.allowed_highlighting)
+    var unallowed_highlighting:Option[ColorOrGradient]      = mostRelevant((i: Style) => i.unallowed_highlighting)
 
-    val ret = Style(name, key,
-      description match {
-        case a: Some[String] => a
-        case None if extendedStyle.isDefined => getSuperData(extendedStyle).description
-        case _ => None
-      },
-      transparency match {
-        case a: Some[Double] => a
-        case None if extendedStyle.isDefined => getSuperData(extendedStyle).transparency
-        case _ => None
-      },
-      background_color match {
-        case a: Some[Color] => a
-        case None if extendedStyle.isDefined => getSuperData(extendedStyle).backgroundColor
-        case _ => None
-      },
-      line_color match {
-        case a: Some[Color] => a
-        case None if extendedStyle.isDefined => getSuperData(extendedStyle).lineColor
-        case _ => None
-      },
-      line_style match {
-        case a: Some[String] => a
-        case None if extendedStyle.isDefined => getSuperData(extendedStyle).lineStyle
-        case _ => None
-      },
-      line_width match {
-        case a: Some[Int] => a
-        case None if extendedStyle.isDefined => getSuperData(extendedStyle).lineWidth
-        case _ => None
-      },
-      font_color match {
-        case a: Some[Color] => a
-        case None if extendedStyle.isDefined => getSuperData(extendedStyle).fontColor
-        case _ => None
-      },
-      font_name match {
-        case a: Some[String] => a
-        case None if extendedStyle.isDefined => getSuperData(extendedStyle).fontName
-        case _ => None
-      },
-      font_size match {
-        case a: Some[Int] => a
-        case None if extendedStyle.isDefined => getSuperData(extendedStyle).fontSize
-        case _ => None
-      },
-      font_bold match {
-        case a: Some[Boolean] => a
-        case None if extendedStyle.isDefined => getSuperData(extendedStyle).fontBold
-        case _ => None
-      },
-      font_italic match {
-        case a: Some[Boolean] => a
-        case None if extendedStyle.isDefined => getSuperData(extendedStyle).fontItalic
-        case _ => None
-      },
-      gradient_orientation match {
-        case a: Some[String] => a
-        case None if extendedStyle.isDefined => getSuperData(extendedStyle).gradientOrientation
-        case _ => None
-      },
-      extendedStyle)
+    /*filter the inputString and override attributes accordingly*/
+    styleAttributes.foreach { line => line.trim.split(" = ")(0) match {
+      case x if x == "key" => key = line.trim.split(" = ")(1).toLong
+      case x if x == "description" => description = Some(line.trim.split(" = ")(1))
+      case x if x == "transparency" => transparency = Some(line.trim.split(" = ")(1).toDouble)
+      case x if x.matches("background.?color") => background_color = Some(knownColors.getOrElse(line.trim.split(" = ")(1), GRAY))
+      case x if x.matches("line.?color") => line_color = Some(knownColors.getOrElse(line.trim.split(" = ")(1), WHITE))
+      case x if x.matches("line.?style") => line_style = LineStyle.getIfValid(line.trim.split(" = ")(1))
+      case x if x.matches("line.?width") => line_width = Some(line.trim.split(" = ")(1).toInt)
+      case x if x.matches("font.?color") => font_color = Some(knownColors.getOrElse(line.trim.split(" = ")(1), BLACK))
+      case x if x.matches("font.?name") => font_name = Some(line.trim.split(" = ")(1))
+      case x if x.matches("font.?size") => font_size = Some(line.trim.split(" = ")(1).toInt)
+      case x if x.matches("font.?bold") => font_bold = Some(matchBoolean(line.trim.split(" = ")(1)))
+      case x if x.matches("font.?italic") => font_italic = Some(matchBoolean(line.trim.split(" = ")(1)))
+      case x if x.matches("gradient.?orientation") => gradient_orientation = GradientAlignment.getIfValid(line.trim.split(" = ")(1))
+      case x if x.contains("gradient_area") => x match {
+        case `x` if x.contains("color") => gradient_area_color = Some(knownColors.getOrElse(line.trim.split(" = ")(1), BLACK))
+        case `x` if x.contains("offset") => gradient_area_offset = Some(line.trim.split(" = ")(1).toDouble)
+        case _ => messageIgnored(x)
+      }
+      case x if x.contains("highlighting") => x match {
+        case `x` if x.contains("selected") => selected_highlighting = Some(knownColors.getOrElse(line.trim.split(" = ")(1), BLUE))
+        case `x` if x.contains("multiselected") => multiselected_highlighting = Some(knownColors.getOrElse(line.trim.split(" = ")(1), BLUE)) /*TODO defaults "BLUE" might not be right*/
+        case `x` if x.contains("allowed") => allowed_highlighting = Some(knownColors.getOrElse(line.trim.split(" = ")(1), BLUE))
+        case `x` if x.contains("unallowed") => unallowed_highlighting = Some(knownColors.getOrElse(line.trim.split(" = ")(1), BLUE))
+        case _ => messageIgnored(x)
+      }
+      case x => messageIgnored(x)
+    }
+    }
+    def messageIgnored(attribute: String) = println("[util.StringToObjectParser|toStyleInstance]: attribute -> " +
+      attribute + " in style '" + styleHead(1) + "' was ignored")/*TODO replace with call to Logger*/
 
-    if (extendedStyle.isDefined) {
-      diagram.styleHierarchy(extendedStyle.get.name, ret)
+    /*create the instance of the actual new Style*/
+    val newStyle = Style(name, key, description, transparency, background_color, line_color, line_style, line_width, font_color,
+      font_name, font_size, font_bold, font_italic, gradient_orientation, gradient_area_color, gradient_area_offset,
+      selected_highlighting, multiselected_highlighting, allowed_highlighting, unallowed_highlighting, extendedStyle)
+
+    /*include new style instance in stylehierarchie*/
+    if (extendedStyle.nonEmpty) {
+      extendedStyle.reverse.foreach(elem => diagram.styleHierarchy(elem.name, newStyle))
     } else {
-      diagram.styleHierarchy.newBaseClass(ret)
+      diagram.styleHierarchy.newBaseClass(newStyle)
     }
-    ret
+
+    /*return the new Style*/
+    newStyle
   }
 
 
-  def toShape(shape:String, diagram:Diagram): Shape ={
+  def toShape(shape: String, diagram: Diagram): Shape = {
     val argArray = shape.split("\\{|\\}") //to get header (class name) and attributes(foo = bar)
     val shapeHead: Array[String] = argArray(0).split(" ")
-    val shapeAttributes: Array[String] = if(argArray.size > 1)argArray(1).trim.split("\n") else Array()
+    val shapeAttributes: Array[String] = if (argArray.size > 1) argArray(1).trim.split("\n") else Array()
 
-    var extendedShape:Option[Shape] = None
+    var extendedShape: Option[Shape] = None
 
     /*check if shape extends another Shape*/
-    if(shapeHead.size > 2 && shapeHead.contains("extends")){
-      extendedShape = Some(diagram.shapeHierarchy(shapeHead(shapeHead.indexOf("extends")+1)).data)
+    if (shapeHead.length > 2 && shapeHead.contains("extends")) {
+      extendedShape = Some(diagram.shapeHierarchy(shapeHead(shapeHead.indexOf("extends") + 1)).data)
     }
 
-    var name:String = shapeHead(1)
-    var key:Long = 0L
-    var style:Option[Style] = None
+    /*TODO attributes to be set in new Shape([...])*/
+    val name: String = shapeHead(1)
+    var key: Long = 0L
+    var style: Option[Style] = None
 
-    /*TODO convert string body (shapeAttributes) to Option[Attributes]*/
-    shapeAttributes.foreach{line => line.trim.split(" = ")(0) match {
-      case x:String if x=="style" => style = Some(diagram.styleHierarchy(line.trim.split(" = ")(1)).data)
+    shapeAttributes.foreach { line => line.trim.split(" = ")(0) match {
+      case x if x == "key" => key = line.trim.split(" = ")(1).toLong
+      case x: String if x == "style" => style = Some(diagram.styleHierarchy(line.trim.split(" = ")(1)).data)
       case x => println("[util.StringToObjectParser|toShape]: attribute -> " + x + " in shape '" + shapeHead(1) + "' was ignored")
-    }}
+    }
+    }
 
     def getSuperData(parent: Option[Shape]) = diagram.shapeHierarchy(parent.get.name).data
 
     val ret = Shape(name, key, style match {
-      case x:Some[Style] => x
+      case x: Some[Style] => x
       case None if extendedShape.isDefined => getSuperData(extendedShape).style
       case _ => None
     },
-    if(extendedShape.isDefined)extendedShape else None)
+      if (extendedShape.isDefined) extendedShape else None)
 
     if (extendedShape.isDefined) {
       diagram.shapeHierarchy(extendedShape.get.name, ret)
