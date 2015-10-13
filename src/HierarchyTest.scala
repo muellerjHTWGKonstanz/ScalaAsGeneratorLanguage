@@ -29,25 +29,42 @@ object HierarchyTest extends App{
       |}""".stripMargin
 
   val class4 =
-    """style D extends C{
-      |line-width = 7
-      |}""".stripMargin
+    "style D extends C"
 
   val A = StringToObjectParser toStyle(class1, diagram)
   val B = StringToObjectParser toStyle(class2, diagram)
   val C = StringToObjectParser toStyle(class3, diagram)
   val D = StringToObjectParser toStyle(class4, diagram)
 
+  println("created style-classes A, B, C, D like the following")
+  println(
+    raw"""
+            root
+          ____|___
+          |      |
+          A      B
+          |______|
+          C      |
+          |______|
+          D
+       """)
 
-  /*see, C extends A and B*/
   diagram.styleHierarchy.root.rPrint()
+  println("see, C extends A and B (rprint-methode from classHierarchy shows [parent]:child):")
+  println("\n")
+  println("A, B, C and D are declared like this:")
+  println(class1)
+  println(class2)
+  println(class3)
+  println(class4)
 
-  /*see, C has most relevant line-width = 7(from self), most relevant transparency 4(from most important parent)
-   and font-size = 100(from second most important parent)*/
-  println("style C: "+ C.line_width.get)
-  println("style C: "+ C.transparency.get)
-  println("style C: "+ C.font_size.get)
-  println("Style D: "+ D.font_size.get + " <- even D has A's font-size, for C inherits from A and D inherits from C")
+  println("\naccessing the following attributes should show, that inheritance was successful!")
+  println("\tst\tyle C.line-width:\t"+ C.line_width.get)
+  println("\tst\tyle C.transparency\t: "+ C.transparency.get)
+  println("\tst\tyle C.font-size:\t"+ C.font_size.get)
+  println("\tstyle D.font-size:\t "+ D.font_size.get + " <- even D has A's font-size, for C inherits from A and D inherits from C")
+  println("""see, C has most relevant line-width = 7(from self), most relevant transparency 4(from most important parent B)
+   and font-size = 100(from second most important parent A)""")
 
 
 }
