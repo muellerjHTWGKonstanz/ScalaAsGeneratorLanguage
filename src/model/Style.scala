@@ -2,7 +2,6 @@ package model
 
 case class Style(
                   name:String                             = "noName",
-                  key:Long                                = 1L,
                   description:Option[String]              = None,
                   transparency:Option[Double]             = None,
                   background_color:Option[ColorOrGradient] = None,
@@ -22,7 +21,9 @@ case class Style(
                   allowed_highlighting:Option[ColorOrGradient] = None,
                   unallowed_highlighting:Option[ColorOrGradient] = None,
 
-                  childOf:List[Style]= List())
+                  childOf:List[Style]= List()){
+  val key:Long = this.hashCode()
+}
 
 abstract class ColorOrGradient{
   def getRGBValue:String
@@ -61,7 +62,6 @@ case object CYAN            extends Color{def getRGBValue = """#00ffff"""}
 case object LIGHT_BLUE      extends Color{def getRGBValue = """#add8e6"""}
 case object BLUE            extends Color{def getRGBValue = """#0000ff"""}
 case object DARK_BLUE       extends Color{def getRGBValue = """#00008b"""}
-//TODO case object TRANSPARENT     extends ColorConstant{def getRGBValue = """#"""
 
   class RGBColor(val red:Int, green:Int, blue:Int) extends Color {
     def getRGBValue = ""+red+green+blue

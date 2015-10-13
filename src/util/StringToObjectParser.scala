@@ -56,7 +56,6 @@ object StringToObjectParser {
     /*mapping and defaults*/
     /*fill the "mapping and defaults" with extended information or with None values if necessary*/
     val name:String = styleHead(1)
-    var key = 0L
     var description: Option[String]                         = mostRelevant(extendedStyle){_.description}
     var transparency: Option[Double]                        = mostRelevant(extendedStyle){_.transparency}
     var background_color: Option[ColorOrGradient]           = mostRelevant(extendedStyle){_.background_color}
@@ -78,7 +77,6 @@ object StringToObjectParser {
 
     /*filter the inputString and override attributes accordingly*/
     styleAttributes.foreach { line => line.trim.split(" = ")(0) match {
-      case x if x == "key" => key = line.trim.split(" = ")(1).toLong
       case x if x == "description" => description = Some(line.trim.split(" = ")(1))
       case x if x == "transparency" => transparency = Some(line.trim.split(" = ")(1).toDouble)
       case x if x.matches("background.?color") => background_color = Some(knownColors.getOrElse(line.trim.split(" = ")(1), GRAY))
@@ -107,10 +105,10 @@ object StringToObjectParser {
     }
     }
     def messageIgnored(attribute: String) = println("[util.StringToObjectParser|toStyleInstance]: attribute -> " +
-      attribute + " in style '" + styleHead(1) + "' was ignored")/*TODO replace with call to Logger*/
+      attribute + " in style '" + name + "' was ignored")/*TODO replace with call to Logger*/
 
     /*create the instance of the actual new Style*/
-    val newStyle = Style(name, key, description, transparency, background_color, line_color, line_style, line_width, font_color,
+    val newStyle = Style(name, description, transparency, background_color, line_color, line_style, line_width, font_color,
       font_name, font_size, font_bold, font_italic, gradient_orientation, gradient_area_color, gradient_area_offset,
       selected_highlighting, multiselected_highlighting, allowed_highlighting, unallowed_highlighting, extendedStyle)
 
