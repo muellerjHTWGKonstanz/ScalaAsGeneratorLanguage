@@ -66,9 +66,10 @@ sealed class ClassHierarchy[T <% { def toString :String; val name:String}](rootC
 
 object ClassHierarchy{
   /**
-   * called with a collection of the wished classtype and a function, that solely acts a a getter
-   * this methode will find the most relevant parent's attribute of the given type selected by f and return it
-   * if no parent has information about the given attribute None is returned*/
+   * called with a collection of the wished classtype "stack" and a function "f", that solely acts a a getter
+   * this methode will find the most relevant parent's attribute of the given type selected by f and return it.
+   * If no parent has information about the given attribute None is returned.
+   * "stack" should suhherate, that a collection is chosen, which guarantees, that the most relevant is "popped" first*/
   def mostRelevant[T <: Any, C](stack:List[C])(f: C => Option[T]):Option[T] = {
     for (i <- stack) {
       if(f(i).isDefined)

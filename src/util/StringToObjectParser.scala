@@ -49,14 +49,18 @@ object StringToObjectParser {
     if (styleHead.contains("extends")) {
       /*look up the extended classes in diagram's classHierarchy and push them on the stack*/
       styleHead.splitAt(3)._2.map(s => s.replace(",", "")).foreach(elem =>
-        if(diagram.styleHierarchy.contains(elem)){extendedStyle = diagram.styleHierarchy(elem).data :: extendedStyle})/*TODO if class was not found, to be inherited tell Logger*/
+        if(diagram.styleHierarchy.contains(elem)){
+          /*its important to add like this: elem::Tail to keep the most relevant element in the beginning*/
+          extendedStyle = diagram.styleHierarchy(elem).data :: extendedStyle
+        })/*TODO if class was not found, to be inherited tell Logger*/
     }
 
     /*mapping and defaults*/
     /*fill the "mapping and defaults" with extended information or with None values if necessary*/
-    /**relevant is a help-methode, which shortens the actual call to mostRelevant of ClassHierarchy*/
+    /**relevant is a help-methode, which shortens the actual call to mostRelevant of ClassHierarchy by ensuring the collection-parameter
+      * relevant speaks for the hierarchical context -> "A extends B, C" -> C is most relevant*/
     def relevant[T](f:Style => Option[T]) = ClassHierarchy.mostRelevant(extendedStyle){f}
-    
+
     val name:String = styleHead(1)
     var description: Option[String]                         = relevant{_.description}
     var transparency: Option[Double]                        = relevant{_.transparency}
