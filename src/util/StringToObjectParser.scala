@@ -1,7 +1,6 @@
 package util
 
 import model._
-import model.ClassHierarchy._
 
 /**
  * Created by julian on 9/3/15.
@@ -55,25 +54,28 @@ object StringToObjectParser {
 
     /*mapping and defaults*/
     /*fill the "mapping and defaults" with extended information or with None values if necessary*/
+    /**relevant is a help-methode, which shortens the actual call to mostRelevant of ClassHierarchy*/
+    def relevant[T](f:Style => Option[T]) = ClassHierarchy.mostRelevant(extendedStyle){f}
+    
     val name:String = styleHead(1)
-    var description: Option[String]                         = mostRelevant(extendedStyle){_.description}
-    var transparency: Option[Double]                        = mostRelevant(extendedStyle){_.transparency}
-    var background_color: Option[ColorOrGradient]           = mostRelevant(extendedStyle){_.background_color}
-    var line_color: Option[Color]                           = mostRelevant(extendedStyle){_.line_color}
-    var line_style: Option[LineStyle]                       = mostRelevant(extendedStyle){_.line_style}
-    var line_width: Option[Int]                             = mostRelevant(extendedStyle){_.line_width}
-    var font_color: Option[ColorOrGradient]                 = mostRelevant(extendedStyle){_.font_color}
-    var font_name: Option[String]                           = mostRelevant(extendedStyle){_.font_name}
-    var font_size: Option[Int]                              = mostRelevant(extendedStyle){_.font_size}
-    var font_bold: Option[Boolean]                          = mostRelevant(extendedStyle){_.font_bold}
-    var font_italic: Option[Boolean]                        = mostRelevant(extendedStyle){_.font_italic}
-    var gradient_orientation: Option[GradientAlignment]     = mostRelevant(extendedStyle){_.gradient_orientation}
-    var gradient_area_color: Option[ColorOrGradient]        = mostRelevant(extendedStyle){_.gradient_area_color}
-    var gradient_area_offset: Option[Double]                = mostRelevant(extendedStyle){_.gradient_area_offset}
-    var selected_highlighting: Option[ColorOrGradient]      = mostRelevant(extendedStyle){_.selected_highlighting}
-    var multiselected_highlighting:Option[ColorOrGradient]  = mostRelevant(extendedStyle){_.multiselected_highlighting}
-    var allowed_highlighting:Option[ColorOrGradient]        = mostRelevant(extendedStyle){_.allowed_highlighting}
-    var unallowed_highlighting:Option[ColorOrGradient]      = mostRelevant(extendedStyle){_.unallowed_highlighting}
+    var description: Option[String]                         = relevant{_.description}
+    var transparency: Option[Double]                        = relevant{_.transparency}
+    var background_color: Option[ColorOrGradient]           = relevant{_.background_color}
+    var line_color: Option[Color]                           = relevant{_.line_color}
+    var line_style: Option[LineStyle]                       = relevant{_.line_style}
+    var line_width: Option[Int]                             = relevant{_.line_width}
+    var font_color: Option[ColorOrGradient]                 = relevant{_.font_color}
+    var font_name: Option[String]                           = relevant{_.font_name}
+    var font_size: Option[Int]                              = relevant{_.font_size}
+    var font_bold: Option[Boolean]                          = relevant{_.font_bold}
+    var font_italic: Option[Boolean]                        = relevant{_.font_italic}
+    var gradient_orientation: Option[GradientAlignment]     = relevant{_.gradient_orientation}
+    var gradient_area_color: Option[ColorOrGradient]        = relevant{_.gradient_area_color}
+    var gradient_area_offset: Option[Double]                = relevant{_.gradient_area_offset}
+    var selected_highlighting: Option[ColorOrGradient]      = relevant{_.selected_highlighting}
+    var multiselected_highlighting:Option[ColorOrGradient]  = relevant{_.multiselected_highlighting}
+    var allowed_highlighting:Option[ColorOrGradient]        = relevant{_.allowed_highlighting}
+    var unallowed_highlighting:Option[ColorOrGradient]      = relevant{_.unallowed_highlighting}
 
     /*filter the inputString and override attributes accordingly*/
     styleAttributes.foreach { line => line.trim.split(" = ")(0) match {
