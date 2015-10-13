@@ -59,12 +59,12 @@ object HierarchyTest extends App{
   println(class4)
 
   println("\naccessing the following attributes should show, that inheritance was successful!")
-  println("\tst\tyle C.line-width:\t"+ C.line_width.get)
-  println("\tst\tyle C.transparency\t: "+ C.transparency.get)
-  println("\tst\tyle C.font-size:\t"+ C.font_size.get)
-  println("\tstyle D.font-size:\t "+ D.font_size.get + " <- even D has A's font-size, for C inherits from A and D inherits from C")
+  println("\tstyle C.line-width:\t\t"+ C.line_width.get)
+  println("\tstyle C.transparency:\t"+ C.transparency.get)
+  println("\tstyle C.font-size:\t\t"+ C.font_size.get)
+  println("\tstyle D.font-size:\t\t"+ D.font_size.get + " <- even D has A's font-size, for C inherits from A and D inherits from C")
   println("""see, C has most relevant line-width = 7(from self), most relevant transparency 4(from most important parent B)
-   and font-size = 100(from second most important parent A)""")
+   and most relevant font-size = 100(from second most important parent A)""")
 
 
 }
