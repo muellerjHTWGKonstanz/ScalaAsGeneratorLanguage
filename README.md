@@ -1,7 +1,7 @@
 # README #
 Einfach ```HierarchyTest.scala``` ausführen, sollte hoffentlich verständlichen output erzeugen und bisher zumindest die ClassHierarchy gut demonstrieren
 
-```ParserApp.scala``` ist ebenfalls ein testprogramm, jedoch für außenstehende wahrscheinlich eher verwirrend
+```ParserApp.scala``` ist ebenfalls ein testprogramm, jedoch wahrscheinlich eher verwirrend
 
 ## Relevante Klassen: ##
 
