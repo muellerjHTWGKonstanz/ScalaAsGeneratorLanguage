@@ -1,4 +1,6 @@
-import model.{Shape, Style, ClassHierarchy, Diagram}
+import model.shapecontainer.shape.Shape
+import model.style.Style
+import model.{ClassHierarchy, Diagram}
 import util.StringToObjectParser
 
 /**

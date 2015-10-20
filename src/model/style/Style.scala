@@ -1,4 +1,4 @@
-package model
+package model.style
 
 case class Style(
                   name:String                             = "noName",
@@ -22,11 +22,15 @@ case class Style(
                   unallowed_highlighting:Option[ColorOrGradient] = None,
 
                   childOf:List[Style]= List()){
-  val key:Long = this.hashCode()
+  val key:Long = hashCode
 }
 
 abstract class ColorOrGradient{
+  /**
+   * getRGBValue is createColorValue from StyleGenerator.xtend*/
   def getRGBValue:String
+  /**
+   * methode instead of function from StyleGenerator.xtend*/
   def createOpacityValue:String
 }
 
@@ -36,11 +40,15 @@ abstract class Color extends ColorOrGradient with Transparency{
   def createOpacityValue = """1.0"""
 }
 
-object Transparent extends Color{
-  def getRGBValue = ""
+object Transparent extends Color with Transparency{
+  def getRGBValue = """transparent"""
   override def createOpacityValue = """0.0"""
 }
-abstract class GradientRef extends ColorOrGradient
+abstract class GradientRef (val name:String,
+                            val description:String,
+                            val area:List[GradientColorArea]) extends ColorOrGradient
+
+case class GradientColorArea(color:Color, offset:Double)
 
 
 /*TODO "gradientRef extends ColorOrGradient" from grammar-sheet? unknown types: JvmTypeReference, gradientFromDSL*/
@@ -68,7 +76,7 @@ case object DARK_BLUE       extends Color{def getRGBValue = """#00008b"""}
   }
 
 
-sealed class GradientAlignment
+sealed abstract class GradientAlignment
   case object HORIZONTAL extends GradientAlignment
   case object VERTICAL extends GradientAlignment
 object GradientAlignment{

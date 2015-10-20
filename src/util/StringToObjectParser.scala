@@ -1,6 +1,8 @@
 package util
 
 import model._
+import model.shapecontainer.shape.Shape
+import model.style._
 
 /**
  * Created by julian on 9/3/15.

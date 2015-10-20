@@ -6,6 +6,7 @@ package generators
  */
 
 import model._
+import model.style._
 
 object StyleGenerator {
 
@@ -251,7 +252,28 @@ object StyleGenerator {
                                     fill: 'transparent'
                                   }"""
 
-  def commonAttributes(s: Style) = if (checkBackgroundGradientNecessary(s)) "" /*TODO createGradientAttributes*/
+  def commonAttributes(s: Style) = {
+    var ret = raw""""""
+    if (checkBackgroundGradientNecessary(s))
+      ret += createGradientAttributes(s.background_color.get.asInstanceOf[GradientRef],
+                                      s.gradient_orientation.get match { case HORIZONTAL => true
+                                                                         case _ => false}
+      ) + """
+
+          """ /*TODO GradientRef not 'isA' relation to ColorOrGradient - ask Markus*/
+    else
+        ret+=
+          createBackgroundAttributes(s)+ """
+
+          """
+
+   ret+=raw"""    """+
+     createLineAttributes(s)+
+        raw"""
+
+           """
+    ret
+  }
 
 
   def checkBackgroundGradientNecessary(s: Style) = {
@@ -261,13 +283,32 @@ object StyleGenerator {
     }
   }
 
-  def createGradientAttributes(gr: GradientRef, horizontal: Boolean) =
-  /*TODO unknown syntax "FOR area : gr.gradientRefFromDsl.layout.area"*/
-    """
+  def createGradientAttributes(gr: GradientRef, horizontal: Boolean) = {
+    val areas = for (area <- gr.area)yield{"{ offset: '"+area.offset+"', color: '"+area.color.getRGBValue+"' },"}
+    var ret = """
       fill: {
         type: 'lineGradient',
         stops: [
-    """ //+ for(area <- gr.gradientRefFromDsl...)
+    """
+    for(area <- areas){ret += area}
+
+    if(horizontal){
+      ret += "]"
+    }else{
+      ret +=
+        raw"""],
+           attrs: {
+                    x1: '0%',
+                    y1: '0%',
+                    x2: '0%',
+                    y2: '100%'
+                  }
+        """
+    }
+    ret += "},"
+    ret
+  }
+
 
   def createBackgroundAttributes(s: Style) = {
     if (s.background_color.isDefined) {
@@ -325,5 +366,8 @@ object StyleGenerator {
     ret
   }
 
-  def gradientOrientation(s:Style)= ???/*TODO no gradient alignment known?*/
+  def gradientOrientation(s:Style)= {
+    case HORIZONTAL => true
+    case _ => false
+  }
 }
