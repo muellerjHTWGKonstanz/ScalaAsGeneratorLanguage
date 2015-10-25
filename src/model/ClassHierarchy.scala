@@ -20,8 +20,13 @@ sealed class ClassHierarchy[T <% { def toString :String; val name:String}](rootC
   override def toString = root toString
 
   def newBaseClass(className:T) = root inheritedBy className
-  def get(styleName:T) = nodeView(styleName.name)
-  def get(styleName:String) = nodeView(styleName)
+  def get(className:String):Option[T] = {
+    val ret = nodeView.get(className)
+    if(ret.isDefined)
+      Some(ret.get.data)
+    else
+      None
+  }
   def setRelation(parent:T, child:T) = nodeView(parent.name) inheritedBy child
   def contains(className:String):Boolean = nodeView.contains(className)
 

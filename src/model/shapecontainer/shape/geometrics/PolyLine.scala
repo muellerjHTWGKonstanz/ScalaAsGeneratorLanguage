@@ -8,12 +8,12 @@ import model.style.Style
  * the least amount of points is 2, the standardconstructor requires point1 and point2
  * several other points can be added in a list, or by varargs
  */
-class PolyLine(style:Option[Style] = None,
+class PolyLine(override val style:Option[Style] = None,
                parent:Option[GeometricModel]=None,
                point1: Point,
                point2: Point,
                otherPoints:List[Point] = List[Point]()
-                ) extends GeometricModel(style, parent) with PolyLineLayout{
+                ) extends GeometricModel(parent) with PolyLineLayout{
 
   override val points:List[Point] = List(point1, point2):::otherPoints
 

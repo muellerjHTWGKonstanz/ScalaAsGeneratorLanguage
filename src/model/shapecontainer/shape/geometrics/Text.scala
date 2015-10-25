@@ -14,7 +14,7 @@ class Text(override val style:Option[Style] = None,
             override val size_width:Int,
             override val size_height:Int,
             override val hAlign:HAlign,
-            override val vAlign:VAlign) extends GeometricModel(style, parent) with TextLayout
+            override val vAlign:VAlign) extends GeometricModel(parent) with TextLayout
 
 abstract class TextType
   case object DefaultText extends TextType

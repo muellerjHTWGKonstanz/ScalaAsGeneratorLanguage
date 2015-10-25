@@ -25,7 +25,7 @@ case class Shape( name:String = "no name",
                   stretching_vertical:Option[Boolean]   = None, /*from ShapeLayout*/
                   proportional:Option[Boolean]          = None, /*from ShapeLayout*/
 
-                  shape:List[GeometricModel] = List(),
+                  shape:Option[List[GeometricModel]]    = None,
 
                   description:Option[String]            = None,/*TODO strange description in grammar sheet*/
 

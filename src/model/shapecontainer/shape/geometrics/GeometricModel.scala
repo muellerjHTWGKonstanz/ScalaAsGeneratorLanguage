@@ -7,4 +7,4 @@ import model.style.Style
  * representation of all Geometrical Models like Line Polyline Rectangel
  * and so on
  */
-abstract class GeometricModel (val style:Option[Style] = None, parent:Option[GeometricModel] = None)
+abstract class GeometricModel (parent:Option[GeometricModel] = None)

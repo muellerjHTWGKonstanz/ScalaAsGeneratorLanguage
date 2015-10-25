@@ -221,7 +221,7 @@ object StyleGenerator {
   }
 
 
-  def createLineAttributes(s: Style) = {
+  def createLineAttributes(s: Style):String = {
     raw"""
           /*
           Generated Line style attributes.
@@ -252,7 +252,7 @@ object StyleGenerator {
                                     fill: 'transparent'
                                   }"""
 
-  def commonAttributes(s: Style) = {
+  def commonAttributes(s: Style):String = {
     var ret = raw""""""
     if (checkBackgroundGradientNecessary(s))
       ret += createGradientAttributes(s.background_color.get.asInstanceOf[GradientRef],
@@ -366,7 +366,7 @@ object StyleGenerator {
     ret
   }
 
-  def gradientOrientation(s:Style)= {
+  def gradientOrientation(s:Style)= s.gradient_orientation.get match {
     case HORIZONTAL => true
     case _ => false
   }

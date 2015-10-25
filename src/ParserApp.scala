@@ -79,13 +79,13 @@ object ParserApp extends App {
       }"""
   val C = StringToObjectParser toStyle(differentStyle, diagram)
 
-  println(diagram.styleHierarchy(A).data.line_color)
-  println(diagram.styleHierarchy(B).data.line_color)
-  println(diagram.styleHierarchy(C).data.line_color)
+  //println(diagram.styleHierarchy(A).data.line_color)
+  //println(diagram.styleHierarchy(B).data.line_color)
+  //println(diagram.styleHierarchy(C).data.line_color)
 
-  println(diagram.styleHierarchy(A).data.font_size)
-  println(diagram.styleHierarchy(B).data.font_size)
-  println(diagram.styleHierarchy(C).data.font_size)
+  //println(diagram.styleHierarchy(A).data.font_size)
+  //println(diagram.styleHierarchy(B).data.font_size)
+  //println(diagram.styleHierarchy(C).data.font_size)
 
   println(StyleGenerator.compileDia(A))
 
@@ -94,7 +94,6 @@ object ParserApp extends App {
 
   val shapeString =
     """shape S {
-        key = 12
         style = BpmnDefaultStyle
       }"""
 
