@@ -208,7 +208,7 @@ object StringToObjectParser {
     "gray" -> GRAY,
     "black" -> BLACK,
     "red" -> RED,
-    "light-orange" -> LIGHt_ORANGE,
+    "light-orange" -> LIGHT_ORANGE,
     "orange" -> ORANGE,
     "dark-orange" -> DARK_ORANGE,
     "yellow" -> YELLOW,
@@ -231,13 +231,14 @@ object StringToObjectParser {
     "RoundedRectangle",
     "Text")
 
-  /**
-   * takes a String and parses a boolean value out of it -> if string is yes|true|y*/
-  def matchBoolean(b: String): Boolean = b match {
-    case `b` if b toLowerCase() matches "yes|true|y" => true
-    //case `b` if b toLowerCase() matches("no|false|n") => false
-    case _ => false
-  }
+    /**
+     * takes a String and parses a boolean value out of it -> if string is yes|true|y
+     * @param b the stringargument*/
+    def matchBoolean(b: String): Boolean = b match {
+      case `b` if b toLowerCase() matches "yes|true|y" => true
+      //case `b` if b toLowerCase() matches("no|false|n") => false
+      case _ => false
+    }
 
   /**
    * recursively parses a string of the form <geometricModelName> {<attributes>* <geometricModelName>{}*}

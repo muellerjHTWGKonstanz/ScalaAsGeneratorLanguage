@@ -1,5 +1,7 @@
 
-import model.Diagram
+import model.shapecontainer.shape.Shape
+import model.style.Style
+import model.{ClassHierarchy, Diagram}
 import util.ShapeParser
 
 object RegexTest extends App {
@@ -47,17 +49,20 @@ object RegexTest extends App {
                     }
                 }"""
 
-  //val regex = "(?s)(ellipse|point|line|polyline) \\{[^\\{.+\\}]+\\}".r //gets ll inner shapes
-  //val regex1 = "(?s)(?!(ellipse|point|line|polyline) \\{.+)(ellipse|point|line|polyline) \\{.*\\}".r //trying to get only parent shapes
-  //val ret = regex1.findAllIn(shap1Modded).toArray
-  //println(ret.deep)
-  //println(ret.length)
+  val diagram = Diagram(new ClassHierarchy[Style](new Style(name = "root")), new ClassHierarchy[Shape](new Shape(name = "root")))
+  val parser = new ShapeParser(diagram)
+  println(parser.parse(parser.style,
+    """style BPMNDefault {
+      line-color = 40
+      font-size = 10
+      }"""))
 
-  import util.ShapeParser
-  //println(new ShapeParser(new Diagram()).parseRawShape(shap1))
-  println("style (Foo = Bar)".matches("style.+"))
-  println("parent = Foo".replaceFirst("parent", "").replaceAll("\\(|\\)|\\=", "").trim)
-  //println(ShapeParser.parse(ShapeParser.attribute, "size (x-w=2, y_b=2)"))
+  println(parser.parse(parser.style,
+    """style aicaramba extends BPMNDefault {
+      line-color = blue
+      font-italic = yes
+      }"""))
+
 
 
 

@@ -12,6 +12,7 @@ trait PolyLineLayout extends Layout{
 }
 
 object PolyLineLayoutParser{
+  def apply(attributes:List[String], diagram: Diagram):Option[PolyLineLayout] = parse(attributes, diagram)
   def parse(attributes:List[String], diagram: Diagram):Option[PolyLineLayout] ={
     var collectedPoints:List[Point] = List[Point]()
     var styl:Option[Style] = None
@@ -20,7 +21,7 @@ object PolyLineLayoutParser{
         val tup = "[0-9]+".r.findAllIn(x).toArray
         collectedPoints = collectedPoints.::(new Point(tup(0).toInt, tup(1).toInt))
       }
-      case x if x.matches("style.+") => styl = Style.parse(x, diagram)
+      //TODO case x if x.matches("style.+") => styl = Style.parse(x, diagram)
     }
     if(collectedPoints.length > 1)
       Some(new PolyLineLayout {

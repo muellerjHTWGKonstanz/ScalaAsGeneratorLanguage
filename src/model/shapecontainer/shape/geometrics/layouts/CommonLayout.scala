@@ -1,7 +1,7 @@
 package model.shapecontainer.shape.geometrics.layouts
 
 import model.Diagram
-import model.style.Style
+import model.style.{StyleParser, Style}
 
 /**
  * Created by julian on 15.10.15.
@@ -34,7 +34,7 @@ object CommonLayoutParser {
         size_w = Some(tup(0).toInt)
         size_h= Some(tup(1).toInt)
       }
-      case x if x.matches("style.+") => styl = Style.parse(x, diagram)
+      //TODO case x if x.matches("style.+") => styl = StyleParser.parse(x, diagram)
       case x => "[CommonLayoutParser]: "+x+" was ignored "
     }
 

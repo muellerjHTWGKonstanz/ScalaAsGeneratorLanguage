@@ -1,9 +1,8 @@
 package model.style
 
-import model.Diagram
+import model.{ClassHierarchy, Diagram}
 
-case class Style(
-                  name: String = "noName",
+case class Style( name: String = "noName",
                   description: Option[String] = None,
                   transparency: Option[Double] = None,
                   background_color: Option[ColorOrGradient] = None,
@@ -27,24 +26,139 @@ case class Style(
   val key: Long = hashCode
 }
 
-object Style {
-  def parse(line: String, diagram: Diagram): Option[Style] =
-    diagram.styleHierarchy.get(line.replaceFirst("style", "").replaceAll("\\=|\\(|\\)", "").trim)
+object StyleParser {
+  def apply(name:String, parents:List[String], attributes: List[(String, String)], diagram: Diagram) = parse(name, parents, attributes, diagram)
+
+  def parse(name:String, parents:List[String], attributes: List[(String, String)], diagram: Diagram):Style ={
+
+    var extendedStyle:List[Style] = List[Style]()
+
+    if(parents.nonEmpty)
+      parents.foreach{parent => {
+        val parentName = parent.replace(",","").trim
+        if(diagram.styleHierarchy.contains(parentName))
+          extendedStyle = diagram.styleHierarchy(parentName).data :: extendedStyle
+        }
+      }/*TODO if class was not found, to be inherited tell Logger*/
+    /*mapping and defaults*/
+    /*fill the "mapping and defaults" with extended information or with None values if necessary*/
+    /** relevant is a help-methode, which shortens the actual call to mostRelevant of ClassHierarchy by ensuring the collection-parameter
+      * relevant speaks for the hierarchical context -> "A extends B, C" -> C is most relevant */
+    def relevant[T](f: Style => Option[T]) = ClassHierarchy.mostRelevant(extendedStyle) {f}
+
+    var description: Option[String]                        = relevant { _.description }
+    var transparency: Option[Double]                       = relevant { _.transparency }
+    var background_color: Option[ColorOrGradient]          = relevant { _.background_color }
+    var line_color: Option[Color]                          = relevant { _.line_color }
+    var line_style: Option[LineStyle]                      = relevant { _.line_style }
+    var line_width: Option[Int]                            = relevant { _.line_width }
+    var font_color: Option[ColorOrGradient]                = relevant { _.font_color }
+    var font_name: Option[String]                          = relevant { _.font_name }
+    var font_size: Option[Int]                             = relevant { _.font_size }
+    var font_bold: Option[Boolean]                         = relevant { _.font_bold }
+    var font_italic: Option[Boolean]                       = relevant { _.font_italic }
+    var gradient_orientation: Option[GradientAlignment]    = relevant { _.gradient_orientation }
+    var gradient_area_color: Option[ColorOrGradient]       = relevant { _.gradient_area_color }
+    var gradient_area_offset: Option[Double]               = relevant { _.gradient_area_offset }
+    var selected_highlighting: Option[ColorOrGradient]     = relevant { _.selected_highlighting }
+    var multiselected_highlighting: Option[ColorOrGradient]= relevant { _.multiselected_highlighting }
+    var allowed_highlighting: Option[ColorOrGradient]      = relevant { _.allowed_highlighting }
+    var unallowed_highlighting: Option[ColorOrGradient]    = relevant { _.unallowed_highlighting }
+
+    /*filter the inputString and override attributes accordingly*/
+    def trimit(arg:String) = arg.replace("=","").trim
+    attributes.foreach{
+      case x if x._1.trim == "description" => description = Some(trimit(x._2))
+      case x if x._1.trim == "transparency" => transparency = Some(trimit(x._2).toDouble)
+      case x if x._1.trim.matches("background.?color") => background_color = Some(knownColors.getOrElse(trimit(x._2), GRAY))
+      case x if x._1.trim.matches("line[\\-\\_]?color") => line_color = Some(knownColors.getOrElse(trimit(x._2), WHITE))
+      case x if x._1.trim.matches("line[\\-\\_]?style") => line_style = LineStyle.getIfValid(trimit(x._2))
+      case x if x._1.trim.matches("line[\\-\\_]?width") => line_width = Some(trimit(x._2).toInt)
+      case x if x._1.trim.matches("font[\\-\\_]?color") => font_color = Some(knownColors.getOrElse(trimit(x._2), BLACK))
+      case x if x._1.trim.matches("font[\\-\\_]?name") => font_name = Some(trimit(x._2))
+      case x if x._1.trim.matches("font[\\-\\_]?size") => font_size = Some(trimit(x._2)toInt)
+      case x if x._1.trim.matches("font[\\-\\_]?bold") => font_bold = Some(matchBoolean(trimit(x._2)))
+      case x if x._1.trim.matches("font[\\-\\_]?italic") => font_italic = Some(matchBoolean(trimit(x._2)))
+      case x if x._1.trim.matches("gradient[\\-\\_]?orientation") => gradient_orientation = GradientAlignment.getIfValid(trimit(x._2))
+      case x if x._1.trim.contains("gradient_area") => x match {
+        case `x` if `x`._1.trim.contains("color") => gradient_area_color = Some(knownColors.getOrElse(trimit(x._2), BLACK))
+        case `x` if `x`._1.trim.contains("offset") => gradient_area_offset = Some(trimit(x._2).toDouble)
+        case _ => messageIgnored(x._1, name, "Style")
+      }
+      case x if x._1.trim.contains("highlighting") => x match {
+        case `x` if x._1.trim.contains("selected") => selected_highlighting = Some(knownColors.getOrElse(trimit(x._2), BLUE))
+        case `x` if x._1.trim.contains("multiselected") => multiselected_highlighting = Some(knownColors.getOrElse(trimit(x._2), BLUE)) /*TODO defaults "BLUE" might not be right*/
+        case `x` if x._1.trim.contains("allowed") => allowed_highlighting = Some(knownColors.getOrElse(trimit(x._2), BLUE))
+        case `x` if x._1.trim.contains("unallowed") => unallowed_highlighting = Some(knownColors.getOrElse(trimit(x._2), BLUE))
+        case _ => messageIgnored(x._1, name, "Style")
+      }
+      case x => messageIgnored(x._1, name, "Style")
+    }
+
+    /*create the instance of the actual new Style*/
+    val newStyle = Style(name, description, transparency, background_color, line_color, line_style, line_width, font_color,
+      font_name, font_size, font_bold, font_italic, gradient_orientation, gradient_area_color, gradient_area_offset,
+      selected_highlighting, multiselected_highlighting, allowed_highlighting, unallowed_highlighting, extendedStyle)
+
+    /*include new style instance in stylehierarchie*/
+    if (extendedStyle.nonEmpty) {
+      extendedStyle.reverse.foreach(elem => diagram.styleHierarchy(elem.name, newStyle))
+    } else {
+      diagram.styleHierarchy.newBaseClass(newStyle)
+    }
+
+    /*return the new Style*/
+    newStyle
+  }
+
+  val knownColors = Map(
+    "white" -> WHITE,
+    "light-light-gray" -> LIGHT_LIGHT_GRAY,
+    "light-gray" -> LIGHT_GRAY,
+    "gray" -> GRAY,
+    "black" -> BLACK,
+    "red" -> RED,
+    "light-orange" -> LIGHT_ORANGE,
+    "orange" -> ORANGE,
+    "dark-orange" -> DARK_ORANGE,
+    "yellow" -> YELLOW,
+    "green" -> GREEN,
+    "light-green" -> LIGHT_GREEN,
+    "dark-green" -> DARK_GREEN,
+    "cyan" -> CYAN,
+    "light-blue" -> LIGHT_BLUE,
+    "blue" -> BLUE,
+    "dark-blue" -> DARK_BLUE,
+    "transparent" -> Transparent)
+
+  /**
+   * takes a String and parses a boolean value out of it -> if string is yes|true|y
+   * @param b the stringargument*/
+  def matchBoolean(b: String): Boolean = b match {
+    case `b` if b toLowerCase() matches "yes|true|y" => true
+    //case `b` if b toLowerCase() matches("no|false|n") => false
+    case _ => false
+  }
+
+  /**
+   * states a problem to standardoutput
+   * @param attribute is the attribute, that was not matchable
+   * @param name is the name of the class
+   * @param className is the type (e.G. Style, Shape ...)*/
+  def messageIgnored(attribute: String, name: String, className: String) = println("[util.StringToObjectParser|toShape]: attribute -> " +
+    attribute + " in " + className + " '" + name + "' was ignored") /*TODO replace with call to Logger*/
 }
 
-abstract class ColorOrGradient {
-  /**
-   * getRGBValue is createColorValue from StyleGenerator.xtend*/
-  def getRGBValue: String
 
-  /**
-   * methode instead of function from StyleGenerator.xtend*/
+
+abstract class ColorOrGradient {
+  /** getRGBValue is createColorValue from StyleGenerator.xtend*/
+  def getRGBValue: String
+  /** method instead of function from StyleGenerator.xtend*/
   def createOpacityValue: String
 }
 
 trait Transparency
-
-//ColorWithTransparency in grammar Sheet
 
 abstract class Color extends ColorOrGradient with Transparency {
   def createOpacityValue = """1.0"""
@@ -52,7 +166,6 @@ abstract class Color extends ColorOrGradient with Transparency {
 
 object Transparent extends Color with Transparency {
   def getRGBValue = """transparent"""
-
   override def createOpacityValue = """0.0"""
 }
 
@@ -62,90 +175,32 @@ abstract class GradientRef(val name: String,
 
 case class GradientColorArea(color: Color, offset: Double)
 
-
-/*TODO "gradientRef extends ColorOrGradient" from grammar-sheet? unknown types: JvmTypeReference, gradientFromDSL*/
-case object WHITE extends Color {
-  def getRGBValue = """#ffffff"""
-}
-
-case object LIGHT_LIGHT_GRAY extends Color {
-  def getRGBValue = """#e9e9e9"""
-}
-
-case object LIGHT_GRAY extends Color {
-  def getRGBValue = """#d3d3d3"""
-}
-
-case object GRAY extends Color {
-  def getRGBValue = """#808080"""
-}
-
-case object DARK_GRAY extends Color {
-  def getRGBValue = """#a9a9a9"""
-}
-
-case object BLACK extends Color {
-  def getRGBValue = """#000000"""
-}
-
-case object RED extends Color {
-  def getRGBValue = """#ff0000"""
-}
-
-case object LIGHt_ORANGE extends Color {
-  def getRGBValue = """#ffa07a"""
-}
-
-case object ORANGE extends Color {
-  def getRGBValue = """#ffa500"""
-}
-
-case object DARK_ORANGE extends Color {
-  def getRGBValue = """#ff8c00"""
-}
-
-case object YELLOW extends Color {
-  def getRGBValue = """#ffff00"""
-}
-
-case object GREEN extends Color {
-  def getRGBValue = """#008000"""
-}
-
-case object LIGHT_GREEN extends Color {
-  def getRGBValue = """#90EE90"""
-}
-
-case object DARK_GREEN extends Color {
-  def getRGBValue = """#006400"""
-}
-
-case object CYAN extends Color {
-  def getRGBValue = """#00ffff"""
-}
-
-case object LIGHT_BLUE extends Color {
-  def getRGBValue = """#add8e6"""
-}
-
-case object BLUE extends Color {
-  def getRGBValue = """#0000ff"""
-}
-
-case object DARK_BLUE extends Color {
-  def getRGBValue = """#00008b"""
-}
+case object WHITE             extends Color { def getRGBValue = """#ffffff""" }
+case object LIGHT_LIGHT_GRAY  extends Color { def getRGBValue = """#e9e9e9""" }
+case object LIGHT_GRAY        extends Color { def getRGBValue = """#d3d3d3""" }
+case object GRAY              extends Color { def getRGBValue = """#808080""" }
+case object DARK_GRAY         extends Color { def getRGBValue = """#a9a9a9""" }
+case object BLACK             extends Color { def getRGBValue = """#000000""" }
+case object RED               extends Color { def getRGBValue = """#ff0000""" }
+case object LIGHT_ORANGE      extends Color { def getRGBValue = """#ffa07a""" }
+case object ORANGE            extends Color { def getRGBValue = """#ffa500""" }
+case object DARK_ORANGE       extends Color { def getRGBValue = """#ff8c00""" }
+case object YELLOW            extends Color { def getRGBValue = """#ffff00""" }
+case object GREEN             extends Color { def getRGBValue = """#008000""" }
+case object LIGHT_GREEN       extends Color { def getRGBValue = """#90EE90""" }
+case object DARK_GREEN        extends Color { def getRGBValue = """#006400""" }
+case object CYAN              extends Color { def getRGBValue = """#00ffff""" }
+case object LIGHT_BLUE        extends Color { def getRGBValue = """#add8e6""" }
+case object BLUE              extends Color { def getRGBValue = """#0000ff""" }
+case object DARK_BLUE         extends Color { def getRGBValue = """#00008b""" }
 
 class RGBColor(val red: Int, green: Int, blue: Int) extends Color {
   def getRGBValue = "" + red + green + blue
 }
 
-
 sealed abstract class GradientAlignment
-
-case object HORIZONTAL extends GradientAlignment
-
-case object VERTICAL extends GradientAlignment
+  case object HORIZONTAL extends GradientAlignment
+  case object VERTICAL extends GradientAlignment
 
 object GradientAlignment {
   def getIfValid(s: String) = {
@@ -157,28 +212,12 @@ object GradientAlignment {
   }
 }
 
-
 sealed class LineStyle
-
-case object SOLID extends LineStyle {
-  def aplply = "solid"
-}
-
-case object DOT extends LineStyle {
-  def aplply = "dot"
-}
-
-case object DASH extends LineStyle {
-  def aplply = "dash"
-}
-
-case object DASHDOT extends LineStyle {
-  def aplply = "dash-dot"
-}
-
-case object DASHDOTDOT extends LineStyle {
-  def aplply = "dash-dot-dot"
-}
+  case object SOLID extends LineStyle { def apply = "solid" }
+  case object DOT extends LineStyle { def apply = "dot" }
+  case object DASH extends LineStyle { def apply = "dash" }
+  case object DASHDOT extends LineStyle { def apply = "dash-dot" }
+  case object DASHDOTDOT extends LineStyle { def apply = "dash-dot-dot" }
 
 object LineStyle {
   def getIfValid(s: String) = {

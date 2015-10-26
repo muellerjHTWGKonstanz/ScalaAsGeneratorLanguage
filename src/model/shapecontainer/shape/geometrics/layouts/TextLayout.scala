@@ -14,6 +14,8 @@ trait TextLayout extends CommonLayout{
 }
 
 object TextLayoutParser{
+  def apply(attributes:List[String], diagram: Diagram):Option[TextLayout]=parse(attributes, diagram)
+
   def parse(attributes:List[String], diagram: Diagram):Option[TextLayout]={
     val commonLayout = CommonLayoutParser.parse(attributes, diagram)
     if(commonLayout.isEmpty)

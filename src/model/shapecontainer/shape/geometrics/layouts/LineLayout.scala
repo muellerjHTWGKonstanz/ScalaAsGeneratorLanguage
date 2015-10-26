@@ -26,7 +26,7 @@ object LineLayoutParser{
           point2 = Some(new Point(tup(0).toInt, tup(1).toInt))
         }
       }
-      case x if x.matches("style.+") => styl = Style.parse(x, diagram)
+      //TODO case x if x.matches("style.+") => styl = Style.parse(x, diagram)
     }
     if(point1.isDefined && point2.isDefined)
       Some(new LineLayout {

@@ -15,8 +15,8 @@ class Line(parent:Option[GeometricModel]=None,
            override val position:(Point, Point))
   extends GeometricModel(parent) with LineLayout
 
-object Line extends Parsable{
-  override def parse[Line](geoModel: GeoModel, diagram: Diagram, parent: Option[GeometricModel]): Option[Line] = {
+object Line{
+  def parse(geoModel: GeoModel, diagram: Diagram, parent: Option[GeometricModel]): Option[Line] = {
     val lineLayout = LineLayoutParser.parse(geoModel.attributes, diagram)
     if(lineLayout.isEmpty)
       None
