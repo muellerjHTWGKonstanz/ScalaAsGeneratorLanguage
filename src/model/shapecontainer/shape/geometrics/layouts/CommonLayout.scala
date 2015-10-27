@@ -34,12 +34,12 @@ object CommonLayoutParser {
         size_w = Some(tup(0).toInt)
         size_h= Some(tup(1).toInt)
       }
-      //TODO case x if x.matches("style.+") => styl = StyleParser.parse(x, diagram)
+      case x if x.matches("style.+") => styl = Some(StyleParser.parse(x))
       case x => "[CommonLayoutParser]: "+x+" was ignored "
     }
 
     var ret:Option[CommonLayout] = None
-    if(pos.isDefined && size_w.isDefined && size_h.isDefined)
+    if(size_w.isDefined && size_h.isDefined)
       ret = Some(new CommonLayout {
         override val position: Option[(Int, Int)] = pos
         override val size_width: Int = size_w.get

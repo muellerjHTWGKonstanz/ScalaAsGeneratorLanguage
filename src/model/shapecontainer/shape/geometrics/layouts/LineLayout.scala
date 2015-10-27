@@ -2,7 +2,7 @@ package model.shapecontainer.shape.geometrics.layouts
 
 import model.Diagram
 import model.shapecontainer.shape.geometrics.Point
-import model.style.Style
+import model.style.{StyleParser, Style}
 
 /**
  * Created by julian on 20.10.15.
@@ -26,7 +26,7 @@ object LineLayoutParser{
           point2 = Some(new Point(tup(0).toInt, tup(1).toInt))
         }
       }
-      //TODO case x if x.matches("style.+") => styl = Style.parse(x, diagram)
+      case x if x.matches("style.+") => styl = Some(StyleParser.parse(x))
     }
     if(point1.isDefined && point2.isDefined)
       Some(new LineLayout {

@@ -2,6 +2,9 @@ package model.style
 
 import model.{ClassHierarchy, Diagram}
 
+import scala.util.Random
+import scala.util.parsing.combinator.JavaTokenParsers
+
 case class Style( name: String = "noName",
                   description: Option[String] = None,
                   transparency: Option[Double] = None,
@@ -27,8 +30,81 @@ case class Style( name: String = "noName",
 }
 
 object StyleParser {
-  def apply(name:String, parents:List[String], attributes: List[(String, String)], diagram: Diagram) = parse(name, parents, attributes, diagram)
+  /**
+   * parse
+   * @param attributes is the string containing all the information needed to generate the attributes
+   */
+  def apply(attributes:String) = parse(attributes)
+  def parse(attributes:String):Style = {
+    var description: Option[String]                        = None
+    var transparency: Option[Double]                       = None
+    var background_color: Option[ColorOrGradient]          = None
+    var line_color: Option[Color]                          = None
+    var line_style: Option[LineStyle]                      = None
+    var line_width: Option[Int]                            = None
+    var font_color: Option[ColorOrGradient]                = None
+    var font_name: Option[String]                          = None
+    var font_size: Option[Int]                             = None
+    var font_bold: Option[Boolean]                         = None
+    var font_italic: Option[Boolean]                       = None
+    var gradient_orientation: Option[GradientAlignment]    = None
+    var gradient_area_color: Option[ColorOrGradient]       = None
+    var gradient_area_offset: Option[Double]               = None
+    var selected_highlighting: Option[ColorOrGradient]     = None
+    var multiselected_highlighting: Option[ColorOrGradient]= None
+    var allowed_highlighting: Option[ColorOrGradient]      = None
+    var unallowed_highlighting: Option[ColorOrGradient]    = None
 
+    object Parser extends JavaTokenParsers{
+      def attributes = "style (" ~> rep(attribute) <~ ")" ^^ {case attr => attr}
+      def attribute:Parser[(String, String)] = variable ~ argument <~ ",?".r ^^ {case v ~ a => (v.toString,a.toString)}
+      def argument = "(([a-züäö]+([-_][a-züäö]+)?)|(\".*\")|([+-]?\\d+(\\.\\d+)?))".r ^^ {_.toString}
+      def variable:Parser[String] = ident <~ "="  ^^ {case varname => varname.toString}
+
+      def parseAttributes(input:String) = parse(attributes, input).get
+    }
+
+    def ifValid[T](f: => T):Option[T] = {
+      var ret:Option[T] = None
+      try { ret = Some(f)
+        ret
+      }finally {
+        ret
+      }}
+
+    val attrList = Parser.parseAttributes(attributes)
+    println(attrList.getClass)
+    println(attrList.mkString)
+    //if(attrList.nonEmpty){
+    // attrList.foreach{
+    //   case tuple:(String, String) if tuple._1 == "description" => description = Some(tuple._2)
+    //   case ("transparency", x:String) => transparency = ifValid(x.toDouble)
+    //   case ("background-color", x) => background_color = Some(knownColors.getOrElse(x, GRAY))
+    //   case ("line-color", x) => line_color = Some(knownColors.getOrElse(x, WHITE))
+    //   case ("line-style", x) => line_style= LineStyle.getIfValid(x)
+    //   case ("line-width", x:String) => line_width= ifValid(x.toInt)
+    //   case ("font-color", x) => font_color= Some(knownColors.getOrElse(x, BLACK))
+    //   case ("font-name", x) => font_name= Some(x)
+    //   case ("font-size", x:String) => font_size= ifValid(x.toInt)
+    //   case ("font-bold", x) => font_bold = Some(matchBoolean(x))
+    //   case ("font-italic", x) => font_italic = Some(matchBoolean(x))
+    //   case ("gradient-orientation", x) => gradient_orientation = GradientAlignment.getIfValid(x)
+    //   case ("gradient-area-color", x) => gradient_area_color = Some(knownColors.getOrElse(x, BLACK))
+    //   case ("gradient-area-offset", x:String) => gradient_area_offset= ifValid(x.toDouble)
+    //   case ("highlighting-allowed", x) => allowed_highlighting = Some(knownColors.getOrElse(x, BLUE))
+    //   case ("highlighting-unallowed", x) => unallowed_highlighting= Some(knownColors.getOrElse(x, BLUE))
+    //   case ("highlighting-selected", x) => selected_highlighting = Some(knownColors.getOrElse(x, BLUE))
+    //   case ("highlighting-multiselected", x) => multiselected_highlighting = Some(knownColors.getOrElse(x, BLUE))
+    // }
+    //}
+
+    /*create the instance of the actual new Style*/
+    Style("anonymousSTyle"+Random.nextString(100), description, transparency, background_color, line_color, line_style, line_width, font_color,
+      font_name, font_size, font_bold, font_italic, gradient_orientation, gradient_area_color, gradient_area_offset,
+      selected_highlighting, multiselected_highlighting, allowed_highlighting, unallowed_highlighting, List())
+  }
+
+  def apply(name:String, parents:List[String], attributes: List[(String, String)], diagram: Diagram) = parse(name, parents, attributes, diagram)
   def parse(name:String, parents:List[String], attributes: List[(String, String)], diagram: Diagram):Style ={
 
     var extendedStyle:List[Style] = List[Style]()
@@ -80,7 +156,7 @@ object StyleParser {
       case x if x._1.trim.matches("font[\\-\\_]?bold") => font_bold = Some(matchBoolean(trimit(x._2)))
       case x if x._1.trim.matches("font[\\-\\_]?italic") => font_italic = Some(matchBoolean(trimit(x._2)))
       case x if x._1.trim.matches("gradient[\\-\\_]?orientation") => gradient_orientation = GradientAlignment.getIfValid(trimit(x._2))
-      case x if x._1.trim.contains("gradient_area") => x match {
+      case x if x._1.trim.contains("gradient-area") => x match {
         case `x` if `x`._1.trim.contains("color") => gradient_area_color = Some(knownColors.getOrElse(trimit(x._2), BLACK))
         case `x` if `x`._1.trim.contains("offset") => gradient_area_offset = Some(trimit(x._2).toDouble)
         case _ => messageIgnored(x._1, name, "Style")

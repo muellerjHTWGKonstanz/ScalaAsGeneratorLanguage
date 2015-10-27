@@ -4,6 +4,8 @@ import model.style.Style
 import model.{ClassHierarchy, Diagram}
 import util.SprayParser
 
+import scala.util.parsing.combinator.JavaTokenParsers
+
 object RegexTest extends App {
   val classUno = """style BpmnDefaultStyle {
                   description = "The default style of the petrinet diagram type."
@@ -36,12 +38,8 @@ object RegexTest extends App {
                }"""
 
   val shap1 = """shape BPMN_EventTimer_default {
-                    ellipse {
+                    ellipse style BpmnDefaultStyle{
                         size (width=50, height=50)
-                        point {
-                            size (width=46, height=46)
-                            position (x=2, y=2)
-                        }
                     }
                     ellipse {
                         size (width=50, height=50)
@@ -66,22 +64,34 @@ object RegexTest extends App {
 
   val diagram = Diagram(new ClassHierarchy[Style](new Style(name = "root")), new ClassHierarchy[Shape](new Shape(name = "root")))
   val parser = new SprayParser(diagram)
-  println(parser.parse(parser.style,
+  println(parser.parseRawStyle(
     """style BPMNDefault {
       line-color = 40
       font-size = 10
       }"""))
 
-  println(parser.parse(parser.style,
+  println(parser.parseRawStyle(
     """style aicaramba extends BPMNDefault {
       line-color = blue
       font-italic = yes
       }"""))
 
-  //println(parser.parse(parser.style, classUno))
 
-  //println(parser.parseRawShape(shap1))
-  println(parser.parseRawStyle(classUno))
+  //println(parser.parseRawStyle(classUno))
+  //val allShapes= for(i<-parser.parseRawShape(shap1))yield{i.parse(None)}
+  //println(allShapes.mkString)
+
+  object Parser extends JavaTokenParsers{
+    def attributes = "style (" ~> rep(attribute) <~ ")" ^^ {case attr => attr}
+    def attribute:Parser[(String, String)] = variable ~ argument <~ ",?".r ^^ {case v ~ a => (v.toString,a.toString)}
+    def argument = "(([a-züäö]+([-_][a-züäö])?)|(\".*\")|([+-]?\\d+(\\.\\d+)?))".r ^^ {_.toString}
+    def variable:Parser[String] = ident <~ "="  ^^ {case varname => varname.toString}
+
+    def parseAttributes(input:String) = parse(attributes, input).get
+  }
+  import Parser._
+  println(parse(attributes, "style (x-y=12, y=asd)"))
+  println(parseAttributes("style (x=12 y=adj)"))
 
   //println(parser.parse(parser.argument_classic, " = \"302\""))
   //println(parser.parse(parser.argument_advanced_explicit, "(foo-fo = 12.12, faa-f = \"bla\", fer = gaaaab)"))

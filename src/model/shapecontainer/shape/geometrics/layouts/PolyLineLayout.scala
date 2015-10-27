@@ -2,7 +2,7 @@ package model.shapecontainer.shape.geometrics.layouts
 
 import model.Diagram
 import model.shapecontainer.shape.geometrics.Point
-import model.style.Style
+import model.style.{StyleParser, Style}
 
 /**
  * Created by julian on 20.10.15.
@@ -21,7 +21,7 @@ object PolyLineLayoutParser{
         val tup = "[0-9]+".r.findAllIn(x).toArray
         collectedPoints = collectedPoints.::(new Point(tup(0).toInt, tup(1).toInt))
       }
-      //TODO case x if x.matches("style.+") => styl = Style.parse(x, diagram)
+      case x if x.matches("style.+") => styl = Some(StyleParser.parse(x))
     }
     if(collectedPoints.length > 1)
       Some(new PolyLineLayout {
