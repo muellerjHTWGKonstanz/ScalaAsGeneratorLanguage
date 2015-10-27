@@ -2,7 +2,7 @@ import generators.StyleGenerator
 import model.shapecontainer.shape.Shape
 import model.style.Style
 import model.{ClassHierarchy, Diagram}
-import util.StringToObjectParser
+import util.{SprayParser, StringToObjectParser}
 
 /**
  * Created by julian on 9/3/15.
@@ -31,9 +31,12 @@ object ParserApp extends App {
                   line-color = green
                 }"""
 
+  val parser = new SprayParser(diagram)
 
-  val newStyle = StringToObjectParser toStyle(classUno, diagram)
-  val anotherStyle = StringToObjectParser toStyle(classDuo, diagram)
+  //val newStyle = StringToObjectParser toStyle(classUno, diagram)
+  //val anotherStyle = StringToObjectParser toStyle(classDuo, diagram)
+  val newStyle = parser.parseRawStyle(classUno)
+  val anotherStyle = parser.parseRawStyle(classDuo)
 
   diagram.styleHierarchy.root.rPrint()
   //println(diagram.styleHierarchy(newStyle).data.lineColor)
@@ -43,7 +46,8 @@ object ParserApp extends App {
     """style yetAnotherStyle extends BpmnExtending{
       font-size = 10
       }"""
-  val yetAnotherStyle = StringToObjectParser toStyle(classTres, diagram)
+  //val yetAnotherStyle = StringToObjectParser toStyle(classTres, diagram)
+  val yetAnotherStyle = parser.parseRawStyle(classTres)
   //println(diagram.styleHierarchy(newStyle).data.       fontSize)
   //println(diagram.styleHierarchy(anotherStyle).data.   fontSize)
   //println(diagram.styleHierarchy(yetAnotherStyle).data.fontSize)
@@ -55,13 +59,13 @@ object ParserApp extends App {
     """style A{
       font-size = 20
       }""".stripMargin
-  val A = StringToObjectParser toStyle(differentStyle, diagram)
+  val A = parser.parseRawStyle(differentStyle)
 
   differentStyle =
   """style B extends A{
     line-color = blue
     }"""
-  val B = StringToObjectParser toStyle(differentStyle, diagram)
+  val B = parser.parseRawStyle(differentStyle)
 
   differentStyle =
     """style C extends B{
@@ -77,7 +81,7 @@ object ParserApp extends App {
       font-italic = yes
       gradient-orientation = horizontal
       }"""
-  val C = StringToObjectParser toStyle(differentStyle, diagram)
+  val C = parser.parseRawStyle(differentStyle)
 
   //println(diagram.styleHierarchy(A).data.line_color)
   //println(diagram.styleHierarchy(B).data.line_color)
