@@ -1,7 +1,7 @@
 package model.shapecontainer.shape.geometrics.layouts
 
 import model.Diagram
-import model.shapecontainer.shape.geometrics.Point
+import model.shapecontainer.shape.geometrics.{PointParser, Point}
 import model.style.{StyleParser, Style}
 
 /**
@@ -18,12 +18,11 @@ object LineLayoutParser{
     var point2:Option[Point] = None
     var styl:Option[Style] = None
     attributes.foreach {
-      case x if x.matches("point \\((x=)?[0-9]+\\)") =>{
-        val tup = "[0-9]+".r.findAllIn(x).toArray
+      case x if x.matches("point.+") =>{
         if(point1.isEmpty)
-          point1 = Some(new Point(tup(0).toInt, tup(1).toInt))
+          point1 = PointParser(x)
         else {
-          point2 = Some(new Point(tup(0).toInt, tup(1).toInt))
+          point2 = PointParser(x)
         }
       }
       case x if x.matches("style.+") => styl = Some(StyleParser.parse(x))
