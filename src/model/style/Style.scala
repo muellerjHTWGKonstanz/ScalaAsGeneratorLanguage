@@ -100,13 +100,18 @@ object StyleParser extends JavaTokenParsers{
       selected_highlighting, multiselected_highlighting, allowed_highlighting, unallowed_highlighting, List())
   }
 
-  def apply(name:String, parents:List[String], attributes: List[(String, String)], diagram: Diagram) = parse(name, parents, attributes, diagram)
-  def parse(name:String, parents:List[String], attributes: List[(String, String)], diagram: Diagram):Style ={
+  /**
+   * @param name the name of the ne Style instance
+   * @param parents the style instance's names from which the new Style will inherit information
+   * @param attributes List of Tuples of Strings -> List[(String, String)] consist of tuple._1 = attribute's name and tuple._2 the according value
+   * @param diagram is a Diagram which contains the styleHierarchy which gives information about inheritance*/
+  def apply(name:String, parents:Option[List[String]], attributes: List[(String, String)], diagram: Diagram) = parse(name, parents, attributes, diagram)
+  def parse(name:String, parents:Option[List[String]], attributes: List[(String, String)], diagram: Diagram):Style ={
 
     var extendedStyle:List[Style] = List[Style]()
 
     if(parents.nonEmpty)
-      parents.foreach{parent => {
+      parents.get.foreach{parent => {
         val parentName = parent.replace(",","").trim
         if(diagram.styleHierarchy.contains(parentName))
           extendedStyle = diagram.styleHierarchy(parentName).data :: extendedStyle

@@ -21,30 +21,29 @@ class SprayParser(diagram: Diagram) extends JavaTokenParsers {
   private def attribute: Parser[String] = variable ~ argument ^^ { case v ~ arg => v + arg }
   private def attributePair: Parser[(String, String)] = variable ~ argument ^^ { case v ~ a => (v, a) }
 
+
   /*Style-specific*/
-  private def style = styleDeclaration
-  private def styleDeclaration = styleDeclaration_extends | styleDeclaration_baseClass
-  private def styleDeclaration_extends: Parser[Style] =
-    ("style" ~> ident) ~ ("extends" ~> rep(ident)) ~ ("{" ~> rep(attributePair)) <~ "}" ^^ {
+  private def style: Parser[Style] =
+    ("style" ~> ident) ~ (("extends" ~> rep(ident))?) ~ ("{" ~> rep(attributePair)) <~ "}" ^^ {
       case name ~ parents ~ attributes => StyleParser(name, parents, attributes, diagram)
     }
-  private def styleDeclaration_baseClass: Parser[Style] = {
-    (("style" ~> ident) <~ "{") ~ (rep(attributePair) <~ "}") ^^ {
-      case name ~ attributes => StyleParser(name, List[String](), attributes, diagram)
-    }
-  }
   def parseRawStyle(input: String) = parseAll(style, input).get
 
+
   /*Shape-specific*/
-  private def shape = rep(geoModel)
-  /**parses a geomodel first ident is the GeometricModels name, second ident is an optional reference to a style*/
+  private def geometricModels = rep(geoModel) ^^ {
+    case a:List[GeoModel] =>
+      (for(g <- a)yield{g.parse(None)}).
+        foldLeft(List[GeometricModel]())((r, c:Option[GeometricModel])=>if(c.isDefined)r.::(c.get) else r)
+  }
+  /**parses a geoModel first ident is the GeometricModels name, second ident is an optional reference to a style*/
   private def geoModel: Parser[GeoModel] = ident ~ ((("style" ~> ident)?) <~ "{") ~ rep(attribute) ~ (rep(geoModel) <~ "}") ^^ {
     case name ~ style ~ attr ~ children => GeoModel(name, {
       if(style.isDefined) Some(diagram.styleHierarchy(style.get).data)
       else None }, attr, children, diagram)
   }
   def parseRawShape(input: String) = {
-    parseAll(shape, input.replaceAll("\\/\\/.+", "").split("\n").slice(1, input.lines.length - 1).
+    parseAll(geometricModels, input.replaceAll("\\/\\/.+", "").split("\n").slice(1, input.lines.length - 1).
       map(s => s.trim + "\n").
       mkString).get
   }

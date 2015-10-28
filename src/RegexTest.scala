@@ -66,9 +66,8 @@ object RegexTest extends App {
   val parser = new SprayParser(diagram)
 
   parser.parseRawStyle(classUno)
-  val shapeSketches = parser.parseRawShape(shap1)
-  val allShapes= for(i<-shapeSketches)yield{i.parse(None)}
-
+  val shapes = parser.parseRawShape(shap1)
+  println(shapes(0))//TODO why cant i access shapes(0).wraps?!?!?!
   parser.parseRawStyle(
     """style BPMNDefault {
       line-color = 40
@@ -81,7 +80,6 @@ object RegexTest extends App {
       font-italic = yes
       }""")
 
-  println(allShapes.mkString)
 
   //println(parse(attribute, "x-y=12"))
   //println(parseAttributes("style (l-vb=12, lone=11)"))

@@ -10,7 +10,7 @@ import util.GeoModel
  * Created by julian on 19.10.15.
  * representation of  Rectangle
  */
-case class Rectangle(parent:Option[GeometricModel] = None,
+class Rectangle(parent:Option[GeometricModel] = None,
                 commonLayout: CommonLayout,
                 compartmentInfo: CompartmentInfo,
                 parentOf:List[GeometricModel] = List[GeometricModel]()
@@ -28,6 +28,8 @@ case class Rectangle(parent:Option[GeometricModel] = None,
   override val compartment_margin:Option[Int] = compartmentInfo.compartment_margin
   override val compartment_invisible:Option[Boolean] = compartmentInfo.compartment_invisible
   override val compartment_id:Option[String] = compartmentInfo.compartment_id
+
+  def wraps = children
 }
 
 object Rectangle{
