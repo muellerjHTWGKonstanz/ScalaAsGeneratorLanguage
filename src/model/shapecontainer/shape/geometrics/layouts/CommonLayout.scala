@@ -1,7 +1,7 @@
 package model.shapecontainer.shape.geometrics.layouts
 
-import model.Diagram
 import model.style.{StyleParser, Style}
+import util.{CommonParserMethodes, GeoModel}
 
 /**
  * Created by julian on 15.10.15.
@@ -17,25 +17,29 @@ trait CommonLayout extends Layout{
   def y = position.get._2
 }
 
-object CommonLayoutParser {
-  def parse(attributes:List[String], diagram: Diagram):Option[CommonLayout] = {
+object CommonLayoutParser extends CommonParserMethodes{
+  def parse(geoModel:GeoModel):Option[CommonLayout] = {
+    val attributes = geoModel.attributes
+
+    /*mapping*/
     var pos:Option[(Int,Int)] =None
     var size_w:Option[Int] = None
     var size_h:Option[Int] = None
-    var styl:Option[Style] = None
+    var styl:Option[Style] = geoModel.style
 
     attributes.foreach {
-      case x if x.matches("position \\((x=)?[0-9]+, (y=)?[0-9]+\\)") => pos = {
-        val tup = "[0-9]+".r.findAllIn(x).toArray
-        Some((tup(0).toInt, tup(1).toInt))
+      case x if x.matches("position.+") => pos = {
+        parse(position, x).get
       }
-      case x if x.matches("size \\((width=)?[0-9]+, (height=)?[0-9]+\\)") => {
-        val tup = "[0-9]+".r.findAllIn(x).toArray
-        size_w = Some(tup(0).toInt)
-        size_h= Some(tup(1).toInt)
+      case x if x.matches("size.+") => {
+        val newSize = parse(size, x).get
+        if(newSize.isDefined){
+          size_w = Some(newSize.get._1)
+          size_h = Some(newSize.get._2)
+        }
       }
-      case x if x.matches("style.+") => styl = Some(StyleParser.parse(x))
-      case x => "[CommonLayoutParser]: "+x+" was ignored "
+      case x if x.matches("style.+") & styl.isEmpty => styl = Some(StyleParser.parse(x))
+      case x => println("[CommonLayoutParser]: "+x+" was ignored")
     }
 
     var ret:Option[CommonLayout] = None

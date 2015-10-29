@@ -27,12 +27,11 @@ object RoundedRectangle{
   /**
    * parses a GeoModel into an actual GeometricModel, in this case a Rectangle
    * @param geoModel is the sketch to parse into a GeometricModel
-   * @param diagram is the document, which includes all the classHierarchy information about sevral Styles,
-   * which can be used by any layout that the GeometricModel uses
-   * @param parent is the parent instance that wrappes the new GeometricModel*/
-  def parse(geoModel: GeoModel, diagram: Diagram, parent: Option[GeometricModel]): Option[RoundedRectangle] = {
+   * @param parent is the parent instance that wraps the new GeometricModel*/
+  def apply(geoModel: GeoModel, parent: Option[GeometricModel]) = parse(geoModel, parent)
+  def parse(geoModel: GeoModel, parent: Option[GeometricModel]): Option[RoundedRectangle] = {
     /*mapping*/
-    val rrLayout: Option[RoundedRectangleLayout] = RoundedRectangleLayoutParser.parse(geoModel.attributes, diagram)
+    val rrLayout: Option[RoundedRectangleLayout] = RoundedRectangleLayoutParser.parse(geoModel)
 
     if (rrLayout.isEmpty)
       return None

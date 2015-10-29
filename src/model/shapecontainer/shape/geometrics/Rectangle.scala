@@ -36,12 +36,11 @@ object Rectangle{
   /**
    * parses a GeoModel into an actual GeometricModel, in this case a Rectangle
    * @param geoModel is the sketch to parse into a GeometricModel
-   * @param diagram is the document, which includes all the classHierarchy information about sevral Styles,
-   * which can be used by any layout that the GeometricModel uses
-   * @param parent is the parent instance that wrappes the new GeometricModel*/
-  def parse(geoModel:GeoModel, diagram:Diagram, parent:Option[GeometricModel] = None): Option[Rectangle] = {
+   * @param parent is the parent instance that wraps the new GeometricModel*/
+  def apply(geoModel:GeoModel, parent:Option[GeometricModel] = None)= parse(geoModel, parent)
+  def parse(geoModel:GeoModel, parent:Option[GeometricModel] = None): Option[Rectangle] = {
     /*mapping*/
-    val commonLayout:Option[CommonLayout] = CommonLayoutParser.parse(geoModel.attributes, diagram)
+    val commonLayout:Option[CommonLayout] = CommonLayoutParser.parse(geoModel)
     val compartmentInfo:Option[CompartmentInfo] = CompartmentInfoParser.parse(geoModel.attributes)
 
     if(compartmentInfo.isEmpty || commonLayout.isEmpty)

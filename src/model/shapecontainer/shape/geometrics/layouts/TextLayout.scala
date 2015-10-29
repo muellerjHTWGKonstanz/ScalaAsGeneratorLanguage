@@ -1,9 +1,9 @@
 package model.shapecontainer.shape.geometrics.layouts
 
-import model.Diagram
 import model.shapecontainer.shape.geometrics.Alignment
 import model.shapecontainer.shape.geometrics.Alignment.{VAlign, HAlign}
 import model.style.Style
+import util.GeoModel
 
 /**
  * Created by julian on 20.10.15.
@@ -14,10 +14,12 @@ trait TextLayout extends CommonLayout{
 }
 
 object TextLayoutParser{
-  def apply(attributes:List[String], diagram: Diagram):Option[TextLayout]=parse(attributes, diagram)
+  def apply(geoModel: GeoModel):Option[TextLayout]=parse(geoModel)
+  def parse(geoModel:GeoModel):Option[TextLayout]={
+    val attributes = geoModel.attributes
 
-  def parse(attributes:List[String], diagram: Diagram):Option[TextLayout]={
-    val commonLayout = CommonLayoutParser.parse(attributes, diagram)
+    /*mapping*/
+    val commonLayout = CommonLayoutParser.parse(geoModel)
     if(commonLayout.isEmpty)
       return None
 

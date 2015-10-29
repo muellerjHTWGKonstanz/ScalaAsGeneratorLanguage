@@ -4,22 +4,37 @@ import model.Diagram
 import model.shapecontainer.shape.geometrics._
 import model.style.{StyleParser, Style}
 
-import scala.util.Random
 import scala.util.parsing.combinator.JavaTokenParsers
 
+trait CommonParserMethodes extends JavaTokenParsers{
+  /*basic stuff*/
+  def attribute:Parser[(String, String)] = variable ~ argument <~ ",?".r ^^ {case v ~ a => (v.toString,a.toString)}
+  def variable:Parser[String] = "[a-züäö]+([-_][a-züäö]+)?".r <~ "="  ^^ {_.toString}
+  def argument:Parser[String] = "(([a-züäö]+([-_][a-züäö]+)?)|(\".*\")|([+-]?\\d+(\\.\\d+)?))".r ^^ {_.toString}
+  
+  /*Some explicit usages*/
+  def position:Parser[Option[(Int, Int)]] = "position\\s*\\(\\s*(x=)?".r ~> argument ~ ((",\\s*(y=)?".r ~> argument) <~")") ^^ {
+    case xarg ~ yarg => Some((xarg.toInt, yarg.toInt))
+    case _ => None}
+  def size:Parser[Option[(Int, Int)]] = "size\\s*\\(\\s*(width=)?".r ~> argument ~ (",\\s*(height=)?".r ~> argument) <~ ")" ^^ {
+    case width ~ height => Some((width.toInt, height.toInt))
+    case _ => None }
+  def curve:Parser[Option[(Int, Int)]] = size
+
+}
 /**
  * Created by julian on 23.10.15.
  * offers functions like parseRawShape/Style, which parses style or shape strings to instances
  */
 class SprayParser(diagram: Diagram) extends JavaTokenParsers {
   /*in common usage*/
-  private def variable: Parser[String] = """\w+([-_]\w+)?\s*""".r ^^ { _.toString }
-  private def argument_classic: Parser[String] = """\s*\=\s*(([a-z]+)|(\".*\")|([+-]?\d+(\.\d+)?))""".r ^^ { _.toString }
-  private def argument_advanced_explicit: Parser[String] = """\((\w+([-_]\w+)?\s*=\s*([a-zA-Z]+|(\".*\")|([+-]?\d+(\.\d+)?)),?[\s\n]*)+\)""".r ^^ { _.toString }
-  private def argument_advanced_implicit: Parser[String] = """\((([a-zA-Z]+|(\".*\")|([+-]?\d+(\.\d+)?)),?\s*)+\)""".r ^^ { _.toString }
-  private def argument: Parser[String] = argument_classic | argument_advanced_explicit | argument_advanced_implicit
-  private def attribute: Parser[String] = variable ~ argument ^^ { case v ~ arg => v + arg }
-  private def attributePair: Parser[(String, String)] = variable ~ argument ^^ { case v ~ a => (v, a) }
+  def variable: Parser[String] = """\w+([-_]\w+)?\s*""".r ^^ { _.toString }
+  def argument_classic: Parser[String] = """\s*\=\s*(([a-z]+)|(\".*\")|([+-]?\d+(\.\d+)?))""".r ^^ { _.toString }
+  def argument_advanced_explicit: Parser[String] = """\((\w+([-_]\w+)?\s*=\s*([a-zA-Z]+|(\".*\")|([+-]?\d+(\.\d+)?)),?[\s\n]*)+\)""".r ^^ { _.toString }
+  def argument_advanced_implicit: Parser[String] = """\((([a-zA-Z]+|(\".*\")|([+-]?\d+(\.\d+)?)),?\s*)+\)""".r ^^ { _.toString }
+  def argument: Parser[String] = argument_classic | argument_advanced_explicit | argument_advanced_implicit
+  def attribute: Parser[String] = variable ~ argument ^^ { case v ~ arg => v + arg }
+  def attributePair: Parser[(String, String)] = variable ~ argument ^^ { case v ~ a => (v, a) }
 
 
   /*Style-specific*/
@@ -30,7 +45,7 @@ class SprayParser(diagram: Diagram) extends JavaTokenParsers {
   def parseRawStyle(input: String) = parseAll(style, input).get
 
 
-  /*Shape-specific*/
+  /*GeometricModel-specific*/
   private def geometricModels = rep(geoModel) ^^ {
     case a:List[GeoModel] =>
       (for(g <- a)yield{g.parse(None)}).
@@ -42,11 +57,14 @@ class SprayParser(diagram: Diagram) extends JavaTokenParsers {
       if(style.isDefined) Some(diagram.styleHierarchy(style.get).data)
       else None }, attr, children, diagram)
   }
-  def parseRawShape(input: String) = {
+  def parseRawGeometricModel(input: String) = {
     parseAll(geometricModels, input.replaceAll("\\/\\/.+", "").split("\n").slice(1, input.lines.length - 1).
       map(s => s.trim + "\n").
       mkString).get
   }
+
+  /*Shape-specific*/
+  /*TODO write methodes which specifically parse a Shape*/
 }
 
 /**
@@ -54,13 +72,13 @@ class SprayParser(diagram: Diagram) extends JavaTokenParsers {
  * save all the attributes in a struct for later compilation into a GeometricModel*/
 case class GeoModel(typ: String, style: Option[Style], attributes: List[String], children: List[GeoModel], diagram: Diagram) {
   def parse(parent: Option[GeometricModel]): Option[GeometricModel] = typ match {
-    case "ellipse" => Ellipse.parse(this, diagram, None)
-    case "line" => Line.parse(this, diagram, None)
-    case "polygon" => Polygon.parse(this, diagram, None)
-    case "polyline" => PolyLine.parse(this, diagram, None)
-    case "rectangle" => Rectangle.parse(this, diagram, None)
-    case "roundedrectangle" => RoundedRectangle.parse(this, diagram, None)
-    case "text" => Text.parse(this, diagram, None)
+    case "ellipse" => Ellipse.parse(this, parent)
+    case "line" => Line.parse(this, parent)
+    case "polygon" => Polygon.parse(this, parent)
+    case "polyline" => PolyLine.parse(this, parent)
+    case "rectangle" => Rectangle.parse(this, parent)
+    case "roundedrectangle" => RoundedRectangle.parse(this, parent)
+    case "text" => Text.parse(this, parent)
     case _ => None
   }
 }

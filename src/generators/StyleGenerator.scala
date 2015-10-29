@@ -260,7 +260,7 @@ object StyleGenerator {
                                                                          case _ => false}
       ) + """
 
-          """ /*TODO GradientRef not 'isA' relation to ColorOrGradient - ask Markus*/
+          """
     else
         ret+=
           createBackgroundAttributes(s)+ """

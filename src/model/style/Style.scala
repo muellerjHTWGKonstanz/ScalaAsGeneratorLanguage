@@ -1,6 +1,7 @@
 package model.style
 
 import model.{ClassHierarchy, Diagram}
+import util.CommonParserMethodes
 
 import scala.util.Random
 import scala.util.parsing.combinator.JavaTokenParsers
@@ -29,11 +30,15 @@ case class Style( name: String = "noName",
   val key: Long = hashCode
 }
 
-object StyleParser extends JavaTokenParsers{
+
+
+
+
+/**
+ * StyleParser
+ * either parses a complete style or just generates an anonymous Style out of only a list of attributes*/
+object StyleParser extends CommonParserMethodes {
   def attributes = "style (" ~> rep(attribute) <~ ")" ^^ {case attr => attr}
-  def attribute:Parser[(String, String)] = variable ~ argument <~ ",?".r ^^ {case v ~ a => (v.toString,a.toString)}
-  def variable:Parser[String] = "[a-züäö]+([-_][a-züäö]+)?".r <~ "="  ^^ {_.toString}
-  def argument = "(([a-züäö]+([-_][a-züäö]+)?)|(\".*\")|([+-]?\\d+(\\.\\d+)?))".r ^^ {_.toString}
 
   def parseAttributes(input:String) = parse(attributes, input).get
   /**
@@ -224,88 +229,4 @@ object StyleParser extends JavaTokenParsers{
    * @param className is the type (e.G. Style, Shape ...)*/
   def messageIgnored(attribute: String, name: String, className: String) = println("[util.StringToObjectParser|toShape]: attribute -> " +
     attribute + " in " + className + " '" + name + "' was ignored") /*TODO replace with call to Logger*/
-}
-
-
-
-abstract class ColorOrGradient {
-  /** getRGBValue is createColorValue from StyleGenerator.xtend*/
-  def getRGBValue: String
-  /** method instead of function from StyleGenerator.xtend*/
-  def createOpacityValue: String
-}
-
-trait Transparency
-
-abstract class Color extends ColorOrGradient with Transparency {
-  def createOpacityValue = """1.0"""
-}
-
-object Transparent extends Color with Transparency {
-  def getRGBValue = """transparent"""
-  override def createOpacityValue = """0.0"""
-}
-
-abstract class GradientRef(val name: String,
-                           val description: String,
-                           val area: List[GradientColorArea]) extends ColorOrGradient
-
-case class GradientColorArea(color: Color, offset: Double)
-
-case object WHITE             extends Color { def getRGBValue = """#ffffff""" }
-case object LIGHT_LIGHT_GRAY  extends Color { def getRGBValue = """#e9e9e9""" }
-case object LIGHT_GRAY        extends Color { def getRGBValue = """#d3d3d3""" }
-case object GRAY              extends Color { def getRGBValue = """#808080""" }
-case object DARK_GRAY         extends Color { def getRGBValue = """#a9a9a9""" }
-case object BLACK             extends Color { def getRGBValue = """#000000""" }
-case object RED               extends Color { def getRGBValue = """#ff0000""" }
-case object LIGHT_ORANGE      extends Color { def getRGBValue = """#ffa07a""" }
-case object ORANGE            extends Color { def getRGBValue = """#ffa500""" }
-case object DARK_ORANGE       extends Color { def getRGBValue = """#ff8c00""" }
-case object YELLOW            extends Color { def getRGBValue = """#ffff00""" }
-case object GREEN             extends Color { def getRGBValue = """#008000""" }
-case object LIGHT_GREEN       extends Color { def getRGBValue = """#90EE90""" }
-case object DARK_GREEN        extends Color { def getRGBValue = """#006400""" }
-case object CYAN              extends Color { def getRGBValue = """#00ffff""" }
-case object LIGHT_BLUE        extends Color { def getRGBValue = """#add8e6""" }
-case object BLUE              extends Color { def getRGBValue = """#0000ff""" }
-case object DARK_BLUE         extends Color { def getRGBValue = """#00008b""" }
-
-class RGBColor(val red: Int, green: Int, blue: Int) extends Color {
-  def getRGBValue = "" + red + green + blue
-}
-
-sealed abstract class GradientAlignment
-  case object HORIZONTAL extends GradientAlignment
-  case object VERTICAL extends GradientAlignment
-
-object GradientAlignment {
-  def getIfValid(s: String) = {
-    s match {
-      case "horizontal" => Some(HORIZONTAL)
-      case "vertical" => Some(VERTICAL)
-      case _ => None
-    }
-  }
-}
-
-sealed class LineStyle
-  case object SOLID extends LineStyle { def apply = "solid" }
-  case object DOT extends LineStyle { def apply = "dot" }
-  case object DASH extends LineStyle { def apply = "dash" }
-  case object DASHDOT extends LineStyle { def apply = "dash-dot" }
-  case object DASHDOTDOT extends LineStyle { def apply = "dash-dot-dot" }
-
-object LineStyle {
-  def getIfValid(s: String) = {
-    s match {
-      case "solid" => Some(SOLID)
-      case "dot" => Some(DOT)
-      case "dash" => Some(DASH)
-      case "dashdot" => Some(DASHDOT)
-      case "dashdotdot" => Some(DASHDOTDOT)
-      case _ => None
-    }
-  }
-
 }

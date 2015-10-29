@@ -1,6 +1,5 @@
 package model.shapecontainer.shape.geometrics
 
-import model.Diagram
 import model.shapecontainer.shape.geometrics.layouts.{TextLayoutParser, TextLayout, CommonLayout}
 import model.style.Style
 import Alignment._
@@ -29,9 +28,10 @@ abstract class TextType
 
 
 object Text{
-  def parse(geoModel:GeoModel, diagram:Diagram, parent:Option[GeometricModel]):Option[Text] = {
+  def apply(geoModel:GeoModel, parent:Option[GeometricModel]) = parse(geoModel, parent)
+  def parse(geoModel:GeoModel, parent:Option[GeometricModel]):Option[Text] = {
     var id:String = ""
-    val textLayout:Option[TextLayout] = TextLayoutParser(geoModel.attributes, diagram)
+    val textLayout:Option[TextLayout] = TextLayoutParser(geoModel)
 
     geoModel.attributes.foreach{
       case x if x.matches("id = (\\w+|[0-9]+)") => id = "(\\w+|[0-9]+)".r.findFirstIn(x).get

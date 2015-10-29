@@ -1,13 +1,16 @@
 package model.shapecontainer.shape.geometrics
 
-import scala.util.parsing.combinator.JavaTokenParsers
+import util.CommonParserMethodes
 
 /**
  * Created by julian on 19.10.15.
  */
 class Point(val x:Int, val y:Int, val curveBefore:Option[Int]=None, val curveAfter:Option[Int]=None)
 
-object PointParser extends JavaTokenParsers{
+object PointParser extends CommonParserMethodes{
+  def point = "point [\\(\\{]".r ~> rep(attribute) <~ "[\\)\\}]".r ^^ {case attr:List[(String, String)] => Some(attr)
+  case _ => None}
+
   def apply(line:String) = parse(line)
   def parse(line:String):Option[Point] ={
     val attrOption = parse(point, line).get
@@ -32,9 +35,4 @@ object PointParser extends JavaTokenParsers{
       None
   }
 
-  def point = "point [\\(\\{]".r ~> rep(attribute) <~ "[\\)\\}]".r ^^ {case attr:List[(String, String)] => Some(attr)
-  case _ => None}
-  def attribute:Parser[(String, String)] = variable ~ argument <~ ",?".r ^^ {case v ~ a => (v.toString,a.toString)}
-  def variable:Parser[String] = "[a-züäö]+([-_][a-züäö]+)?".r <~ "="  ^^ {_.toString}
-  def argument = "(([a-züäö]+([-_][a-züäö]+)?)|(\".*\")|([+-]?\\d+(\\.\\d+)?))".r ^^ {_.toString}
 }

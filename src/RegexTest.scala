@@ -4,8 +4,6 @@ import model.style.Style
 import model.{ClassHierarchy, Diagram}
 import util.SprayParser
 
-import scala.util.parsing.combinator.JavaTokenParsers
-
 object RegexTest extends App {
   val classUno = """style BpmnDefaultStyle {
                   description = "The default style of the petrinet diagram type."
@@ -22,24 +20,23 @@ object RegexTest extends App {
                   gradient-orientation = horizontal
                  }"""
 
-  val shap = """shape BPMN_EventEnd_used {
+  val shap = """shape BPMN_EventEskalation_Dash {
                    ellipse {
                        size (width=50, height=50)
-                       ellipse {
-                           foo = bar
-                       }
-                   }
-                   ellipse {
-                       size (width=50, height=50)
-                       ellipse {
-                           foo = bar
+                       style (line-style=dash)
+                       polygon {
+                           point (x=25, y=10)
+                           point (x=40, y=40)
+                           point (x=25, y=25)
+                           point (x=10, y=40)
                        }
                    }
                }"""
 
   val shap1 = """shape BPMN_EventTimer_default {
-                    ellipse style BpmnDefaultStyle{
+                    ellipse {
                         size (width=50, height=50)
+                        style (description="hallo")
                     }
                     ellipse {
                         size (width=50, height=50)
@@ -66,8 +63,6 @@ object RegexTest extends App {
   val parser = new SprayParser(diagram)
 
   parser.parseRawStyle(classUno)
-  val shapes = parser.parseRawShape(shap1)
-  println(shapes(0))//TODO why cant i access shapes(0).wraps?!?!?!
   parser.parseRawStyle(
     """style BPMNDefault {
       line-color = 40
@@ -80,7 +75,6 @@ object RegexTest extends App {
       font-italic = yes
       }""")
 
-
-  //println(parse(attribute, "x-y=12"))
-  //println(parseAttributes("style (l-vb=12, lone=11)"))
+  val shapes = parser.parseRawGeometricModel(shap)
+  println(shapes.head)//TODO why cant i access shapes(0).wraps?!?!?!
 }

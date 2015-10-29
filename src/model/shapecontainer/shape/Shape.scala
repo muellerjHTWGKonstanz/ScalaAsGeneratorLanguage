@@ -4,6 +4,7 @@ import model.shapecontainer.ShapeContainerElement
 import model.shapecontainer.shape.anchor.Anchor.AnchorType
 import model.shapecontainer.shape.geometrics.GeometricModel
 import model.style.Style
+import util.CommonParserMethodes
 
 /**
  * Created by julian on 29.09.15.
@@ -34,4 +35,7 @@ case class Shape( name:String = "no name",
                   extendedShape:List[Shape] = List()) extends ShapeContainerElement{
   val key = hashCode
   def apply() = shape
+}
+
+object ShapeParser extends CommonParserMethodes{
 }

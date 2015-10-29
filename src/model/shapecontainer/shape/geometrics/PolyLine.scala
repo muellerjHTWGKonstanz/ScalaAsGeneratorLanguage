@@ -1,6 +1,5 @@
 package model.shapecontainer.shape.geometrics
 
-import model.Diagram
 import model.shapecontainer.shape.geometrics.layouts.{PolyLineLayoutParser, PolyLineLayout}
 import model.style.Style
 import util.GeoModel
@@ -19,10 +18,10 @@ class PolyLine(parent:Option[GeometricModel]=None,
 }
 
 object PolyLine{
-  def apply(geoModel:GeoModel, diagram:Diagram, parent:Option[GeometricModel]):Option[PolyLine] = parse(geoModel, diagram, parent)
+  def apply(geoModel:GeoModel, parent:Option[GeometricModel]):Option[PolyLine] = parse(geoModel, parent)
 
-  def parse(geoModel:GeoModel, diagram:Diagram, parent:Option[GeometricModel]):Option[PolyLine] = {
-    val polyLineLayout:Option[PolyLineLayout] = PolyLineLayoutParser.parse(geoModel.attributes, diagram)
+  def parse(geoModel:GeoModel, parent:Option[GeometricModel]):Option[PolyLine] = {
+    val polyLineLayout:Option[PolyLineLayout] = PolyLineLayoutParser.parse(geoModel)
     if(polyLineLayout.isEmpty)
       None
     else
