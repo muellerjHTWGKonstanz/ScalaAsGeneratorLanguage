@@ -1,7 +1,5 @@
 package model.shapecontainer.shape.geometrics
 
-import model.Diagram
-import model.shapecontainer.shape.Parsable
 import model.shapecontainer.shape.geometrics.layouts.{CommonLayoutParser, RectangleEllipeLayout, CommonLayout}
 import model.style.Style
 import util.GeoModel

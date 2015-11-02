@@ -1,6 +1,9 @@
 package util
 
+import java.io.File
+
 import model.Diagram
+import model.shapecontainer.shape.{ShapeParser, Shape}
 import model.shapecontainer.shape.geometrics._
 import model.style.{StyleParser, Style}
 
@@ -20,7 +23,14 @@ trait CommonParserMethodes extends JavaTokenParsers{
     case width ~ height => Some((width.toInt, height.toInt))
     case _ => None }
   def curve:Parser[Option[(Int, Int)]] = size
-
+  /**
+   * takes a String and parses a boolean value out of it -> if string is yes|true|y
+   * @param b the stringargument*/
+  def matchBoolean(b: String): Boolean = b match {
+    case `b` if b toLowerCase() matches "yes|true|y" => true
+    //case `b` if b toLowerCase() matches("no|false|n") => false
+    case _ => false
+  }
 }
 /**
  * Created by julian on 23.10.15.
@@ -57,14 +67,31 @@ class SprayParser(diagram: Diagram) extends JavaTokenParsers {
       if(style.isDefined) Some(diagram.styleHierarchy(style.get).data)
       else None }, attr, children, diagram)
   }
-  def parseRawGeometricModel(input: String) = {
-    parseAll(geometricModels, input.replaceAll("\\/\\/.+", "").split("\n").slice(1, input.lines.length - 1).
-      map(s => s.trim + "\n").
-      mkString).get
+  def parseRawGeometricModel(input: String): List[GeometricModel] = {
+    parseAll(geometricModels, trimRight(input)).get
   }
 
   /*Shape-specific*/
-  /*TODO write methodes which specifically parse a Shape*/
+  def shape:Parser[Shape] =
+    ("shape" ~> ident) ~
+    (("style" ~> ident)?) ~
+    ("{" ~> rep(attributePair)) ~
+    (geometricModels <~ "}") ^^
+    {case name ~ style ~ attrs ~ geos => ShapeParser(name, style, attrs, geos, diagram)}
+
+  private def shapes = rep(shape)
+
+  def parseRawShape(input:String):List[Shape] = {println(trimRight(input));parseAll(shapes, trimRight(input)).get}
+  def parseRawShape:List[Shape] = {
+    import scala.swing.FileChooser
+    val chooser = new FileChooser()
+    if(chooser.showOpenDialog(null) == FileChooser.Result.Approve)
+      parseRawShape(scala.io.Source.fromFile(chooser.selectedFile).mkString)
+    else
+      List()
+  }
+
+  private def trimRight(s:String) = s.replaceAll("\\/\\/.+", "").split("\n").map(s => s.trim + "\n").mkString
 }
 
 /**

@@ -1,5 +1,6 @@
 package model.shapecontainer.shape
 
+import model.Diagram
 import model.shapecontainer.ShapeContainerElement
 import model.shapecontainer.shape.anchor.Anchor.AnchorType
 import model.shapecontainer.shape.geometrics.GeometricModel
@@ -38,4 +39,61 @@ case class Shape( name:String = "no name",
 }
 
 object ShapeParser extends CommonParserMethodes{
+  def apply(name:String, style:Option[String], attributes:List[(String, String)], geos:List[GeometricModel], diagram:Diagram) =
+    parse(name, style, attributes, geos, diagram)
+  
+  def parse(name:String, style:Option[String], attributes:List[(String, String)], geos:List[GeometricModel], diagram:Diagram):Shape = {
+    var styl:Option[Style] = None
+    if(style isDefined){
+      val ret = diagram.styleHierarchy.nodeView.get(style.get)
+      if(ret isDefined)
+        styl = Some(ret.get.data)
+    }
+    var size_width_min:Option[Int]    = None
+    var size_width_max:Option[Int]    = None
+    var size_height_min:Option[Int]   = None
+    var size_height_max:Option[Int]   = None
+    var stretching_horizontal:Option[Boolean] = None
+    var stretching_vertical:Option[Boolean]   = None
+    var proportional:Option[Boolean]          = None
+    var description:Option[String]            = None
+    var anchor:Option[AnchorType]             = None
+    val chilldrenGeometricModels = if(geos nonEmpty) Some(geos) else None
+    
+    attributes.foreach{
+      case x if x._1.matches("size[-_]min") =>
+        val opt = parse(width_height, x._2).get
+        if(opt.isDefined){
+          size_width_min = Some(opt.get._1)
+          size_height_min = Some(opt.get._2)
+        }
+      case x if x._1.matches("size[-_]max") =>
+        val opt = parse(width_height, x._2).get
+        if(opt.isDefined){
+          size_width_max = Some(opt.get._1)
+          size_height_max = Some(opt.get._2)
+        }
+      case x if x._1.matches("stretching") =>
+        val opt = parse(stretching, x._2).get
+        if(opt.isDefined){
+          stretching_horizontal = Some(opt.get._1)
+          stretching_vertical = Some(opt.get._2)
+        }
+      case x if x._1.matches("proportional") => proportional = Some(matchBoolean(x._2))
+        //TODO description and anchor missing!!!
+      case _ =>
+    }
+
+    new Shape(name, styl, size_width_min, size_width_max, size_height_min, size_height_max,
+      stretching_horizontal, stretching_vertical, proportional, chilldrenGeometricModels, description, anchor)
+
+  }
+
+  def stretching:Parser[Option[(Boolean, Boolean)]] = "\\(\\s*(horizontal=)?".r ~> argument ~ (",\\s*(height=)?".r ~> argument) <~ ")" ^^ {
+    case hor ~ ver => Some(matchBoolean(hor), matchBoolean(ver))
+    case _ => None
+  }
+  def width_height:Parser[Option[(Int, Int)]] = "\\(\\s*(width=)?".r ~> argument ~ (",\\s*(height=)?".r ~> argument) <~ ")" ^^ {
+    case width ~ height => Some((width.toInt, height.toInt))
+    case _ => None }
 }

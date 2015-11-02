@@ -20,8 +20,7 @@ object RegexTest extends App {
                   gradient-orientation = horizontal
                  }"""
 
-  val shap = """shape BPMN_EventEskalation_Dash {
-                   ellipse {
+  val shap = """ ellipse {
                        size (width=50, height=50)
                        style (line-style=dash)
                        polygon {
@@ -31,10 +30,9 @@ object RegexTest extends App {
                            point (x=10, y=40)
                        }
                    }
-               }"""
+               """
 
-  val shap1 = """shape BPMN_EventTimer_default {
-                    ellipse {
+  val shap1 = """ ellipse {
                         size (width=50, height=50)
                         style (description="hallo")
                     }
@@ -57,7 +55,7 @@ object RegexTest extends App {
                             }
                         }
                     }
-                }"""
+                """
 
   val diagram = Diagram(new ClassHierarchy[Style](new Style(name = "root")), new ClassHierarchy[Shape](new Shape(name = "root")))
   val parser = new SprayParser(diagram)
@@ -75,6 +73,21 @@ object RegexTest extends App {
       font-italic = yes
       }""")
 
-  val shapes = parser.parseRawGeometricModel(shap)
-  println(shapes.head)//TODO why cant i access shapes(0).wraps?!?!?!
+  //val shapes = parser.parseRawGeometricModel(shap)
+
+  val actualShape = """shape BPMN_EventStart_default {
+                          ellipse {
+                              size (width=50, height=50)
+                          }
+                      }"""
+  val pollutedShape = """//--> Events
+                        // Blanko
+                        shape BPMN_EventStart_default {
+                            ellipse {
+                                size (width=50, height=50)
+                            }
+                        }"""
+  //parser.parseRawShape
+  //println(parser.parse(parser.shape, actualShape).get)
+  println(parser.parseRawShape(pollutedShape))
 }

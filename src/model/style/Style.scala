@@ -214,15 +214,6 @@ object StyleParser extends CommonParserMethodes {
     "transparent" -> Transparent)
 
   /**
-   * takes a String and parses a boolean value out of it -> if string is yes|true|y
-   * @param b the stringargument*/
-  def matchBoolean(b: String): Boolean = b match {
-    case `b` if b toLowerCase() matches "yes|true|y" => true
-    //case `b` if b toLowerCase() matches("no|false|n") => false
-    case _ => false
-  }
-
-  /**
    * states a problem to standardoutput
    * @param attribute is the attribute, that was not matchable
    * @param name is the name of the class
