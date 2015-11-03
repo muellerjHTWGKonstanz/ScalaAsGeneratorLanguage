@@ -40,10 +40,13 @@ case class Shape( name:String = "no name",
 }
 
 object ShapeParser extends CommonParserMethodes{
-  def apply(name:String, style:Option[String], attributes:List[(String, String)], geos:List[GeometricModel], diagram:Diagram) =
-    parse(name, style, attributes, geos, diagram)
+  val validShapeVariables = List("size-min", "size-max", "stretching", "proportional", "anchor", "description(\\s*style\\s*[a-zA-ZüäöÜÄÖ]+([-_][a-zA-ZüäöÜÄÖ])*)?\\s*")
 
-  def parse(name:String, style:Option[String], attributes:List[(String, String)], geos:List[GeometricModel], diagram:Diagram):Shape = {
+  def apply(name:String, style:Option[String], attributes:List[(String, String)], geos:Option[List[GeometricModel]], description:Option[(String, String)], anchor:Option[String], diagram:Diagram) =
+    parse(name, style, attributes, geos, description, anchor, diagram)
+
+  def parse(name:String, style:Option[String], attributes:List[(String, String)], geos:Option[List[GeometricModel]], desc:Option[(String, String)], anch:Option[String], diagram:Diagram):Shape = {
+    /*mapping*/
     var styl:Option[Style] = None
     if(style isDefined){
       val ret = diagram.styleHierarchy.nodeView.get(style.get)
@@ -59,7 +62,6 @@ object ShapeParser extends CommonParserMethodes{
     var prop:Option[Boolean]          = None
     var description:Option[Description]            = None
     var anchor:Option[AnchorType]             = None
-    val chilldrenGeometricModels = if(geos nonEmpty) Some(geos) else None
 
     attributes.foreach{
       case x if x._1.matches("size[-_]min") =>
@@ -93,9 +95,15 @@ object ShapeParser extends CommonParserMethodes{
       case _ =>
     }
 
+    if(desc nonEmpty)
+      description = Description.parse(desc.get, diagram)
+    if(anch nonEmpty)
+      anchor = Some(Anchor.parse(Anchor.anchor, anch.get).get)
+
+
     /*create the actual shape instance*/
     new Shape(name, styl, size_width_min, size_width_max, size_height_min, size_height_max,
-      stretching_horizontal, stretching_vertical, prop, chilldrenGeometricModels, description, anchor)
+      stretching_horizontal, stretching_vertical, prop, geos, description, anchor)
 
   }
 

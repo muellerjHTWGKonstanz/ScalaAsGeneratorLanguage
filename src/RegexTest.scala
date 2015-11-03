@@ -1,5 +1,6 @@
 
 import model.shapecontainer.shape.Shape
+import model.shapecontainer.shape.geometrics.Description
 import model.style.{StyleParser, Style}
 import model.{ClassHierarchy, Diagram}
 import util.SprayParser
@@ -42,14 +43,6 @@ object RegexTest extends App {
                             size-max (width=10, height=11)
                             stretching (horizontal=true, vertical=false)
                             proportional = true
-                            anchor {
-                              position (x=10, y=20)
-                              position (x=12, y=90)
-                            }
-                            description style aicaramba{
-                              align (horizontal=center, verrtical=top)
-                              id = BABABU
-                            }
                             text{
                               size(width=10, height=40)
                               id = Hallo
@@ -63,6 +56,11 @@ object RegexTest extends App {
                                   size (width=30, height=30)
                             	}
                             }
+                            description{
+                              align (horizontal=center, vertical=top)
+                              id = BABABA
+                            }
+                            anchor = center
                         }"""
   val shapesList = parser.parseRawShape(shapeWithText)
   println(shapesList)

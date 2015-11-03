@@ -13,7 +13,7 @@ trait CommonParserMethodes extends JavaTokenParsers{
   def argument:Parser[String] = "(([a-züäöA-ZÜÄÖ]+([-_][a-züäöA-ZÜÄÖ]+)?)|(\".*\")|([+-]?\\d+(\\.\\d+)?))".r ^^ {_.toString}
   def argument_classic: Parser[String] = """\s*\=\s*""".r ~> argument^^ { _.toString }
   def argument_advanced_explicit: Parser[String] = """\((\w+([-_]\w+)?\s*=\s*([a-zA-ZüäöÜÄÖ]+|(\".*\")|([+-]?\d+(\.\d+)?)),?[\s\n]*)+\)""".r ^^ { _.toString }
-  def argument_wrapped:Parser[String] = "(?s)\\{[^\\{\\}]*\\}".r ^^ {_.toString}
+  def argument_wrapped:Parser[String] = "\\{[^\\{\\}]*\\}".r ^^ {_.toString}
   def argument_advanced_implicit: Parser[String] = """\((([a-zA-ZüäöÜÄÖ]+|(\".*\")|([+-]?\d+(\.\d+)?)),?\s*)+\)""".r ^^ { _.toString }
   def arguments: Parser[String] = argument_classic | argument_advanced_explicit | argument_advanced_implicit | argument_wrapped
   def attributeAsString: Parser[String] = variable ~ arguments ^^ { case v ~ arg => v + arg }

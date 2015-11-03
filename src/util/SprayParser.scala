@@ -11,14 +11,6 @@ import model.style.{StyleParser, Style}
  * offers functions like parseRawShape/Style, which parses style or shape strings to instances
  */
 class SprayParser(diagram: Diagram) extends CommonParserMethodes {
-  /*in common usage---------------------------------------------------------------------------*/
-  //override def variable: Parser[String] = """\w+([-_]\w+)?\s*""".r ^^ { _.toString }
-  /*------------------------------------------------------------------------------------------*/
-
-
-
-
-
   /*Style-specific----------------------------------------------------------------------------*/
   private def styleVariable =("""("""+StyleParser.validStyleVariables.map(_+"|").mkString+""")""").r ^^ {_.toString}
   private def styleAttribute = styleVariable ~ arguments ^^ {case v ~ a => (v, a)}
@@ -61,12 +53,22 @@ class SprayParser(diagram: Diagram) extends CommonParserMethodes {
 
 
   /*Shape-specific----------------------------------------------------------------------------*/
-  def shapeVariable = ("""("""+SprayParser.validShapeVariables.map(_+"|").mkString+""")""").r ^^ {_.toString}
+  def shapeVariable = ("""("""+ShapeParser.validShapeVariables.map(_+"|").mkString+""")""").r ^^ {_.toString}
   def shapeAttribute = shapeVariable ~ arguments ^^ {case v ~ a => (v, a)}
+  def descriptionAttribute = "description\\s*(style ([a-zA-ZüäöÜÄÖ][-_]?)+)?".r ~ argument_wrapped ^^ {case des ~ arg => (des, arg)}
+  def anchorAttribute = "anchor" ~> arguments ^^ {_.toString}
+
+  //def shape:Parser[Shape] = ("shape" ~> ident) ~ (("style" ~> ident)?) ~
+  //  ("{" ~> rep(shapeAttribute)) ~
+  //  (geometricModels <~ "}") ^^
+  //  {case name ~ style ~ attrs ~ geos => ShapeParser(name, style, attrs, geos, diagram)}
+
   def shape:Parser[Shape] = ("shape" ~> ident) ~ (("style" ~> ident)?) ~
     ("{" ~> rep(shapeAttribute)) ~
-    (geometricModels <~ "}") ^^
-    {case name ~ style ~ attrs ~ geos => ShapeParser(name, style, attrs, geos, diagram)}
+    (geometricModels?) ~
+    (descriptionAttribute?) ~
+    (anchorAttribute?) <~ "}" ^^
+    {case name ~ style ~ attrs ~ geos ~ desc ~ anch => ShapeParser(name, style, attrs, geos, desc, anch, diagram)}
 
   private def shapes = rep(shape)
 
@@ -85,7 +87,6 @@ class SprayParser(diagram: Diagram) extends CommonParserMethodes {
 }
 
 object SprayParser{
-  val validShapeVariables = List("size-min", "size-max", "stretching", "proportional", "anchor", "description(\\s*style\\s*[a-zA-ZüäöÜÄÖ]+([-_][a-zA-ZüäöÜÄÖ])*)?\\s*")
   val validGeometricModelVariables = List("position", "size", "style", "point", "curve", "align", "id")
 }
 
