@@ -36,9 +36,11 @@ object RoundedRectangle{
     if (rrLayout.isEmpty)
       return None
 
-
-    val ret = new RoundedRectangle(parent, rrLayout.get)
-    ret.children = for (i <- geoModel.children) yield {i.parse(Some(ret)).get}
+    val ret:RoundedRectangle = new RoundedRectangle(parent, rrLayout.get)
+    ret.children = for (i <- geoModel.children) yield {
+      val re = i.parse(Some(ret))
+        re.get
+    }
     Some(ret)
   }
 }

@@ -38,9 +38,17 @@ case class Style( name: String = "noName",
  * StyleParser
  * either parses a complete style or just generates an anonymous Style out of only a list of attributes*/
 object StyleParser extends CommonParserMethodes {
-  def attributes = "style (" ~> rep(attribute) <~ ")" ^^ {case attr => attr}
+  val validStyleVariables = List("description", "transparency", "background-color", "line-color", "line-style", "line-width",
+    "font-color", "font-name", "font-size", "font-bold", "font-italic", "gradient-orientation", "gradient-area-color",
+    "gradient-area-offset", "highlighting-allowed", "highlighting-unallowed", "highlighting-selected", "highlighting-multiselected")
 
-  def parseAttributes(input:String) = parse(attributes, input).get
+  private def parseAttributes(input:String) = parse(attributes, input).get
+
+  private def attributes = "style\\s*\\(".r ~> rep(styleAttribute) <~ ")" ^^ {case attr:List[(String, String)] => attr}
+  private def styleVariable =("""("""+StyleParser.validStyleVariables.map(_+"|").mkString+""")""").r ^^ {_.toString}
+  private def styleAttribute = styleVariable ~ (styleArguments <~ ",?".r)^^ {case v ~ a => (v, a)}
+  private def styleArguments = styleVariable ~> ("=?\\s*".r ~> argument) ^^ {case arg => arg}
+
   /**
    * parse
    * @param attributes is the string containing all the information needed to generate the attributes
@@ -100,7 +108,7 @@ object StyleParser extends CommonParserMethodes {
     }
 
     /*create the instance of the actual new Style*/
-    Style("anonymousSTyle"+Random.nextString(100), description, transparency, background_color, line_color, line_style, line_width, font_color,
+    Style("anonymousStyle"+Random.nextString(100), description, transparency, background_color, line_color, line_style, line_width, font_color,
       font_name, font_size, font_bold, font_italic, gradient_orientation, gradient_area_color, gradient_area_offset,
       selected_highlighting, multiselected_highlighting, allowed_highlighting, unallowed_highlighting, List())
   }

@@ -2,8 +2,9 @@ package model.shapecontainer.shape
 
 import model.Diagram
 import model.shapecontainer.ShapeContainerElement
+import model.shapecontainer.shape.anchor.Anchor
 import model.shapecontainer.shape.anchor.Anchor.AnchorType
-import model.shapecontainer.shape.geometrics.GeometricModel
+import model.shapecontainer.shape.geometrics.{Description, GeometricModel}
 import model.style.Style
 import util.CommonParserMethodes
 
@@ -29,7 +30,7 @@ case class Shape( name:String = "no name",
 
                   shape:Option[List[GeometricModel]]    = None,
 
-                  description:Option[String]            = None,/*TODO strange description in grammar sheet*/
+                  description:Option[Description]            = None,
 
                   anchor:Option[AnchorType]             = None,
 
@@ -41,7 +42,7 @@ case class Shape( name:String = "no name",
 object ShapeParser extends CommonParserMethodes{
   def apply(name:String, style:Option[String], attributes:List[(String, String)], geos:List[GeometricModel], diagram:Diagram) =
     parse(name, style, attributes, geos, diagram)
-  
+
   def parse(name:String, style:Option[String], attributes:List[(String, String)], geos:List[GeometricModel], diagram:Diagram):Shape = {
     var styl:Option[Style] = None
     if(style isDefined){
@@ -55,11 +56,11 @@ object ShapeParser extends CommonParserMethodes{
     var size_height_max:Option[Int]   = None
     var stretching_horizontal:Option[Boolean] = None
     var stretching_vertical:Option[Boolean]   = None
-    var proportional:Option[Boolean]          = None
-    var description:Option[String]            = None
+    var prop:Option[Boolean]          = None
+    var description:Option[Description]            = None
     var anchor:Option[AnchorType]             = None
     val chilldrenGeometricModels = if(geos nonEmpty) Some(geos) else None
-    
+
     attributes.foreach{
       case x if x._1.matches("size[-_]min") =>
         val opt = parse(width_height, x._2).get
@@ -73,23 +74,36 @@ object ShapeParser extends CommonParserMethodes{
           size_width_max = Some(opt.get._1)
           size_height_max = Some(opt.get._2)
         }
-      case x if x._1.matches("stretching") =>
+      case x if x._1 =="stretching" =>
         val opt = parse(stretching, x._2).get
         if(opt.isDefined){
           stretching_horizontal = Some(opt.get._1)
           stretching_vertical = Some(opt.get._2)
         }
-      case x if x._1.matches("proportional") => proportional = Some(matchBoolean(x._2))
-        //TODO description and anchor missing!!!
+      case x if x._1 == "proportional" =>
+        prop = parse(proportional, x._2).get
+      case x if x._1 =="anchor" => anchor = {
+        val anch = Anchor.parse(Anchor.anchor, x._2)
+        if(anch isEmpty)
+          None
+        else
+          Some(anch.get)
+      }
+      case x if x._1.matches("description.*") => description = Description.parse(x, diagram)
       case _ =>
     }
 
+    /*create the actual shape instance*/
     new Shape(name, styl, size_width_min, size_width_max, size_height_min, size_height_max,
-      stretching_horizontal, stretching_vertical, proportional, chilldrenGeometricModels, description, anchor)
+      stretching_horizontal, stretching_vertical, prop, chilldrenGeometricModels, description, anchor)
 
   }
 
-  def stretching:Parser[Option[(Boolean, Boolean)]] = "\\(\\s*(horizontal=)?".r ~> argument ~ (",\\s*(height=)?".r ~> argument) <~ ")" ^^ {
+  def proportional:Parser[Option[Boolean]] = "=?".r ~> argument ^^ {
+    case prop => Some(matchBoolean(prop))
+    case _ => None
+  }
+  def stretching:Parser[Option[(Boolean, Boolean)]] = "\\(\\s*(horizontal=)?".r ~> argument ~ (",\\s*(vertical=)?".r ~> argument) <~ ")" ^^ {
     case hor ~ ver => Some(matchBoolean(hor), matchBoolean(ver))
     case _ => None
   }

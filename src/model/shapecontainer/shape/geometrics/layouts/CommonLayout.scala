@@ -29,7 +29,11 @@ object CommonLayoutParser extends CommonParserMethodes{
 
     attributes.foreach {
       case x if x.matches("position.+") => pos = {
-        parse(position, x).get
+        val newPositoin = parse(position, x).get
+        if(newPositoin isDefined)
+          newPositoin
+        else
+          None
       }
       case x if x.matches("size.+") => {
         val newSize = parse(size, x).get
@@ -50,6 +54,7 @@ object CommonLayoutParser extends CommonParserMethodes{
         override val size_height: Int = size_h.get
         override val style: Option[Style] = styl
       })
+    else println("no size was given for Position in: " + geoModel.typ)//TODO replace with call to Logger
    ret
   }
 }

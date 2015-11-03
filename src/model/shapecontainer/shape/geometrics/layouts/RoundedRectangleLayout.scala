@@ -33,7 +33,7 @@ object RoundedRectangleLayoutParser extends CommonParserMethodes{
           override val size_height: Int = commonLayout.get.size_height
         })
       }
-      case x if x.trim == "}" => return None
+      case _ =>
     }
     None
   }

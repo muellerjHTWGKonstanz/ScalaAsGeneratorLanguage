@@ -4,7 +4,7 @@ import model._
 import model.shapecontainer.shape.Shape
 import model.shapecontainer.shape.anchor.Anchor
 import model.shapecontainer.shape.anchor.Anchor.AnchorType
-import model.shapecontainer.shape.geometrics.GeometricModel
+import model.shapecontainer.shape.geometrics.{Description, GeometricModel}
 import model.style._
 
 /**
@@ -154,8 +154,8 @@ object StringToObjectParser {
     var stretching_horizontal: Option[Boolean] = relevant { _.stretching_horizontal }
     var stretching_vertical: Option[Boolean]   = relevant { _.stretching_vertical }
     var proportional: Option[Boolean]          = relevant { _.proportional }
-    var shape: Option[List[GeometricModel]]    = relevant { _.shape }
-    var description: Option[String]            = relevant { _.description } /*TODO strange description in grammar sheet*/
+    val shape: Option[List[GeometricModel]]    = relevant { _.shape }
+    var description: Option[Description]       = relevant { _.description } /*TODO strange description in grammar sheet*/
     var anchor: Option[AnchorType]             = relevant { _.anchor }
 
     shapeAttributes.foreach { line => line.trim.split(" = ")(0) match {
@@ -178,8 +178,8 @@ object StringToObjectParser {
         case _ => messageIgnored(x, name, "Shape")
       }
       case x if x == "proportional"     => proportional = Some(matchBoolean(line.trim.split(" = ")(1)))
-      case x if x == "description"      => description = Some(line.trim.split(" = ")(1))
-      case x if x == "anchor"           => Anchor.getValid(line.trim.split(" = ")(1))
+      //case x if x == "description"      => description = Some(line.trim.split(" = ")(1))
+      //case x if x == "anchor"           => anchor = Anchor.parse(Anchor.anchor, line.trim.split(" = ")(1))
       case x if knownGeometricModels.contains(x) =>parseGeometricModel(x)
       case x => messageIgnored(x, name, "Shape")
     }

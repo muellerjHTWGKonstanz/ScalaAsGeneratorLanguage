@@ -1,11 +1,13 @@
 
 import model.shapecontainer.shape.Shape
-import model.style.Style
+import model.style.{StyleParser, Style}
 import model.{ClassHierarchy, Diagram}
 import util.SprayParser
 
 object RegexTest extends App {
-  val classUno = """style BpmnDefaultStyle {
+  val diagram = Diagram(new ClassHierarchy[Style](new Style(name = "root")), new ClassHierarchy[Shape](new Shape(name = "root")))
+  val parser = new SprayParser(diagram)
+  val styleUno = """style BpmnDefaultStyle {
                   description = "The default style of the petrinet diagram type."
                   transparency = 0.95
                   background-color = green
@@ -18,49 +20,11 @@ object RegexTest extends App {
                   font-bold = yes
                   font-italic = yes
                   gradient-orientation = horizontal
+                  gradient-area-offset = 10
                  }"""
+  parser.parseRawStyle(styleUno)
 
-  val shap = """ ellipse {
-                       size (width=50, height=50)
-                       style (line-style=dash)
-                       polygon {
-                           point (x=25, y=10)
-                           point (x=40, y=40)
-                           point (x=25, y=25)
-                           point (x=10, y=40)
-                       }
-                   }
-               """
 
-  val shap1 = """ ellipse {
-                        size (width=50, height=50)
-                        style (description="hallo")
-                    }
-                    ellipse {
-                        size (width=50, height=50)
-                        style (line-width=1)
-
-                        //Clock
-                        ellipse {
-                            size (width=38, height=38)
-                            position (x=6, y=6)
-                            polyline {
-                                point (x=32, y=19)
-                                point (x=19, y=19)
-                                point (x=22, y=3)
-                            }
-                            line {
-                                point (x=19, y=0)
-                                point (x=19, y=4)
-                            }
-                        }
-                    }
-                """
-
-  val diagram = Diagram(new ClassHierarchy[Style](new Style(name = "root")), new ClassHierarchy[Shape](new Shape(name = "root")))
-  val parser = new SprayParser(diagram)
-
-  parser.parseRawStyle(classUno)
   parser.parseRawStyle(
     """style BPMNDefault {
       line-color = 40
@@ -73,21 +37,33 @@ object RegexTest extends App {
       font-italic = yes
       }""")
 
-  //val shapes = parser.parseRawGeometricModel(shap)
-
-  val actualShape = """shape BPMN_EventStart_default {
-                          ellipse {
-                              size (width=50, height=50)
-                          }
-                      }"""
-  val pollutedShape = """//--> Events
-                        // Blanko
-                        shape BPMN_EventStart_default {
-                            ellipse {
-                                size (width=50, height=50)
+  val shapeWithText = """shape EClassShape {
+                            size-min (width=4, height=6)
+                            size-max (width=10, height=11)
+                            stretching (horizontal=true, vertical=false)
+                            proportional = true
+                            anchor {
+                              position (x=10, y=20)
+                              position (x=12, y=90)
+                            }
+                            description style aicaramba{
+                              align (horizontal=center, verrtical=top)
+                              id = BABABU
+                            }
+                            text{
+                              size(width=10, height=40)
+                              id = Hallo
+                            }
+                            rectangle {
+                              style (line-width=2)
+                              position (x=2, y=0)
+                              size (width=10, height=3)
+                              ellipse {
+                                  position (x=0, y=36)
+                                  size (width=30, height=30)
+                            	}
                             }
                         }"""
-  //parser.parseRawShape
-  //println(parser.parse(parser.shape, actualShape).get)
-  println(parser.parseRawShape(pollutedShape))
+  val shapesList = parser.parseRawShape(shapeWithText)
+  println(shapesList)
 }
