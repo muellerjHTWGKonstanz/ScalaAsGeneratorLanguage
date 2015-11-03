@@ -1,7 +1,6 @@
 
 import model.shapecontainer.shape.Shape
-import model.shapecontainer.shape.geometrics.Description
-import model.style.{StyleParser, Style}
+import model.style.Style
 import model.{ClassHierarchy, Diagram}
 import util.SprayParser
 
