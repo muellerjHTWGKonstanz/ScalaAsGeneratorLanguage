@@ -30,7 +30,7 @@ case class Shape( name:String = "no name",
 
                   shape:Option[List[GeometricModel]]    = None,
 
-                  description:Option[Description]            = None,
+                  description:Option[Description]       = None,
 
                   anchor:Option[AnchorType]             = None,
 
