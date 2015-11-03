@@ -1,7 +1,5 @@
 package util
 
-import java.io.File
-
 import model.Diagram
 import model.shapecontainer.shape.{ShapeParser, Shape}
 import model.shapecontainer.shape.geometrics._
@@ -12,7 +10,7 @@ import scala.util.parsing.combinator.JavaTokenParsers
 trait CommonParserMethodes extends JavaTokenParsers{
   /*basic stuff*/
   def attribute:Parser[(String, String)] = variable ~ argument <~ ",?".r ^^ {case v ~ a => (v.toString,a.toString)}
-  def variable:Parser[String] = "[a-züäö]+([-_][a-züäö]+)?".r <~ "="  ^^ {_.toString}
+  def variable:Parser[String] = "[a-züäö]+([-_][a-züäö]+)?\\s*".r  ^^ {_.toString} //<~ "=?\\s*".r
   def argument:Parser[String] = "(([a-züäö]+([-_][a-züäö]+)?)|(\".*\")|([+-]?\\d+(\\.\\d+)?))".r ^^ {_.toString}
   
   /*Some explicit usages*/
@@ -36,52 +34,69 @@ trait CommonParserMethodes extends JavaTokenParsers{
  * Created by julian on 23.10.15.
  * offers functions like parseRawShape/Style, which parses style or shape strings to instances
  */
-class SprayParser(diagram: Diagram) extends JavaTokenParsers {
-  /*in common usage*/
-  def variable: Parser[String] = """\w+([-_]\w+)?\s*""".r ^^ { _.toString }
-  def argument_classic: Parser[String] = """\s*\=\s*(([a-z]+)|(\".*\")|([+-]?\d+(\.\d+)?))""".r ^^ { _.toString }
+class SprayParser(diagram: Diagram) extends CommonParserMethodes {
+  /*in common usage---------------------------------------------------------------------------*/
+  //override def variable: Parser[String] = """\w+([-_]\w+)?\s*""".r ^^ { _.toString }
+  def argument_classic: Parser[String] = """\s*\=\s*""".r ~> argument^^ { _.toString }
+  //def argument_advanced_explicit:Parser[List[(String, String)]] = "[\\(\\{]".r ~> rep(attribute) <~ "[\\)\\}]".r ^^ {
+  //  case attrs: List[(String, String)] => attrs
+  //}
   def argument_advanced_explicit: Parser[String] = """\((\w+([-_]\w+)?\s*=\s*([a-zA-Z]+|(\".*\")|([+-]?\d+(\.\d+)?)),?[\s\n]*)+\)""".r ^^ { _.toString }
   def argument_advanced_implicit: Parser[String] = """\((([a-zA-Z]+|(\".*\")|([+-]?\d+(\.\d+)?)),?\s*)+\)""".r ^^ { _.toString }
-  def argument: Parser[String] = argument_classic | argument_advanced_explicit | argument_advanced_implicit
-  def attribute: Parser[String] = variable ~ argument ^^ { case v ~ arg => v + arg }
-  def attributePair: Parser[(String, String)] = variable ~ argument ^^ { case v ~ a => (v, a) }
+  def arguments: Parser[String] = argument_classic | argument_advanced_explicit | argument_advanced_implicit
+  def attribute_string: Parser[String] = variable ~ arguments ^^ { case v ~ arg => v + arg }
+  def attributePair: Parser[(String, String)] = variable ~ arguments ^^ { case v ~ a => (v, a) }
+  /*------------------------------------------------------------------------------------------*/
 
 
-  /*Style-specific*/
+
+
+
+  /*Style-specific----------------------------------------------------------------------------*/
   private def style: Parser[Style] =
     ("style" ~> ident) ~ (("extends" ~> rep(ident))?) ~ ("{" ~> rep(attributePair)) <~ "}" ^^ {
       case name ~ parents ~ attributes => StyleParser(name, parents, attributes, diagram)
     }
   def parseRawStyle(input: String) = parseAll(style, input).get
+  /*------------------------------------------------------------------------------------------*/
 
 
-  /*GeometricModel-specific*/
+
+
+
+  /*GeometricModel-specific-------------------------------------------------------------------*/
   private def geometricModels = rep(geoModel) ^^ {
     case a:List[GeoModel] =>
       (for(g <- a)yield{g.parse(None)}).
         foldLeft(List[GeometricModel]())((r, c:Option[GeometricModel])=>if(c.isDefined)r.::(c.get) else r)
   }
   /**parses a geoModel first ident is the GeometricModels name, second ident is an optional reference to a style*/
-  private def geoModel: Parser[GeoModel] = ident ~ ((("style" ~> ident)?) <~ "{") ~ rep(attribute) ~ (rep(geoModel) <~ "}") ^^ {
+  private def geoModel: Parser[GeoModel] = geoIdentifier ~ ((("style" ~> ident)?) <~ "{") ~ rep(attribute_string) ~ (rep(geoModel) <~ "}") ^^ {
     case name ~ style ~ attr ~ children => GeoModel(name, {
       if(style.isDefined) Some(diagram.styleHierarchy(style.get).data)
       else None }, attr, children, diagram)
   }
+  private def geoIdentifier:Parser[String] = "(ellipse|line|polygon|polyline|rectangle|roundedrectangle|text)".r ^^ {_.toString}
+
   def parseRawGeometricModel(input: String): List[GeometricModel] = {
     parseAll(geometricModels, trimRight(input)).get
   }
+  /*------------------------------------------------------------------------------------------*/
 
-  /*Shape-specific*/
-  def shape:Parser[Shape] =
-    ("shape" ~> ident) ~
-    (("style" ~> ident)?) ~
+
+
+
+
+
+  /*Shape-specific----------------------------------------------------------------------------*/
+  private def shape:Parser[Shape] = ("shape" ~> ident) ~ (("style" ~> ident)?) ~
     ("{" ~> rep(attributePair)) ~
     (geometricModels <~ "}") ^^
     {case name ~ style ~ attrs ~ geos => ShapeParser(name, style, attrs, geos, diagram)}
 
   private def shapes = rep(shape)
 
-  def parseRawShape(input:String):List[Shape] = {println(trimRight(input));parseAll(shapes, trimRight(input)).get}
+  def parseRawShape(input:String):List[Shape] = parseAll(shapes, trimRight(input)).get
   def parseRawShape:List[Shape] = {
     import scala.swing.FileChooser
     val chooser = new FileChooser()
@@ -90,6 +105,7 @@ class SprayParser(diagram: Diagram) extends JavaTokenParsers {
     else
       List()
   }
+  /*------------------------------------------------------------------------------------------*/
 
   private def trimRight(s:String) = s.replaceAll("\\/\\/.+", "").split("\n").map(s => s.trim + "\n").mkString
 }
