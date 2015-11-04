@@ -8,29 +8,28 @@ import util.CommonParserMethodes
 class Point(val x:Int, val y:Int, val curveBefore:Option[Int]=None, val curveAfter:Option[Int]=None)
 
 object PointParser extends CommonParserMethodes{
-  def point = "point [\\(\\{]".r ~> rep(attribute) <~ "[\\)\\}]".r ^^ {case attr:List[(String, String)] => Some(attr)
-  case _ => None}
+  def pointAttribute:Parser[Option[(String, Int)]] = ("(x|y|curveBefore|curveAfter)".r <~ "\\s*=\\s*".r) ~ ("[+-]?\\d+".r <~ ",?".r) ^^ {
+    case varname ~ arg => Some((varname, arg.toInt))
+    case _ => None
+  }
+  def point:Parser[Option[Point]] = "point\\s*\\(".r ~> pointAttribute ~ pointAttribute ~ (pointAttribute?) ~ (pointAttribute?) <~ ")" ^^ {
+    case x ~ y ~ curveB ~ curveA => {
+      var cB:Option[Int] = None
+      var cA:Option[Int] = None
+      if(curveB isDefined) {
+        cB = Some(curveB.get.get._2)
+        cA = Some(curveA.get.get._2)
+      }
+      Some(new Point(x.get._2, y.get._2, cB, cA))
+    }
+    case _ => None
+  }
 
   def apply(line:String) = parse(line)
   def parse(line:String):Option[Point] ={
-    val attrOption = parse(point, line).get
-    if(attrOption.isEmpty)
-      return None
-
-    val attrList = attrOption.get
-    var x:Option[Int] = None
-    var y:Option[Int] = None
-    var curveBefore:Option[Int] = None
-    var curveAfter:Option[Int] = None
-
-    attrList.foreach{
-      case tup:(String, String) if tup._1=="x" => x = Some(tup._2.toInt)
-      case tup:(String, String) if tup._1=="y" => y = Some(tup._2.toInt)
-      case tup:(String, String) if tup._1=="curveBefore" => curveBefore = Some(tup._2.toInt)
-      case tup:(String, String) if tup._1=="curveAfter" => curveAfter = Some(tup._2.toInt)
-    }
-    if(x.isDefined && y.isDefined)
-     Some(new Point(x.get, y.get, curveBefore, curveAfter))
+    val ret = parse(point, line).get
+    if(ret isDefined)
+      ret
     else
       None
   }

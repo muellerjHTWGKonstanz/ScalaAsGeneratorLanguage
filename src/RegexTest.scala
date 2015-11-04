@@ -1,5 +1,6 @@
 
 import model.shapecontainer.shape.Shape
+import model.shapecontainer.shape.geometrics.PointParser
 import model.style.Style
 import model.{ClassHierarchy, Diagram}
 import util.SprayParser
@@ -61,6 +62,22 @@ object RegexTest extends App {
                             }
                             anchor = center
                         }"""
-  val shapesList = parser.parseRawShape(shapeWithText)
+
+  val failingShape = """//Messages
+                       shape BPMN_EventMail {
+                           ellipse {
+                               size (width=50, height=50)
+                               rectangle {
+                                   position (x=10, y=15)
+                                   size (width=30, height=20)
+                                   polygon {
+                                       point (x=0, y=0)
+                                       point (x=15, y=10)
+                                       point (x=30, y=0)
+                                   }
+                               }
+                           }
+                       }"""
+  val shapesList = parser.parseRawShape
   println(shapesList)
 }
