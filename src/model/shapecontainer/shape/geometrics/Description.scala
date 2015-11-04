@@ -9,6 +9,7 @@ import util.CommonParserMethodes
  * Created by julian on 03.11.15.
  * representation of a description
  */
+/*TODO description is rather useless ... missing something?*/
 class Description(override val id:String,
                   val style:Option[Style],
                   val hAlign:Option[HAlign],
