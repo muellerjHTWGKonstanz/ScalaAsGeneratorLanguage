@@ -1,6 +1,6 @@
 
 import model.shapecontainer.shape.Shape
-import model.shapecontainer.shape.geometrics.PointParser
+import model.shapecontainer.shape.geometrics.{CompartmentInfoParser, PointParser}
 import model.style.Style
 import model.{ClassHierarchy, Diagram}
 import util.SprayParser
@@ -64,8 +64,16 @@ object RegexTest extends App {
                         }"""
 
   val failingShape = """//Messages
-                       shape BPMN_EventMail {
+                       shape BPMN_EventMail{
                            ellipse {
+                               compartment(
+                                  id = blablablu
+                                  layout = fixed
+                                  stretching (horizontal = true, vertical = false)
+                                  spacing = 12
+                                  margin = 10
+                                  invisible = invisible
+                                )
                                size (width=50, height=50)
                                rectangle {
                                    position (x=10, y=15)
@@ -78,6 +86,6 @@ object RegexTest extends App {
                                }
                            }
                        }"""
-  val shapesList = parser.parseRawShape
+  val shapesList = parser.parseRawShape(failingShape)
   println(shapesList)
 }
