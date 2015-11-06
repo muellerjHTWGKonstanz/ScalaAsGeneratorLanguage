@@ -27,7 +27,9 @@ class SprayParser(diagram: Diagram) extends CommonParserMethodes {
 
   /*GeometricModel-specific-------------------------------------------------------------------*/
   def geoVariable = ("""("""+SprayParser.validGeometricModelVariables.map(_+"|").mkString+""")""").r ^^ {_.toString}
-  def geoAttribute = geoVariable ~ arguments ^^ {case v ~ a => v+a}
+  def geoAttribute = geoVariable ~ (arguments | compartmentinfo ) ^^ {case v ~ a => v+a}
+
+
   private def geometricModels = rep(geoModel) ^^ {
     case a:List[GeoModel] =>
       (for(g <- a)yield{g.parse(None)}).
@@ -87,7 +89,7 @@ class SprayParser(diagram: Diagram) extends CommonParserMethodes {
 }
 
 object SprayParser{
-  val validGeometricModelVariables = List("position", "size", "style", "point", "curve", "align", "id")
+  val validGeometricModelVariables = List("position", "size", "style", "point", "curve", "align", "id", "compartment")
 }
 
 /**

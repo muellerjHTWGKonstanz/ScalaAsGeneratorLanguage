@@ -10,7 +10,7 @@ import util.GeoModel
  */
 class Rectangle(parent:Option[GeometricModel] = None,
                 commonLayout: CommonLayout,
-                compartmentInfo: CompartmentInfo,
+                compartmentInfo:Option[CompartmentInfo],
                 parentOf:List[GeometricModel] = List[GeometricModel]()
                  ) extends GeometricModel(parent) with RectangleEllipeLayout with Wrapper with CompartmentInfo{
 
@@ -19,13 +19,13 @@ class Rectangle(parent:Option[GeometricModel] = None,
   override val size_width: Int = commonLayout.size_width
   override val size_height: Int = commonLayout.size_height
   override var children:List[GeometricModel] = parentOf
-  override val compartment_layout:CompartmentLayout = compartmentInfo.compartment_layout
-  override val compartment_stretching_horizontal:Option[Boolean] = compartmentInfo.compartment_stretching_horizontal
-  override val compartment_stretching_vertical:Option[Boolean] = compartmentInfo.compartment_stretching_vertical
-  override val compartment_spacing:Option[Int] = compartmentInfo.compartment_spacing
-  override val compartment_margin:Option[Int] = compartmentInfo.compartment_margin
-  override val compartment_invisible:Option[Boolean] = compartmentInfo.compartment_invisible
-  override val compartment_id:Option[String] = compartmentInfo.compartment_id
+  override val compartment_layout:Option[CompartmentLayout] = if(compartmentInfo isDefined)compartmentInfo.get.compartment_layout else None
+  override val compartment_stretching_horizontal: Option[Boolean] = if(compartmentInfo isDefined)compartmentInfo.get.compartment_stretching_horizontal else None
+  override val compartment_stretching_vertical: Option[Boolean] = if(compartmentInfo isDefined)compartmentInfo.get.compartment_stretching_vertical else None
+  override val compartment_spacing: Option[Int] = if(compartmentInfo isDefined)compartmentInfo.get.compartment_spacing else None
+  override val compartment_margin: Option[Int] = if(compartmentInfo isDefined)compartmentInfo.get.compartment_margin else None
+  override val compartment_invisible: Option[Boolean] = if(compartmentInfo isDefined)compartmentInfo.get.compartment_invisible else None
+  override val compartment_id: Option[String] = if(compartmentInfo isDefined)compartmentInfo.get.compartment_id else None
 
   def wraps = children
 }
@@ -41,10 +41,10 @@ object Rectangle{
     val commonLayout:Option[CommonLayout] = CommonLayoutParser.parse(geoModel)
     val compartmentInfo:Option[CompartmentInfo] = CompartmentInfoParser.parse(geoModel.attributes)
 
-    if(compartmentInfo.isEmpty || commonLayout.isEmpty)
+    if(commonLayout.isEmpty)
       return None
 
-    val ret:Rectangle = new Rectangle(parent, commonLayout.get, compartmentInfo.get, List())
+    val ret:Rectangle = new Rectangle(parent, commonLayout.get, compartmentInfo, List())
     ret.children = for(i <- geoModel.children)yield{i.parse(Some(ret)).get}
     Some(ret)
   }
