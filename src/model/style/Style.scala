@@ -38,20 +38,20 @@ case class Style( name: String = "noName",
  * StyleParser
  * either parses a complete style or just generates an anonymous Style out of only a list of attributes*/
 object StyleParser extends CommonParserMethodes {
-  val validStyleVariables = List("description", "transparency", "background-color", "line-color", "line-style", "line-width",
+  val validStyleAttributes = List("description", "transparency", "background-color", "line-color", "line-style", "line-width",
     "font-color", "font-name", "font-size", "font-bold", "font-italic", "gradient-orientation", "gradient-area-color",
     "gradient-area-offset", "highlighting-allowed", "highlighting-unallowed", "highlighting-selected", "highlighting-multiselected")
 
   private def parseAttributes(input:String) = parse(attributes, input).get
 
   private def attributes = "style\\s*\\(".r ~> rep(styleAttribute) <~ ")" ^^ {case attr:List[(String, String)] => attr}
-  private def styleVariable =("""("""+StyleParser.validStyleVariables.map(_+"|").mkString+""")""").r ^^ {_.toString}
+  private def styleVariable =("""("""+StyleParser.validStyleAttributes.map(_+"|").mkString+""")""").r ^^ {_.toString}
   private def styleAttribute = styleVariable ~ (styleArguments <~ ",?".r)^^ {case v ~ a => (v, a)}
   private def styleArguments = styleVariable ~> ("=?\\s*".r ~> argument) ^^ {case arg => arg}
 
   /**
    * parse
-   * @param attributes is the string containing all the information needed to generate the attributes
+   * @param attributes is the string containing all the information needed to generate the attributes to generate a anonymous Style instance
    */
   def apply(attributes:String) = parse(attributes)
   def parse(attributes:String):Style = {

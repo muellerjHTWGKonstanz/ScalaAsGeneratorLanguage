@@ -1,19 +1,48 @@
 package model.shapecontainer.connection
 
+import model.Diagram
 import model.shapecontainer.ShapeContainerElement
-import model.style.Style
+import model.style.{StyleParser, Style}
+import util.{PlacingSketch, CommonParserMethodes}
 
 /**
  * Created by julian on 20.10.15.
  * representation of a Connection
  * @param connection_type -> inner Connection.scala ConnectionStyle, can either be an object {FreeForm, Manhatten}
- * @param layout is a model.style.Style instance
+ * @param style is a model.style.Style instance
  * @param placing outstanding
  * TODO
  */
-class Connection(val connection_type:Option[ConnectionStyle] = None,
-                  layout:Option[Style] = None,
-                  placing:List[PlacingDefinition] = List[PlacingDefinition]()) extends ShapeContainerElement{
+case class Connection(name:String,
+                 connection_type:Option[ConnectionStyle] = None,
+                 style:Option[Style] = None,
+                 placing:List[Placing] = List[Placing]()) extends ShapeContainerElement{
+
+}
+object Connection extends CommonParserMethodes{
+  val validConnectionAttributes = List("connection-type", "layout", "placing")
+  /**
+   * parse method
+   * */
+  def apply(name:String, styleRef:Option[String], typ:Option[String], anonymousStyle:Option[String], placings:List[PlacingSketch], diagram:Diagram):Option[Connection] = {
+    /*mapping*/
+    var style:Option[Style] = if(styleRef isDefined) Some(diagram.styleHierarchy(styleRef.get).data) else None
+    val connection_type:Option[ConnectionStyle] = if(typ isDefined) Some(parse(connectionType, typ.get).get) else None
+    if(anonymousStyle.isDefined && style.isEmpty) {
+      style = Some(StyleParser(anonymousStyle.get))
+    }
+    val placingList = for(i <- placings)yield{Placing(i)}
+
+    if(placingList isEmpty)
+      None
+    else
+      Some(new Connection(name, connection_type, style, placingList))
+  }
+
+  def connectionType = "connection-type\\s*=".r ~> "(freeform|manhatten)".r ^^ {
+    case "freeform" => FreeForm
+    case "manhatten" => Manhatten
+  }
 
 }
 

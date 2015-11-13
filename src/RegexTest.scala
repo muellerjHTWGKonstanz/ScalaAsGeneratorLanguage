@@ -1,9 +1,10 @@
 
+import model.shapecontainer.connection.Placing
 import model.shapecontainer.shape.Shape
 import model.shapecontainer.shape.geometrics.{CompartmentInfoParser, PointParser}
 import model.style.Style
 import model.{ClassHierarchy, Diagram}
-import util.SprayParser
+import util.{PlacingSketch, SprayParser}
 
 object RegexTest extends App {
   val diagram = Diagram(new ClassHierarchy[Style](new Style(name = "root")), new ClassHierarchy[Shape](new Shape(name = "root")))
@@ -63,9 +64,9 @@ object RegexTest extends App {
                             anchor = center
                         }"""
 
-  val failingShape = """//Messages
+  val nonfailingShape = """//Messages
                        shape BPMN_EventMail{
-                           ellipse {
+                           ellipse style aicaramba{
                                compartment(
                                   id = blablablu
                                   layout = fixed
@@ -86,6 +87,32 @@ object RegexTest extends App {
                                }
                            }
                        }"""
-  val shapesList = parser.parseRawShape(failingShape)
+  val shapesList = parser.parseRawShape(nonfailingShape)
   println(shapesList)
+
+
+  val connectionUno = """connection BPMN_DataAssoziation style aicaramba{
+                            placing {
+                                position (offset=1.0, distance = 1)
+                                polygon {
+                                    point (x=-10, y=10)
+                                    point (x=0, y=0)
+                                    point (x=-10, y=-10)
+                                    style (background-color=black)
+                                }
+                            }
+                        }"""
+
+  //val conni = parser.parseRawConnection
+  //println(conni)
+
+  //import scala.swing.FileChooser
+  //val chooser = new FileChooser()
+  //if(chooser.showOpenDialog(null) == FileChooser.Result.Approve) {
+  //  //val li = parser.file(scala.io.Source.fromFile(chooser.selectedFile).mkString).get
+  //  val li = parser.parse(parser.shapesAndConnections,scala.io.Source.fromFile(chooser.selectedFile).mkString )
+  //  println(li)
+  //}
+  //else
+    List()
 }

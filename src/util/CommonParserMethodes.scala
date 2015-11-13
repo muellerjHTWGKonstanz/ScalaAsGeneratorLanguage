@@ -10,6 +10,8 @@ trait CommonParserMethodes extends JavaTokenParsers{
   /*basic stuff*/
   def attribute:Parser[(String, String)] = variable ~ argument <~ ",?".r ^^ {case v ~ a => (v.toString,a.toString)}
   def variable:Parser[String] = "[a-züäöA-ZÜÄÖ]+([-_][a-züäöA-ZÜÄÖ]+)*".r <~ "\\s*".r  ^^ {_.toString} //<~ "=?\\s*".r
+  def argument_double:Parser[Double] = "[+-]?\\d+(\\.\\d+)?".r ^^ {case dou => dou.toDouble}
+  def argument_int:Parser[Int] = "[+-]?\\d+".r ^^ {case dou => dou.toInt}
   def argument:Parser[String] = "(([a-züäöA-ZÜÄÖ]+([-_][a-züäöA-ZÜÄÖ]+)?)|(\".*\")|([+-]?\\d+(\\.\\d+)?))".r ^^ {_.toString}
   def argument_classic: Parser[String] = """\s*\=\s*""".r ~> argument^^ { _.toString }
   def argument_advanced_explicit: Parser[String] = """(?s)\((\w+([-_]\w+)*\s*=\s*([a-zA-ZüäöÜÄÖ]+|(\".*\")|([+-]?\d+(\.\d+)?)),?[\s\n]*)+\)""".r ^^ { _.toString }

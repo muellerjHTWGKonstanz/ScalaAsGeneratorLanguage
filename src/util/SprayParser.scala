@@ -1,6 +1,7 @@
 package util
 
 import model.Diagram
+import model.shapecontainer.connection.Connection
 import model.shapecontainer.shape.{ShapeParser, Shape}
 import model.shapecontainer.shape.geometrics._
 import model.style.{StyleParser, Style}
@@ -12,13 +13,13 @@ import model.style.{StyleParser, Style}
  */
 class SprayParser(diagram: Diagram) extends CommonParserMethodes {
   /*Style-specific----------------------------------------------------------------------------*/
-  private def styleVariable =("""("""+StyleParser.validStyleVariables.map(_+"|").mkString+""")""").r ^^ {_.toString}
+  private def styleVariable =("""("""+StyleParser.validStyleAttributes.map(_+"|").mkString+""")""").r ^^ {_.toString}
   private def styleAttribute = styleVariable ~ arguments ^^ {case v ~ a => (v, a)}
   private def style: Parser[Style] =
     ("style" ~> ident) ~ (("extends" ~> rep(ident))?) ~ ("{" ~> rep(styleAttribute)) <~ "}" ^^ {
       case name ~ parents ~ attributes => StyleParser(name, parents, attributes, diagram)
     }
-  def parseRawStyle(input: String) = parseAll(style, input).get
+  def parseRawStyle(input: String) = parseAll(style, trimRight(input)).get
   /*------------------------------------------------------------------------------------------*/
 
 
@@ -26,8 +27,8 @@ class SprayParser(diagram: Diagram) extends CommonParserMethodes {
 
 
   /*GeometricModel-specific-------------------------------------------------------------------*/
-  def geoVariable = ("""("""+SprayParser.validGeometricModelVariables.map(_+"|").mkString+""")""").r ^^ {_.toString}
-  def geoAttribute = geoVariable ~ (arguments | compartmentinfo ) ^^ {case v ~ a => v+a}
+  private def geoVariable = ("""("""+SprayParser.validGeometricModelVariables.map(_+"|").mkString+""")""").r ^^ {_.toString}
+  private def geoAttribute = geoVariable ~ (arguments | compartmentinfo ) ^^ {case v ~ a => v+a}
 
 
   private def geometricModels = rep(geoModel) ^^ {
@@ -60,11 +61,6 @@ class SprayParser(diagram: Diagram) extends CommonParserMethodes {
   def descriptionAttribute = "description\\s*(style ([a-zA-ZüäöÜÄÖ][-_]?)+)?".r ~ argument_wrapped ^^ {case des ~ arg => (des, arg)}
   def anchorAttribute = "anchor" ~> arguments ^^ {_.toString}
 
-  //def shape:Parser[Shape] = ("shape" ~> ident) ~ (("style" ~> ident)?) ~
-  //  ("{" ~> rep(shapeAttribute)) ~
-  //  (geometricModels <~ "}") ^^
-  //  {case name ~ style ~ attrs ~ geos => ShapeParser(name, style, attrs, geos, diagram)}
-
   def shape:Parser[Shape] = ("shape" ~> ident) ~ (("style" ~> ident)?) ~
     ("{" ~> rep(shapeAttribute)) ~
     (geometricModels?) ~
@@ -85,13 +81,56 @@ class SprayParser(diagram: Diagram) extends CommonParserMethodes {
   }
   /*------------------------------------------------------------------------------------------*/
 
+
+
+  /*Connection-Specific-----------------------------------------------------------------------*/
+  private def c_type = "connection-type\\s*=\\s*".r ~> "(freeform|manhatten)".r
+  private def c_placing = ("placing\\s*\\{".r ~> ("position" ~> arguments)) ~ (geoModel <~ "}") ^^ {
+    case posi ~ geo => PlacingSketch(posi, geo)
+  }
+  private def c_style = "style\\s*".r ~ arguments ^^ {_.toString()}
+
+  private def connection:Parser[Connection] =
+    ("connection" ~> ident) ~
+    (("style" ~> ident)?) ~
+    ("{" ~> (c_type?)) ~
+    (c_style?) ~
+    rep(c_placing) <~ "}" ^^ {
+      case name ~ style ~ typ ~ anonymousStyle ~ placings => Connection(name, style, typ, anonymousStyle, placings, diagram).get
+    }
+  private def connections = rep(connection)
+
+  def parseRawConnection(input:String) = parseAll(connections, trimRight(input)).get
+  def parseRawConnection:List[Connection] = {
+    import scala.swing.FileChooser
+    val chooser = new FileChooser()
+    if(chooser.showOpenDialog(null) == FileChooser.Result.Approve)
+      parseRawConnection(scala.io.Source.fromFile(chooser.selectedFile).mkString)
+    else
+      List()
+  }
+  /*------------------------------------------------------------------------------------------*/
+
   private def trimRight(s:String) = s.replaceAll("\\/\\/.+", "").split("\n").map(s => s.trim + "\n").mkString
+
+  def shapesAndConnections = shapes ~ connections ^^ {case s ~ c => (s, c)}
+  def file(input:String) = parseAll(shapesAndConnections, input)
+  //def parseFile ={
+  //  import scala.swing.FileChooser
+  //  val chooser = new FileChooser()
+  //  if(chooser.showOpenDialog(null) == FileChooser.Result.Approve) {
+  //    //parseRawStyle(scala.io.Source.fromFile(chooser.selectedFile).mkString)
+  //    parseRawShape(scala.io.Source.fromFile(chooser.selectedFile).mkString)
+  //    parseRawConnection(scala.io.Source.fromFile(chooser.selectedFile).mkString)
+  //  }
+  //  else
+  //    List()
+  //}
 }
 
 object SprayParser{
   val validGeometricModelVariables = List("position", "size", "style", "point", "curve", "align", "id", "compartment")
 }
-
 /**
  * GeoModel is a sketch of a GeometricModel, only used for parsing a shape string and temporarily
  * save all the attributes in a struct for later compilation into a GeometricModel*/
@@ -107,3 +146,7 @@ case class GeoModel(typ: String, style: Option[Style], attributes: List[String],
     case _ => None
   }
 }
+
+/**
+ * PlacingSketch is a sketch of a placing, only used for parsing a Connection*/
+case class PlacingSketch(position:String, shapes:GeoModel)
