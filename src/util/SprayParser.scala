@@ -71,7 +71,7 @@ class SprayParser(diagram: Diagram) extends CommonParserMethodes {
 
   private def shape:Parser[Shape] =
     ("shape" ~> ident) ~
-    (("extends" ~> rep(ident <~ ",?".r))?) ~
+    (("extends" ~> rep("(?!style)[a-zA-ZüäöÜÄÖ]+".r <~ ",?".r))?) ~
     (("style" ~> "[a-zA-ZüäöÜÄÖ]+".r)?) ~
     ("{" ~> rep(shapeAttribute)) ~
     rep(geoModel) ~
@@ -79,7 +79,7 @@ class SprayParser(diagram: Diagram) extends CommonParserMethodes {
     (anchorAttribute?) <~ "}" ^^
     {case name ~ parent ~ style ~ attrs ~ geos ~ desc ~ anch =>
       val pStyle = if(style isDefined)diagram.styleHierarchy.get(style.get) else None
-      println("["+name + ":\t" + style +"]")
+      println("["+name + ":\t" + parent + "\t" + style +"]")
       ShapeParser(name, parent, style, attrs, parseGeometricModels(geos, pStyle), desc, anch, diagram)
     }
 
