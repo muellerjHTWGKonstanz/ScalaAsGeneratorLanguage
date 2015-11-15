@@ -1,5 +1,6 @@
 package model.shapecontainer.shape.geometrics.layouts
 
+import model.Diagram
 import model.style.Style
 import util.{CommonParserMethodes, GeoModel}
 
@@ -13,16 +14,16 @@ trait RoundedRectangleLayout extends CommonLayout{
 }
 
 object RoundedRectangleLayoutParser extends CommonParserMethodes{
-  def apply(geoModel: GeoModel) = parse(geoModel)
-  def parse(geoModel:GeoModel):Option[RoundedRectangleLayout]={
+  def apply(geoModel: GeoModel, parentStyle:Option[Style], diagram:Diagram) = parse(geoModel, parentStyle, diagram)
+  def parse(geoModel:GeoModel, parentStyle:Option[Style], diagram:Diagram):Option[RoundedRectangleLayout]={
    val attributes = geoModel.attributes
     /*mapping*/
-    val commonLayout = CommonLayoutParser.parse(geoModel)
+    val commonLayout = CommonLayoutParser.parse(geoModel, parentStyle, diagram)
     if(commonLayout.isEmpty)
       return None
 
     attributes.foreach{
-      case x if x.matches("curve.+") => {
+      case x if x.matches("curve.+") =>
         val newCurve = parse(curve, x).get
         return Some(new RoundedRectangleLayout {
           override val style:Option[Style] = commonLayout.get.style
@@ -32,7 +33,6 @@ object RoundedRectangleLayoutParser extends CommonParserMethodes{
           override val size_width: Int = commonLayout.get.size_width
           override val size_height: Int = commonLayout.get.size_height
         })
-      }
       case _ =>
     }
     None

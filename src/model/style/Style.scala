@@ -50,6 +50,23 @@ object StyleParser extends CommonParserMethodes {
   private def styleArguments = styleVariable ~> ("=?\\s*".r ~> argument) ^^ {case arg => arg}
 
   /**
+   * Methode for creating a child of type Style, by only giving parentStyles
+   * @param diagram only for delegating the actual creation to an apply method of StyleParser
+   * @param parents holds all the parentStyles, the returnedsstyle will inherit from
+   *                if only one style is given, the given style is returned -> you need two to make an actual child
+   * @return s a Option including a new Style or None if no parentstyles were given
+   * @note note, that attributes are inherited by the latest bound principle: Style A extends B -> B overrides attributes of A a call like:
+   *       StyleParser.makeLove(someDiagram, B, C, D, A) -> A's attributes have highest priority!!
+   */
+  def makeLove(diagram: Diagram, parents:Option[Style]*):Option[Style] ={
+    val parentStyles = parents.filter(_.isDefined)
+    if(parentStyles.length == 1) return parentStyles.head
+    else if(parentStyles.isEmpty) return None
+    val childName = "[child_style]:_"+parentStyles.map(_.get.name+"_").mkString
+    Some(StyleParser(childName, Some(parentStyles.toList.map(i => i.get.name)), List[(String, String)](), diagram))
+  }
+
+  /**
    * parse
    * @param attributes is the string containing all the information needed to generate the attributes to generate a anonymous Style instance
    */

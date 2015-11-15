@@ -1,5 +1,6 @@
 package model.shapecontainer.shape.geometrics.layouts
 
+import model.Diagram
 import model.style.{StyleParser, Style}
 import util.{CommonParserMethodes, GeoModel}
 
@@ -18,14 +19,14 @@ trait CommonLayout extends Layout{
 }
 
 object CommonLayoutParser extends CommonParserMethodes{
-  def parse(geoModel:GeoModel):Option[CommonLayout] = {
+  def parse(geoModel:GeoModel, parentStyle:Option[Style], diagram: Diagram):Option[CommonLayout] = {
     val attributes = geoModel.attributes
 
     /*mapping*/
     var pos:Option[(Int,Int)] =None
     var size_w:Option[Int] = None
     var size_h:Option[Int] = None
-    var styl:Option[Style] = geoModel.style
+    var styl:Option[Style] = StyleParser.makeLove(diagram, parentStyle, geoModel.style) //if geoModel.style and parentstyle are defined a childStyle is created
 
     attributes.foreach {
       case x if x.matches("position.+") => pos = {
@@ -35,14 +36,13 @@ object CommonLayoutParser extends CommonParserMethodes{
         else
           None
       }
-      case x if x.matches("size.+") => {
+      case x if x.matches("size.+") =>
         val newSize = parse(size, x).get
         if(newSize.isDefined){
           size_w = Some(newSize.get._1)
           size_h = Some(newSize.get._2)
         }
-      }
-      case x if x.matches("style.+") & styl.isEmpty => styl = Some(StyleParser.parse(x))
+      case x if x.matches("style.+") & geoModel.style.isEmpty => styl = StyleParser.makeLove(diagram, parentStyle, Some(StyleParser.parse(x))) //generate anonymous style
       case x => println("[CommonLayoutParser]: "+x+" was ignored")
     }
 

@@ -1,30 +1,31 @@
 package model.shapecontainer.shape.geometrics.layouts
 
+import model.Diagram
 import model.shapecontainer.shape.geometrics.{PointParser, Point}
 import model.style.{StyleParser, Style}
 import util.GeoModel
 
 /**
  * Created by julian on 20.10.15.
+ * representation of a polylinelayout
  */
 trait PolyLineLayout extends Layout{
   val points:List[Point]
 }
 
 object PolyLineLayoutParser{
-  def apply(geoModel: GeoModel):Option[PolyLineLayout] = parse(geoModel)
-  def parse(geoModel:GeoModel):Option[PolyLineLayout] ={
+  def apply(geoModel: GeoModel, parentStyle:Option[Style], diagram:Diagram):Option[PolyLineLayout] = parse(geoModel, parentStyle, diagram)
+  def parse(geoModel:GeoModel, parentStyle:Option[Style], diagram:Diagram):Option[PolyLineLayout] ={
     val attributes = geoModel.attributes
 
     /*mapping*/
     var collectedPoints:List[Point] = List[Point]()
-    var styl:Option[Style] = geoModel.style
+    var styl:Option[Style] = StyleParser.makeLove(diagram, parentStyle, geoModel.style)
     attributes.foreach{
-      case x if x.matches("point.+") => {
+      case x if x.matches("point.+") =>
         val newPoint = PointParser(x)
         if(newPoint.isDefined)collectedPoints = collectedPoints.::(newPoint.get)
-      }
-      case x if x.matches("style.+") & styl.isEmpty => styl = Some(StyleParser.parse(x))
+      case x if x.matches("style.+") & geoModel.style.isEmpty => styl = StyleParser.makeLove(diagram, parentStyle, Some(StyleParser.parse(x)))
     }
     if(collectedPoints.length > 1)
       Some(new PolyLineLayout {

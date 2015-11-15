@@ -1,5 +1,6 @@
 package model.shapecontainer.shape.geometrics
 
+import model.Diagram
 import model.shapecontainer.shape.geometrics.layouts.{LineLayoutParser, LineLayout}
 import model.style.Style
 import util.GeoModel
@@ -14,9 +15,9 @@ class Line(parent:Option[GeometricModel]=None,
   extends GeometricModel(parent) with LineLayout
 
 object Line{
-  def apply(geoModel: GeoModel, parent:Option[GeometricModel]) = parse(geoModel, parent)
-  def parse(geoModel: GeoModel, parent: Option[GeometricModel]): Option[Line] = {
-    val lineLayout = LineLayoutParser.parse(geoModel)
+  def apply(geoModel: GeoModel, parent:Option[GeometricModel], parentStyle:Option[Style], diagram: Diagram) = parse(geoModel, parent, parentStyle, diagram)
+  def parse(geoModel: GeoModel, parent:Option[GeometricModel], parentStyle:Option[Style], diagram: Diagram): Option[Line] = {
+    val lineLayout = LineLayoutParser.parse(geoModel, parentStyle, diagram)
     if(lineLayout.isEmpty)
       None
     else

@@ -1,5 +1,6 @@
 package model.shapecontainer.shape.geometrics
 
+import model.Diagram
 import model.shapecontainer.shape.geometrics.layouts.{CommonLayoutParser, CommonLayout}
 import model.style.Style
 import util.GeoModel
@@ -33,18 +34,18 @@ object Ellipse {
   /**
    * parses a GeoModel into an actual GeometricModel, in this case a Rectangle
    * @param geoModel is the sketch to parse into a GeometricModel
-   * @param parent is the parent instance that wrappes the new GeometricModel*/
-  def apply(geoModel: GeoModel, parent:Option[GeometricModel])= parse(geoModel, parent)
-  def parse(geoModel: GeoModel, parent: Option[GeometricModel]): Option[Ellipse] = {
+   * @param parent is the parent instance that wraps the new GeometricModel*/
+  def apply(geoModel: GeoModel, parent: Option[GeometricModel], parentStyle:Option[Style], diagram:Diagram)= parse(geoModel, parent, parentStyle, diagram)
+  def parse(geoModel: GeoModel, parent: Option[GeometricModel], parentStyle:Option[Style], diagram:Diagram): Option[Ellipse] = {
     /*mapping*/
-    val commonLayout: Option[CommonLayout] = CommonLayoutParser.parse(geoModel)
+    val commonLayout: Option[CommonLayout] = CommonLayoutParser.parse(geoModel, parentStyle, diagram)
     val compartmentInfo: Option[CompartmentInfo] = CompartmentInfoParser.parse(geoModel.attributes)
 
     if (commonLayout.isEmpty)
       return None
 
     val ret = new Ellipse(parent, commonLayout.get, compartmentInfo)
-    ret.children = for (i <- geoModel.children) yield {i.parse(Some(ret)).get}
+    ret.children = for (i <- geoModel.children) yield {i.parse(Some(ret), ret.style).get}
     Some(ret)
   }
 }

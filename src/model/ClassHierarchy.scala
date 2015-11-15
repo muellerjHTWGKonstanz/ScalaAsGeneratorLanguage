@@ -21,6 +21,7 @@ sealed class ClassHierarchy[T <% { def toString :String; val name:String}](rootC
 
   def newBaseClass(className:T) = root inheritedBy className
   def get(className:String):Option[T] = {
+    if(className isEmpty) return None
     val ret = nodeView.get(className)
     if(ret.isDefined)
       Some(ret.get.data)

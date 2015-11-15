@@ -1,6 +1,8 @@
 package model.shapecontainer.shape.geometrics
 
+import model.Diagram
 import model.shapecontainer.shape.geometrics.layouts.{PolyLineLayoutParser, PolyLineLayout}
+import model.style.Style
 import util.GeoModel
 
 /**
@@ -15,15 +17,15 @@ class Polygon(parent: Option[GeometricModel] = None,
                ) extends PolyLine(parent, polygonLayout) with Wrapper
 
 object Polygon {
-  def apply(geoModel: GeoModel, parent: Option[GeometricModel])=parse(geoModel, parent)
-  def parse(geoModel: GeoModel, parent: Option[GeometricModel]): Option[Polygon] = {
-    val polygonLayout: Option[PolyLineLayout] = PolyLineLayoutParser(geoModel)
+  def apply(geoModel: GeoModel, parent: Option[GeometricModel], parentStyle:Option[Style], diagram:Diagram)=parse(geoModel, parent, parentStyle, diagram)
+  def parse(geoModel: GeoModel, parent: Option[GeometricModel], parentStyle:Option[Style], diagram:Diagram): Option[Polygon] = {
+    val polygonLayout: Option[PolyLineLayout] = PolyLineLayoutParser(geoModel, parentStyle, diagram)
     if (polygonLayout.isEmpty)
       return None
 
     val ret = new Polygon(parent, polygonLayout.get)
     ret.children = for (i <- geoModel.children) yield {
-      i.parse(Some(ret)).get
+      i.parse(Some(ret), ret.style).get
     }
     Some(ret)
   }
