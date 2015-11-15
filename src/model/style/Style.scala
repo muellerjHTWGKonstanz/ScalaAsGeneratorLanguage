@@ -61,8 +61,9 @@ object StyleParser extends CommonParserMethodes {
     val parentStyles = parents.filter(_.isDefined)
     if(parentStyles.length == 1) return parentStyles.head
     else if(parentStyles.isEmpty) return None
-    val childName = "(child_of -> "+parentStyles.map( p => p.get.name+{if(p != parentStyles.last)" & "else ""}).mkString+") "
-    Some(StyleParser(childName, Some(parentStyles.toList.map(i => i.get.name)), List[(String, String)](), diagram))
+    val childName = "(child_of -> "+parentStyles.map( p => p.get.name+{if(p != parentStyles.last)" & "else ""}).mkString+")"
+    val ret = Some(StyleParser(childName, Some(parentStyles.toList.map(i => i.get.name)), List[(String, String)](), diagram))
+    ret
   }
 
   /**
@@ -124,7 +125,7 @@ object StyleParser extends CommonParserMethodes {
     }
 
     /*create the instance of the actual new Style*/
-    Style("anonymousStyle"+Random.nextString(100), description, transparency, background_color, line_color, line_style, line_width, font_color,
+    Style("Anonymous_Style"+Random.nextString(5), description, transparency, background_color, line_color, line_style, line_width, font_color,
       font_name, font_size, font_bold, font_italic, gradient_orientation, gradient_area_color, gradient_area_offset,
       selected_highlighting, multiselected_highlighting, allowed_highlighting, unallowed_highlighting, List())
   }

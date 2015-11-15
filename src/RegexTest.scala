@@ -76,9 +76,10 @@ object RegexTest extends App {
                                   invisible = invisible
                                 )
                                size (width=50, height=50)
-                               rectangle style BPMNDefault{
+                               rectangle {
                                    position (x=10, y=15)
                                    size (width=30, height=20)
+                                   style (line-width=2)
                                    polygon {
                                        point (x=0, y=0)
                                        point (x=15, y=10)

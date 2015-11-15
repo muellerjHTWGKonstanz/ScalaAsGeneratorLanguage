@@ -42,7 +42,8 @@ object CommonLayoutParser extends CommonParserMethodes{
           size_w = Some(newSize.get._1)
           size_h = Some(newSize.get._2)
         }
-      case x if x.matches("style.+") & geoModel.style.isEmpty => styl = StyleParser.makeLove(diagram, parentStyle, Some(StyleParser.parse(x))) //generate anonymous style
+      case x if x.matches("style.+") & geoModel.style.isEmpty =>
+        styl = StyleParser.makeLove(diagram, parentStyle, Some(StyleParser.parse(x))) //generate anonymous style
       case x => println("[CommonLayoutParser]: "+x+" was ignored")
     }
 
