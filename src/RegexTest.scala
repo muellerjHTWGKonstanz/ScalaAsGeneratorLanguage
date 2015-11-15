@@ -29,14 +29,14 @@ object RegexTest extends App {
 
   parser.parseRawStyle(
     """style BPMNDefault {
-      line-color = 40
+      line-color = green
       font-size = 10
       }""")
 
   parser.parseRawStyle(
-    """style aicaramba extends BPMNDefault {
+    """style aicaramba {
       line-color = blue
-      font-italic = yes
+      font-italic = false
       }""")
 
   val shapeWithText = """shape EClassShape {
@@ -76,7 +76,7 @@ object RegexTest extends App {
                                   invisible = invisible
                                 )
                                size (width=50, height=50)
-                               rectangle {
+                               rectangle style BPMNDefault{
                                    position (x=10, y=15)
                                    size (width=30, height=20)
                                    polygon {
@@ -103,16 +103,6 @@ object RegexTest extends App {
                             }
                         }"""
 
-  //val conni = parser.parseRawConnection
-  //println(conni)
-
-  //import scala.swing.FileChooser
-  //val chooser = new FileChooser()
-  //if(chooser.showOpenDialog(null) == FileChooser.Result.Approve) {
-  //  //val li = parser.file(scala.io.Source.fromFile(chooser.selectedFile).mkString).get
-  //  val li = parser.parse(parser.shapesAndConnections,scala.io.Source.fromFile(chooser.selectedFile).mkString )
-  //  println(li)
-  //}
-  //else
-    List()
+  val conni = parser.parseRawConnection
+  println(conni)
 }

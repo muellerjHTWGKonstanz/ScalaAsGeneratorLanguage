@@ -5,4 +5,4 @@ package model.shapecontainer.shape.geometrics
  * representation of all Geometrical Models like Line Polyline Rectangel
  * and so on
  */
-abstract class GeometricModel (var parent:Option[GeometricModel] = None)
+abstract class GeometricModel (var parent:Option[GeometricModel] = None) extends Cloneable

@@ -4,7 +4,6 @@ import model.{ClassHierarchy, Diagram}
 import util.CommonParserMethodes
 
 import scala.util.Random
-import scala.util.parsing.combinator.JavaTokenParsers
 
 case class Style( name: String = "noName",
                   description: Option[String] = None,

@@ -26,12 +26,12 @@ object Connection extends CommonParserMethodes{
    * */
   def apply(name:String, styleRef:Option[String], typ:Option[String], anonymousStyle:Option[String], placings:List[PlacingSketch], diagram:Diagram):Option[Connection] = {
     /*mapping*/
-    var style:Option[Style] = if(styleRef isDefined) Some(diagram.styleHierarchy(styleRef.get).data) else None
+    var style:Option[Style] = if(styleRef isDefined) diagram.styleHierarchy.get(styleRef.get) else None
     val connection_type:Option[ConnectionStyle] = if(typ isDefined) Some(parse(connectionType, typ.get).get) else None
     if(anonymousStyle.isDefined && style.isEmpty) {
       style = Some(StyleParser(anonymousStyle.get))
     }
-    val placingList = for(i <- placings)yield{Placing(i)}
+    val placingList = placings.map{Placing(_)}
 
     if(placingList isEmpty)
       None
