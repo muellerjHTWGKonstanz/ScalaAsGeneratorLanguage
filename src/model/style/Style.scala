@@ -61,7 +61,7 @@ object StyleParser extends CommonParserMethodes {
     val parentStyles = parents.filter(_.isDefined)
     if(parentStyles.length == 1) return parentStyles.head
     else if(parentStyles.isEmpty) return None
-    val childName = "[child_style]:_"+parentStyles.map(_.get.name+"_").mkString
+    val childName = "(child_of -> "+parentStyles.map( p => p.get.name+{if(p != parentStyles.last)" & "else ""}).mkString+") "
     Some(StyleParser(childName, Some(parentStyles.toList.map(i => i.get.name)), List[(String, String)](), diagram))
   }
 

@@ -103,6 +103,6 @@ object RegexTest extends App {
                             }
                         }"""
 
-  val conni = parser.parseRawConnection
+  val conni = parser.parseRawConnection(connectionUno)
   println(conni)
 }
