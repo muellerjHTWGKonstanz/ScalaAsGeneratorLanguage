@@ -53,7 +53,7 @@ object StyleParser extends CommonParserMethodes {
    * @param diagram only for delegating the actual creation to an apply method of StyleParser
    * @param parents holds all the parentStyles, the returnedsstyle will inherit from
    *                if only one style is given, the given style is returned -> you need two to make an actual child
-   * @return s a Option including a new Style or None if no parentstyles were given
+   * @return an Option including a new Style or None if no parentstyles were given
    * @note note, that attributes are inherited by the latest bound principle: Style A extends B -> B overrides attributes of A a call like:
    *       StyleParser.makeLove(someDiagram, B, C, D, A) -> A's attributes have highest priority!!
    */
@@ -142,7 +142,7 @@ object StyleParser extends CommonParserMethodes {
 
     if(parents.nonEmpty)
       parents.get.foreach{parent => {
-        val parentName = parent.replace(",","").trim
+        val parentName = parent.trim
         if(diagram.styleHierarchy.contains(parentName))
           extendedStyle = diagram.styleHierarchy(parentName).data :: extendedStyle
         }

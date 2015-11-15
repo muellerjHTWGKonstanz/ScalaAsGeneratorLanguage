@@ -31,7 +31,7 @@ object Connection extends CommonParserMethodes{
     if(anonymousStyle.isDefined && style.isEmpty) {
       style = Some(StyleParser(anonymousStyle.get))
     }
-    val placingList = placings.map{Placing(_)}
+    val placingList = placings.map{Placing(_, style)}
 
     if(placingList isEmpty)
       None

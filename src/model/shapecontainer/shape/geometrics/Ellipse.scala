@@ -16,19 +16,7 @@ class Ellipse(parent: Option[GeometricModel] = None,
               commonLayout: CommonLayout,
               compartmentInfo:Option[CompartmentInfo],
               parentOf: List[GeometricModel] = List[GeometricModel]()
-               ) extends Rectangle(parent, commonLayout, compartmentInfo, parentOf){
-  //override val style:Option[Style] = commonLayout.style
-  //override val position:Option[(Int, Int)] = commonLayout.position
-  //override val size_width: Int = commonLayout.size_width
-  //override val size_height: Int = commonLayout.size_height
-  //override val compartment_layout:Option[CompartmentLayout]= if(compartmentInfo isDefined)compartmentInfo.get.compartment_layout else None
-  //override val compartment_stretching_horizontal: Option[Boolean] = if(compartmentInfo isDefined)compartmentInfo.get.compartment_stretching_horizontal else None
-  //override val compartment_stretching_vertical: Option[Boolean] = if(compartmentInfo isDefined)compartmentInfo.get.compartment_stretching_vertical else None
-  //override val compartment_spacing: Option[Int] = if(compartmentInfo isDefined)compartmentInfo.get.compartment_spacing else None
-  //override val compartment_margin: Option[Int] = if(compartmentInfo isDefined)compartmentInfo.get.compartment_margin else None
-  //override val compartment_invisible: Option[Boolean] = if(compartmentInfo isDefined)compartmentInfo.get.compartment_invisible else None
-  //override val compartment_id: Option[String] = if(compartmentInfo isDefined)compartmentInfo.get.compartment_id else None
-}
+               ) extends Rectangle(parent, commonLayout, compartmentInfo, parentOf)
 
 object Ellipse {
   /**

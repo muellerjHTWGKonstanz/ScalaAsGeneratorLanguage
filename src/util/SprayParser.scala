@@ -18,7 +18,7 @@ class SprayParser(diagram: Diagram) extends CommonParserMethodes {
   private def styleVariable =("""("""+StyleParser.validStyleAttributes.map(_+"|").mkString+""")""").r ^^ {_.toString}
   private def styleAttribute = styleVariable ~ arguments ^^ {case v ~ a => (v, a)}
   private def style: Parser[Style] =
-    ("style" ~> ident) ~ (("extends" ~> rep(ident))?) ~ ("{" ~> rep(styleAttribute)) <~ "}" ^^ {
+    ("style" ~> ident) ~ (("extends" ~> rep(ident <~ ",?".r))?) ~ ("{" ~> rep(styleAttribute)) <~ "}" ^^ {
       case name ~ parents ~ attributes => StyleParser(name, parents, attributes, diagram)
     }
   def parseRawStyle(input: String) = parseAll(style, trimRight(input)).get
@@ -69,14 +69,18 @@ class SprayParser(diagram: Diagram) extends CommonParserMethodes {
   private def descriptionAttribute = "description\\s*(style ([a-zA-ZüäöÜÄÖ][-_]?)+)?".r ~ argument_wrapped ^^ {case des ~ arg => (des, arg)}
   private def anchorAttribute = "anchor" ~> arguments ^^ {_.toString}
 
-  private def shape:Parser[Shape] = ("shape" ~> ident) ~ (("style" ~> ident)?) ~
+  private def shape:Parser[Shape] =
+    ("shape" ~> ident) ~
+    (("extends" ~> rep(ident <~ ",?".r))?) ~
+    (("style" ~> "[a-zA-ZüäöÜÄÖ]+".r)?) ~
     ("{" ~> rep(shapeAttribute)) ~
     rep(geoModel) ~
     (descriptionAttribute?) ~
     (anchorAttribute?) <~ "}" ^^
-    {case name ~ style ~ attrs ~ geos ~ desc ~ anch =>
+    {case name ~ parent ~ style ~ attrs ~ geos ~ desc ~ anch =>
       val pStyle = if(style isDefined)diagram.styleHierarchy.get(style.get) else None
-      ShapeParser(name, style, attrs, parseGeometricModels(geos, pStyle), desc, anch, diagram)
+      println("["+name + ":\t" + style +"]")
+      ShapeParser(name, parent, style, attrs, parseGeometricModels(geos, pStyle), desc, anch, diagram)
     }
 
   private def shapes = rep(shape)

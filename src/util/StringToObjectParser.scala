@@ -154,7 +154,7 @@ object StringToObjectParser {
     var stretching_horizontal: Option[Boolean] = relevant { _.stretching_horizontal }
     var stretching_vertical: Option[Boolean]   = relevant { _.stretching_vertical }
     var proportional: Option[Boolean]          = relevant { _.proportional }
-    val shape: Option[List[GeometricModel]]    = relevant { _.shape }
+    val shape: Option[List[GeometricModel]]    = relevant { _.shapes }
     var description: Option[Description]       = relevant { _.description } /*TODO strange description in grammar sheet*/
     var anchor: Option[AnchorType]             = relevant { _.anchor }
 

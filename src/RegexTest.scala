@@ -1,10 +1,8 @@
 
-import model.shapecontainer.connection.Placing
 import model.shapecontainer.shape.Shape
-import model.shapecontainer.shape.geometrics.{CompartmentInfoParser, PointParser}
 import model.style.Style
 import model.{ClassHierarchy, Diagram}
-import util.{PlacingSketch, SprayParser}
+import util.SprayParser
 
 object RegexTest extends App {
   val diagram = Diagram(new ClassHierarchy[Style](new Style(name = "root")), new ClassHierarchy[Shape](new Shape(name = "root")))
@@ -26,6 +24,11 @@ object RegexTest extends App {
                  }"""
   parser.parseRawStyle(styleUno)
 
+  parser.parseRawStyle(
+    """style aicaramba {
+      line-color = blue
+      font-italic = false
+      }""")
 
   parser.parseRawStyle(
     """style BPMNDefault {
@@ -34,11 +37,22 @@ object RegexTest extends App {
       }""")
 
   parser.parseRawStyle(
-    """style aicaramba {
-      line-color = blue
-      font-italic = false
+    """style A {
+      line-color = green
+      font-size = 10
       }""")
 
+  parser.parseRawStyle(
+    """style B {
+      line-color = green
+      font-size = 10
+      }""")
+
+  parser.parseRawStyle(
+    """style C extends A, B {
+      line-color = green
+      font-size = 10
+      }""")
   val shapeWithText = """shape EClassShape {
                             size-min (width=4, height=6)
                             size-max (width=10, height=11)
@@ -88,6 +102,7 @@ object RegexTest extends App {
                                }
                            }
                        }"""
+  parser.parseRawShape(shapeWithText)
   val shapesList = parser.parseRawShape(nonfailingShape)
   println(shapesList)
 
@@ -106,4 +121,34 @@ object RegexTest extends App {
 
   val conni = parser.parseRawConnection(connectionUno)
   println(conni)
+
+
+  val shapeA =
+    """
+      shape A style aicaramba{
+        size-min (width=4, height=6)
+        polygon {
+            point (x=0, y=0)
+            point (x=15, y=10)
+            point (x=30, y=0)
+        }
+      }
+    """
+
+  val shapeB =
+    """shape B extends A{
+        stretching (horizontal=true, vertical=false)
+      }"""
+  val shapeC =
+    """shape C extends B style A{
+           text{
+             size(width=10, height=40)
+             id = Hallo
+           }
+      }"""
+
+  parser.parseRawShape(shapeA)
+  parser.parseRawShape(shapeB)
+  val testShapes = parser.parseRawShape(shapeC)
+  println(testShapes)
 }

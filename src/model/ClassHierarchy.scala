@@ -75,7 +75,10 @@ object ClassHierarchy{
    * called with a collection of the wished classtype "stack" and a function "f", that solely acts a a getter
    * this methode will find the most relevant parent's attribute of the given type selected by f and return it.
    * If no parent has information about the given attribute None is returned.
-   * "stack" should suhherate, that a collection is chosen, which guarantees, that the most relevant is "popped" first*/
+   * "stack" should suggerate, that a collection is chosen, which guarantees, that the most relevant is "popped" first
+   * @param stack is a List of type C's which will be iterated
+   * @param f is a function, that will be used as a generic getter for any attribute of type T that is stored in a C
+   * @return the matching atribue of type T wrapped as an Option or None if the attribute is not defined in the according C type instance*/
   def mostRelevant[T <: Any, C](stack:List[C])(f: C => Option[T]):Option[T] = {
     for (i <- stack) {
       if(f(i).isDefined)

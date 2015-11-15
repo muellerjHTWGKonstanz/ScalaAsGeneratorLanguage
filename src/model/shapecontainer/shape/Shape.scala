@@ -1,11 +1,11 @@
 package model.shapecontainer.shape
 
-import model.Diagram
+import model.{ClassHierarchy, Diagram}
 import model.shapecontainer.ShapeContainerElement
 import model.shapecontainer.shape.anchor.Anchor
 import model.shapecontainer.shape.anchor.Anchor.AnchorType
 import model.shapecontainer.shape.geometrics.{Description, GeometricModel}
-import model.style.Style
+import model.style.{StyleParser, Style}
 import util.CommonParserMethodes
 
 /**
@@ -15,7 +15,7 @@ import util.CommonParserMethodes
  *
  * @param name = id
  * @param style = model.style.Style
- * @param shape is a list of model.shapecontainer.shape.geometrics.GeometricForm 's that can be nested inside the shape
+ * @param shapes is a list of model.shapecontainer.shape.geometrics.GeometricForm 's that can be nested inside the shape
  * TODO
  */
 case class Shape( name:String = "no name",
@@ -28,7 +28,7 @@ case class Shape( name:String = "no name",
                   stretching_vertical:Option[Boolean]   = None, /*from ShapeLayout*/
                   proportional:Option[Boolean]          = None, /*from ShapeLayout*/
 
-                  shape:Option[List[GeometricModel]]    = None,
+                  shapes:Option[List[GeometricModel]]    = None,
 
                   description:Option[Description]       = None,
 
@@ -36,33 +36,61 @@ case class Shape( name:String = "no name",
 
                   extendedShape:List[Shape] = List()) extends ShapeContainerElement{
   val key = hashCode
-  def apply() = shape
+  def apply() = shapes
 }
 
 object ShapeParser extends CommonParserMethodes{
   val validShapeVariables = List("size-min", "size-max", "stretching", "proportional", "anchor", "description(\\s*style\\s*[a-zA-ZüäöÜÄÖ]+([-_][a-zA-ZüäöÜÄÖ])*)?\\s*")
 
-  def apply(name:String, style:Option[String], attributes:List[(String, String)], geos:Option[List[GeometricModel]], description:Option[(String, String)], anchor:Option[String], diagram:Diagram) =
-    parse(name, style, attributes, geos, description, anchor, diagram)
+  def apply(name:String, parents:Option[List[String]], style:Option[String], attributes:List[(String, String)], geos:Option[List[GeometricModel]], description:Option[(String, String)], anchor:Option[String], diagram:Diagram) =
+    parse(name, parents, style, attributes, geos, description, anchor, diagram)
 
-  def parse(name:String, style:Option[String], attributes:List[(String, String)], geos:Option[List[GeometricModel]], desc:Option[(String, String)], anch:Option[String], diagram:Diagram):Shape = {
+  def parse(name:String,
+            parentShapes:Option[List[String]],
+            styleArgument:Option[String],
+            attributes:List[(String, String)],
+            geos:Option[List[GeometricModel]],
+            desc:Option[(String, String)],
+            anch:Option[String],
+            diagram:Diagram):Shape = {
+
+    val parents = if(parentShapes isDefined) parentShapes.get else List()
+    var extendedStyle:List[Shape] = List[Shape]()
+    if(parents.nonEmpty)
+      parents.foreach{parent => {
+        val parentName = parent.trim //trim just to make sure, could probably be removed
+        if(diagram.styleHierarchy.contains(parentName))
+          extendedStyle = diagram.shapeHierarchy(parentName).data :: extendedStyle
+      }
+      }/*TODO if class was not found, to be inherited tell Logger*/
+
     /*mapping*/
-    var styl:Option[Style] = None
-    if(style isDefined){
-      val ret = diagram.styleHierarchy.nodeView.get(style.get)
-      if(ret isDefined)
-        styl = Some(ret.get.data)
-    }
-    var size_width_min:Option[Int]    = None
-    var size_width_max:Option[Int]    = None
-    var size_height_min:Option[Int]   = None
-    var size_height_max:Option[Int]   = None
-    var stretching_horizontal:Option[Boolean] = None
-    var stretching_vertical:Option[Boolean]   = None
-    var prop:Option[Boolean]          = None
-    var description:Option[Description]            = None
-    var anchor:Option[AnchorType]             = None
+    /** relevant is a help-methode, which shortens the actual call to mostRelevant of ClassHierarchy by ensuring the collection-parameter
+      * relevant speaks for the hierarchical context -> "A extends B, C" -> C is most relevant */
+    def relevant[T](f: Shape => Option[T]) = ClassHierarchy.mostRelevant(extendedStyle) {f}
 
+    var style:Option[Style]                   = relevant {_.style}
+    var size_width_min:Option[Int]            = relevant {_.size_width_min}
+    var size_width_max:Option[Int]            = relevant {_.size_width_max}
+    var size_height_min:Option[Int]           = relevant {_.size_height_min}
+    var size_height_max:Option[Int]           = relevant {_.size_height_max}
+    var stretching_horizontal:Option[Boolean] = relevant {_.stretching_horizontal}
+    var stretching_vertical:Option[Boolean]   = relevant {_.stretching_vertical}
+    var prop:Option[Boolean]                  = relevant {_.proportional}
+    var description:Option[Description]       = relevant {_.description}
+    var anchor:Option[AnchorType]             = relevant {_.anchor}
+    val shapes:Option[List[GeometricModel]]   = relevant {_.shapes}
+
+    /*initialize the mapping-variables with the actual parameter-values, if they exist*/
+    if(styleArgument isDefined){
+      val newStyle: Option[Style] = diagram.styleHierarchy.get(styleArgument.get)
+      if(newStyle isDefined) {
+        if(style isDefined){
+          style = StyleParser.makeLove(diagram, style, newStyle)
+        }else
+          style = newStyle
+      }
+    }
     attributes.foreach{
       case x if x._1.matches("size[-_]min") =>
         val opt = parse(width_height, x._2).get
@@ -94,21 +122,33 @@ object ShapeParser extends CommonParserMethodes{
       case x if x._1.matches("description.*") => description = Description.parse(x, diagram)
       case _ =>
     }
-
     if(desc nonEmpty)
       description = Description.parse(desc.get, diagram)
     if(anch nonEmpty)
       anchor = Some(Anchor.parse(Anchor.anchor, anch.get).get)
 
+    /*if parentShape had GeometricModels in 'shapes'-attribute, both the lists (parents and new List of GeometricModels) need to be merged*/
+    val inherited_and_new = {if(shapes isDefined)shapes.get else List()} ::: geos.get
 
     /*create the actual shape instance*/
-    new Shape(name, styl, size_width_min, size_width_max, size_height_min, size_height_max,
-      stretching_horizontal, stretching_vertical, prop, geos, description, anchor)
+    val newShape = new Shape(name, style, size_width_min, size_width_max, size_height_min, size_height_max,
+      stretching_horizontal, stretching_vertical, prop, if(inherited_and_new nonEmpty) Some(inherited_and_new) else None, description, anchor)
 
+    /*include new shape instance in shapeHierarchie*/
+    if (extendedStyle.nonEmpty) {
+      extendedStyle.reverse.foreach(elem => diagram.shapeHierarchy(elem.name, newShape))
+    } else {
+      diagram.shapeHierarchy.newBaseClass(newShape)
+    }
+
+    newShape
   }
+  
+  
 
+  /*parsingRules for special attributes*/
   def proportional:Parser[Option[Boolean]] = "=?".r ~> argument ^^ {
-    case prop => Some(matchBoolean(prop))
+    case prop:String => Some(matchBoolean(prop))
     case _ => None
   }
   def stretching:Parser[Option[(Boolean, Boolean)]] = "\\(\\s*(horizontal=)?".r ~> argument ~ (",\\s*(vertical=)?".r ~> argument) <~ ")" ^^ {
