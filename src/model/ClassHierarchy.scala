@@ -29,7 +29,9 @@ sealed class ClassHierarchy[T <% { def toString :String; val name:String}](rootC
       None
   }
   def setRelation(parent:T, child:T) = nodeView(parent.name) inheritedBy child
-  def contains(className:String):Boolean = nodeView.contains(className)
+  def contains(className:String):Boolean = {
+    nodeView.contains(className)
+  }
 
   sealed case class Node(data: T,
                          var parents:List[Node] = List(),

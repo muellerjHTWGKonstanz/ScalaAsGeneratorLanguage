@@ -28,12 +28,9 @@ case class Shape( name:String = "no name",
                   stretching_vertical:Option[Boolean]   = None, /*from ShapeLayout*/
                   proportional:Option[Boolean]          = None, /*from ShapeLayout*/
 
-                  shapes:Option[List[GeometricModel]]    = None,
-
+                  shapes:Option[List[GeometricModel]]   = None,
                   description:Option[Description]       = None,
-
                   anchor:Option[AnchorType]             = None,
-
                   extendedShape:List[Shape] = List()) extends ShapeContainerElement{
   val key = hashCode
   def apply() = shapes
@@ -59,7 +56,7 @@ object ShapeParser extends CommonParserMethodes{
     if(parents.nonEmpty)
       parents.foreach{parent => {
         val parentName = parent.trim //trim just to make sure, could probably be removed
-        if(diagram.styleHierarchy.contains(parentName))
+        if(diagram.shapeHierarchy.contains(parentName))
           extendedStyle = diagram.shapeHierarchy(parentName).data :: extendedStyle
       }
       }/*TODO if class was not found, to be inherited tell Logger*/

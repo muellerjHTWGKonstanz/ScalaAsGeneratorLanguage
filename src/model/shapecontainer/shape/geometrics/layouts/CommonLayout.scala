@@ -44,7 +44,7 @@ object CommonLayoutParser extends CommonParserMethodes{
         }
       case x if x.matches("style.+") & geoModel.style.isEmpty =>
         styl = StyleParser.makeLove(diagram, parentStyle, Some(StyleParser.parse(x))) //generate anonymous style
-      case x => println("[CommonLayoutParser]: "+x+" was ignored")
+      case _ =>
     }
 
     var ret:Option[CommonLayout] = None

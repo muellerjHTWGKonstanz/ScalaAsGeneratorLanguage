@@ -79,7 +79,7 @@ object RegexTest extends App {
                         }"""
 
   val nonfailingShape = """//Messages
-                       shape BPMN_EventMail style BpmnDefaultStyle{
+                       shape BPMN_EventMail extends EClassShape style BpmnDefaultStyle{
                            ellipse style aicaramba{
                                compartment(
                                   id = blablablu
@@ -149,6 +149,5 @@ object RegexTest extends App {
 
   parser.parseRawShape(shapeA)
   parser.parseRawShape(shapeB)
-  val testShapes = parser.parseRawShape(shapeC)
-  println(testShapes)
+  println(parser.parseRawShape(shapeC))
 }
