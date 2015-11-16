@@ -136,7 +136,7 @@ object RegexTest extends App {
     """
 
   val shapeB =
-    """shape B extends A{
+    """shape B extends A style B{
         stretching (horizontal=true, vertical=false)
       }"""
   val shapeC =

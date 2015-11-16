@@ -89,19 +89,19 @@ object ShapeParser extends CommonParserMethodes{
       }
     }
     attributes.foreach{
-      case x if x._1.matches("size[-_]min") =>
+      case x if x._1 == "size-min" =>
         val opt = parse(width_height, x._2).get
         if(opt.isDefined){
           size_width_min = Some(opt.get._1)
           size_height_min = Some(opt.get._2)
         }
-      case x if x._1.matches("size[-_]max") =>
+      case x if x._1 == "size-max" =>
         val opt = parse(width_height, x._2).get
         if(opt.isDefined){
           size_width_max = Some(opt.get._1)
           size_height_max = Some(opt.get._2)
         }
-      case x if x._1 =="stretching" =>
+      case x if x._1 == "stretching" =>
         val opt = parse(stretching, x._2).get
         if(opt.isDefined){
           stretching_horizontal = Some(opt.get._1)
@@ -109,7 +109,7 @@ object ShapeParser extends CommonParserMethodes{
         }
       case x if x._1 == "proportional" =>
         prop = parse(proportional, x._2).get
-      case x if x._1 =="anchor" => anchor = {
+      case x if x._1 == "anchor" => anchor = {
         val anch = Anchor.parse(Anchor.anchor, x._2)
         if(anch isEmpty)
           None
@@ -129,7 +129,7 @@ object ShapeParser extends CommonParserMethodes{
     val inherited_and_new = {if(shapes isDefined)shapes.get else List()} ::: geometricModels
 
     /*create the actual shape instance*/
-    val newShape = new Shape(name, style, size_width_min, size_width_max, size_height_min, size_height_max,
+    val newShape = new Shape(name, style, size_width_min, size_height_min, size_width_max, size_height_max,
       stretching_horizontal, stretching_vertical, prop, if(inherited_and_new nonEmpty) Some(inherited_and_new) else None, description, anchor)
 
     /*include new shape instance in shapeHierarchie*/
