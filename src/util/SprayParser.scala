@@ -40,9 +40,6 @@ class SprayParser(diagram: Diagram) extends CommonParserMethodes {
         foldLeft(List[GeometricModel]())((r, c:Option[GeometricModel])=>if(c.isDefined)r.::(c.get) else r)
   }
 
-  private def parseGeometricModels(geoModels:List[GeoModel], parentStyle:Option[Style]) =
-    Some(geoModels.map{_.parse(None, parentStyle)}.
-      foldLeft(List[GeometricModel]())((r, c:Option[GeometricModel])=>if(c.isDefined)r.::(c.get) else r))
 
   /**parses a geoModel first ident is the GeometricModels name, second ident is an optional reference to a style*/
   private def geoModel: Parser[GeoModel] =
@@ -79,7 +76,7 @@ class SprayParser(diagram: Diagram) extends CommonParserMethodes {
     (anchorAttribute?) <~ "}" ^^
     {case name ~ parent ~ style ~ attrs ~ geos ~ desc ~ anch =>
       val pStyle = if(style isDefined)diagram.styleHierarchy.get(style.get) else None
-      ShapeParser(name, parent, style, attrs, parseGeometricModels(geos, pStyle), desc, anch, diagram)
+      ShapeParser(name, parent, style, attrs, geos, desc, anch, diagram)
     }
 
   private def shapes = rep(shape)

@@ -53,7 +53,7 @@ object RegexTest extends App {
       line-color = green
       font-size = 10
       }""")
-  val shapeWithText = """shape EClassShape {
+  val shapeWithText = """shape EClassShape style B{
                             size-min (width=4, height=6)
                             size-max (width=10, height=11)
                             stretching (horizontal=true, vertical=false)
@@ -71,7 +71,7 @@ object RegexTest extends App {
                                   size (width=30, height=30)
                             	}
                             }
-                            description{
+                            description style A{
                               align (horizontal=center, vertical=top)
                               id = BABABA
                             }
@@ -127,7 +127,7 @@ object RegexTest extends App {
     """
       shape A style aicaramba{
         size-min (width=4, height=6)
-        polygon {
+        polygon style B{
             point (x=0, y=0)
             point (x=15, y=10)
             point (x=30, y=0)
@@ -149,5 +149,6 @@ object RegexTest extends App {
 
   parser.parseRawShape(shapeA)
   parser.parseRawShape(shapeB)
-  println(parser.parseRawShape(shapeC))
+  val testShapes = parser.parseRawShape(shapeC)
+  println(testShapes)
 }

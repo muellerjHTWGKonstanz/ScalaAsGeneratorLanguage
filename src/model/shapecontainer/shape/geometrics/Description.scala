@@ -17,7 +17,7 @@ class Description(override val id:String,
 
 object Description extends CommonParserMethodes{
 
-  def parse(attrs:(String, String), diagram: Diagram):Option[Description] = {
+  def parse(attrs:(String, String), parentStyle:Option[Style], diagram: Diagram):Option[Description] = {
     /*mapping*/
     var hali:Option[HAlign] = None
     var vali:Option[VAlign] = None
@@ -28,10 +28,7 @@ object Description extends CommonParserMethodes{
       val attrsArray = attrs._1.split(" ")
       val styleIndex = attrsArray.indexOf("style")+1
       val newstyl = diagram.styleHierarchy.get(attrsArray(styleIndex))
-      styl = if(newstyl isDefined)
-        Some(newstyl.get)
-      else
-        None
+      styl = StyleParser.makeLove(diagram, parentStyle, newstyl)
     }
 
     val attributes = attrs._2.split("\n")

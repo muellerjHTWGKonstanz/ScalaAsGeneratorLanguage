@@ -6,7 +6,7 @@ import model.shapecontainer.shape.anchor.Anchor
 import model.shapecontainer.shape.anchor.Anchor.AnchorType
 import model.shapecontainer.shape.geometrics.{Description, GeometricModel}
 import model.style.{StyleParser, Style}
-import util.CommonParserMethodes
+import util.{GeoModel, CommonParserMethodes}
 
 /**
  * Created by julian on 29.09.15.
@@ -39,14 +39,14 @@ case class Shape( name:String = "no name",
 object ShapeParser extends CommonParserMethodes{
   val validShapeVariables = List("size-min", "size-max", "stretching", "proportional", "anchor", "description(\\s*style\\s*[a-zA-ZüäöÜÄÖ]+([-_][a-zA-ZüäöÜÄÖ])*)?\\s*")
 
-  def apply(name:String, parents:Option[List[String]], style:Option[String], attributes:List[(String, String)], geos:Option[List[GeometricModel]], description:Option[(String, String)], anchor:Option[String], diagram:Diagram) =
+  def apply(name:String, parents:Option[List[String]], style:Option[String], attributes:List[(String, String)], geos:List[GeoModel], description:Option[(String, String)], anchor:Option[String], diagram:Diagram) =
     parse(name, parents, style, attributes, geos, description, anchor, diagram)
 
   def parse(name:String,
             parentShapes:Option[List[String]],
             styleArgument:Option[String],
             attributes:List[(String, String)],
-            geos:Option[List[GeometricModel]],
+            geos:List[GeoModel],
             desc:Option[(String, String)],
             anch:Option[String],
             diagram:Diagram):Shape = {
@@ -116,16 +116,17 @@ object ShapeParser extends CommonParserMethodes{
         else
           Some(anch.get)
       }
-      case x if x._1.matches("description.*") => description = Description.parse(x, diagram)
+      case x if x._1.matches("description.*") => description = Description.parse(x, style, diagram)
       case _ =>
     }
     if(desc nonEmpty)
-      description = Description.parse(desc.get, diagram)
+      description = Description.parse(desc.get, style, diagram)
     if(anch nonEmpty)
       anchor = Some(Anchor.parse(Anchor.anchor, anch.get).get)
 
     /*if parentShape had GeometricModels in 'shapes'-attribute, both the lists (parents and new List of GeometricModels) need to be merged*/
-    val inherited_and_new = {if(shapes isDefined)shapes.get else List()} ::: geos.get
+    val geometricModels = parseGeometricModels(geos, style).getOrElse(List())
+    val inherited_and_new = {if(shapes isDefined)shapes.get else List()} ::: geometricModels
 
     /*create the actual shape instance*/
     val newShape = new Shape(name, style, size_width_min, size_width_max, size_height_min, size_height_max,
@@ -140,8 +141,12 @@ object ShapeParser extends CommonParserMethodes{
 
     newShape
   }
-  
-  
+
+
+  /*useful Methodes for generating shape-attribute specific content*/
+  private def parseGeometricModels(geoModels:List[GeoModel], parentStyle:Option[Style]) =
+    Some(geoModels.map{_.parse(None, parentStyle)}.
+      foldLeft(List[GeometricModel]())((r, c:Option[GeometricModel])=>if(c.isDefined)r.::(c.get) else r))
 
   /*parsingRules for special attributes*/
   def proportional:Parser[Option[Boolean]] = "=?".r ~> argument ^^ {
