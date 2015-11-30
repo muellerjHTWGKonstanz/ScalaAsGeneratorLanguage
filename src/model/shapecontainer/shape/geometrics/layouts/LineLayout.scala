@@ -1,6 +1,6 @@
 package model.shapecontainer.shape.geometrics.layouts
 
-import model.Diagram
+import model.HierarchyContainer
 import model.shapecontainer.shape.geometrics.{PointParser, Point}
 import model.style.{StyleParser, Style}
 import util.GeoModel
@@ -14,13 +14,13 @@ trait LineLayout extends Layout{
 }
 
 object LineLayoutParser{
-  def parse(geoModel:GeoModel, parentStyle:Option[Style], diagram: Diagram):Option[LineLayout]={
+  def parse(geoModel:GeoModel, parentStyle:Option[Style], hierarchyContainer: HierarchyContainer):Option[LineLayout]={
     val attributes = geoModel.attributes
 
     /*mapping*/
     var point1:Option[Point] = None
     var point2:Option[Point] = None
-    var styl:Option[Style] = StyleParser.makeLove(diagram, parentStyle, geoModel.style)
+    var styl:Option[Style] = StyleParser.makeLove(hierarchyContainer, parentStyle, geoModel.style)
     attributes.foreach {
       case x if x.matches("point.+") =>
         if(point1.isEmpty)
@@ -28,7 +28,7 @@ object LineLayoutParser{
         else {
           point2 = PointParser(x)
         }
-      case x if x.matches("style.+") & styl.isEmpty => styl = StyleParser.makeLove(diagram, parentStyle, Some(StyleParser.parse(x)))
+      case x if x.matches("style.+") & styl.isEmpty => styl = StyleParser.makeLove(hierarchyContainer, parentStyle, Some(StyleParser.parse(x)))
     }
     if(point1.isDefined && point2.isDefined)
       Some(new LineLayout {

@@ -1,7 +1,7 @@
 import generators.StyleGenerator
 import model.shapecontainer.shape.Shape
 import model.style.Style
-import model.{ClassHierarchy, Diagram}
+import model.{ClassHierarchy, HierarchyContainer}
 import util.{SprayParser, StringToObjectParser}
 
 /**
@@ -10,10 +10,10 @@ import util.{SprayParser, StringToObjectParser}
  */
 object ParserApp extends App {
 
-  val diagram = Diagram(new ClassHierarchy[Style](new Style(name = "root")), new ClassHierarchy[Shape](new Shape(name = "root")))
+  val hierarchyContainer = HierarchyContainer(new ClassHierarchy[Style](new Style(name = "root")), new ClassHierarchy[Shape](new Shape(name = "root")))
 
   val classUno = """style BpmnDefaultStyle {
-                  description = "The default style of the petrinet diagram type."
+                  description = "The default style of the petrinet hierarchyContainer type."
                   transparency = 0.95
                   background-color = green
                   line-color = black
@@ -31,28 +31,28 @@ object ParserApp extends App {
                   line-color = green
                 }"""
 
-  val parser = new SprayParser(diagram)
+  val parser = new SprayParser(hierarchyContainer)
 
-  //val newStyle = StringToObjectParser toStyle(classUno, diagram)
-  //val anotherStyle = StringToObjectParser toStyle(classDuo, diagram)
+  //val newStyle = StringToObjectParser toStyle(classUno, hierarchyContainer)
+  //val anotherStyle = StringToObjectParser toStyle(classDuo, hierarchyContainer)
   val newStyle = parser.parseRawStyle(classUno)
   val anotherStyle = parser.parseRawStyle(classDuo)
 
-  diagram.styleHierarchy.root.rPrint()
-  //println(diagram.styleHierarchy(newStyle).data.lineColor)
-  //println(diagram.styleHierarchy(anotherStyle).data.lineColor)
+  hierarchyContainer.styleHierarchy.root.rPrint()
+  //println(hierarchyContainer.styleHierarchy(newStyle).data.lineColor)
+  //println(hierarchyContainer.styleHierarchy(anotherStyle).data.lineColor)
 
   val classTres =
     """style yetAnotherStyle extends BpmnExtending{
       font-size = 10
       }"""
-  //val yetAnotherStyle = StringToObjectParser toStyle(classTres, diagram)
+  //val yetAnotherStyle = StringToObjectParser toStyle(classTres, hierarchyContainer)
   val yetAnotherStyle = parser.parseRawStyle(classTres)
-  //println(diagram.styleHierarchy(newStyle).data.       fontSize)
-  //println(diagram.styleHierarchy(anotherStyle).data.   fontSize)
-  //println(diagram.styleHierarchy(yetAnotherStyle).data.fontSize)
+  //println(hierarchyContainer.styleHierarchy(newStyle).data.       fontSize)
+  //println(hierarchyContainer.styleHierarchy(anotherStyle).data.   fontSize)
+  //println(hierarchyContainer.styleHierarchy(yetAnotherStyle).data.fontSize)
 
-  diagram.styleHierarchy.root.rPrint()
+  hierarchyContainer.styleHierarchy.root.rPrint()
 
 
   var differentStyle =
@@ -69,7 +69,7 @@ object ParserApp extends App {
 
   differentStyle =
     """style C extends B{
-      description = "The default style of the petrinet diagram type."
+      description = "The default style of the petrinet hierarchyContainer type."
       transparency = 0.95
       background-color = green
       line-style = solid
@@ -83,13 +83,13 @@ object ParserApp extends App {
       }"""
   val C = parser.parseRawStyle(differentStyle)
 
-  //println(diagram.styleHierarchy(A).data.line_color)
-  //println(diagram.styleHierarchy(B).data.line_color)
-  //println(diagram.styleHierarchy(C).data.line_color)
+  //println(hierarchyContainer.styleHierarchy(A).data.line_color)
+  //println(hierarchyContainer.styleHierarchy(B).data.line_color)
+  //println(hierarchyContainer.styleHierarchy(C).data.line_color)
 
-  //println(diagram.styleHierarchy(A).data.font_size)
-  //println(diagram.styleHierarchy(B).data.font_size)
-  //println(diagram.styleHierarchy(C).data.font_size)
+  //println(hierarchyContainer.styleHierarchy(A).data.font_size)
+  //println(hierarchyContainer.styleHierarchy(B).data.font_size)
+  //println(hierarchyContainer.styleHierarchy(C).data.font_size)
 
   println(StyleGenerator.compileDia(A))
 
@@ -101,14 +101,14 @@ object ParserApp extends App {
         style = BpmnDefaultStyle
       }"""
 
-  val S = StringToObjectParser.toShape(shapeString, diagram)
+  val S = StringToObjectParser.toShape(shapeString, hierarchyContainer)
 
   val shapeString2 =
     """shape T extends S """
 
-  val T = StringToObjectParser.toShape(shapeString2, diagram)
+  val T = StringToObjectParser.toShape(shapeString2, hierarchyContainer)
 
-  println(diagram.shapeHierarchy(T).data.style)
-  diagram.shapeHierarchy.root.rPrint()
+  println(hierarchyContainer.shapeHierarchy(T).data.style)
+  hierarchyContainer.shapeHierarchy.root.rPrint()
 }
 

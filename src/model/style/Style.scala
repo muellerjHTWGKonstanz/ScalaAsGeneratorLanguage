@@ -1,6 +1,6 @@
 package model.style
 
-import model.{ClassHierarchy, Diagram}
+import model.{ClassHierarchy, HierarchyContainer}
 import util.CommonParserMethodes
 
 import scala.util.Random
@@ -50,19 +50,19 @@ object StyleParser extends CommonParserMethodes {
 
   /**
    * Methode for creating a child of type Style, by only giving parentStyles
-   * @param diagram only for delegating the actual creation to an apply method of StyleParser
+   * @param hierarchyContainer only for delegating the actual creation to an apply method of StyleParser
    * @param parents holds all the parentStyles, the returnedsstyle will inherit from
    *                if only one style is given, the given style is returned -> you need two to make an actual child
    * @return an Option including a new Style or None if no parentstyles were given
    * @note note, that attributes are inherited by the latest bound principle: Style A extends B -> B overrides attributes of A a call like:
    *       StyleParser.makeLove(someDiagram, B, C, D, A) -> A's attributes have highest priority!!
    */
-  def makeLove(diagram: Diagram, parents:Option[Style]*):Option[Style] ={
+  def makeLove(hierarchyContainer: HierarchyContainer, parents:Option[Style]*):Option[Style] ={
     val parentStyles = parents.filter(_.isDefined)
     if(parentStyles.length == 1) return parentStyles.head
     else if(parentStyles.isEmpty) return None
     val childName = "(child_of -> "+parentStyles.map( p => p.get.name+{if(p != parentStyles.last)" & "else ""}).mkString+")"
-    val ret = Some(StyleParser(childName, Some(parentStyles.toList.map(i => i.get.name)), List[(String, String)](), diagram))
+    val ret = Some(StyleParser(childName, Some(parentStyles.toList.map(i => i.get.name)), List[(String, String)](), hierarchyContainer))
     ret
   }
 
@@ -134,17 +134,17 @@ object StyleParser extends CommonParserMethodes {
    * @param name the name of the ne Style instance
    * @param parents the style instance's names from which the new Style will inherit information
    * @param attributes List of Tuples of Strings -> List[(String, String)] consist of tuple._1 = attribute's name and tuple._2 the according value
-   * @param diagram is a Diagram which contains the styleHierarchy which gives information about inheritance*/
-  def apply(name:String, parents:Option[List[String]], attributes: List[(String, String)], diagram: Diagram) = parse(name, parents, attributes, diagram)
-  def parse(name:String, parents:Option[List[String]], attributes: List[(String, String)], diagram: Diagram):Style ={
+   * @param hierarchyContainer is a Diagram which contains the styleHierarchy which gives information about inheritance*/
+  def apply(name:String, parents:Option[List[String]], attributes: List[(String, String)], hierarchyContainer: HierarchyContainer) = parse(name, parents, attributes, hierarchyContainer)
+  def parse(name:String, parents:Option[List[String]], attributes: List[(String, String)], hierarchyContainer: HierarchyContainer):Style ={
 
     var extendedStyle:List[Style] = List[Style]()
 
     if(parents.nonEmpty)
       parents.get.foreach{parent => {
         val parentName = parent.trim
-        if(diagram.styleHierarchy.contains(parentName))
-          extendedStyle = diagram.styleHierarchy(parentName).data :: extendedStyle
+        if(hierarchyContainer.styleHierarchy.contains(parentName))
+          extendedStyle = hierarchyContainer.styleHierarchy(parentName).data :: extendedStyle
         }
       }/*TODO if class was not found, to be inherited tell Logger*/
     /*mapping and defaults*/
@@ -209,9 +209,9 @@ object StyleParser extends CommonParserMethodes {
 
     /*include new style instance in stylehierarchie*/
     if (extendedStyle.nonEmpty) {
-      extendedStyle.reverse.foreach(elem => diagram.styleHierarchy(elem.name, newStyle))
+      extendedStyle.reverse.foreach(elem => hierarchyContainer.styleHierarchy(elem.name, newStyle))
     } else {
-      diagram.styleHierarchy.newBaseClass(newStyle)
+      hierarchyContainer.styleHierarchy.newBaseClass(newStyle)
     }
 
     /*return the new Style*/

@@ -1,6 +1,6 @@
 package model.shapecontainer.shape.geometrics
 
-import model.Diagram
+import model.HierarchyContainer
 import model.shapecontainer.shape.geometrics.layouts.{TextLayoutParser, TextLayout}
 import model.style.Style
 import Alignment._
@@ -28,10 +28,10 @@ abstract class TextType
 
 
 object Text extends CommonParserMethodes{
-  def apply(geoModel:GeoModel, parent:Option[GeometricModel], parentStyle:Option[Style], diagram:Diagram) = parse(geoModel, parent, parentStyle, diagram)
-  def parse(geoModel:GeoModel, parent:Option[GeometricModel], parentStyle:Option[Style], diagram:Diagram):Option[Text] = {
+  def apply(geoModel:GeoModel, parent:Option[GeometricModel], parentStyle:Option[Style], hierarchyContainer:HierarchyContainer) = parse(geoModel, parent, parentStyle, hierarchyContainer)
+  def parse(geoModel:GeoModel, parent:Option[GeometricModel], parentStyle:Option[Style], hierarchyContainer:HierarchyContainer):Option[Text] = {
     var id:String = ""
-    val textLayout:Option[TextLayout] = TextLayoutParser(geoModel, parentStyle, diagram)
+    val textLayout:Option[TextLayout] = TextLayoutParser(geoModel, parentStyle, hierarchyContainer)
     if(textLayout isEmpty)
       return None
 

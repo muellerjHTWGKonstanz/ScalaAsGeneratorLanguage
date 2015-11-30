@@ -1,6 +1,6 @@
 package model.shapecontainer.connection
 
-import model.Diagram
+import model.HierarchyContainer
 import model.shapecontainer.ShapeContainerElement
 import model.style.{StyleParser, Style}
 import util.{PlacingSketch, CommonParserMethodes}
@@ -24,9 +24,9 @@ object Connection extends CommonParserMethodes{
   /**
    * parse method
    * */
-  def apply(name:String, styleRef:Option[String], typ:Option[String], anonymousStyle:Option[String], placings:List[PlacingSketch], diagram:Diagram):Option[Connection] = {
+  def apply(name:String, styleRef:Option[String], typ:Option[String], anonymousStyle:Option[String], placings:List[PlacingSketch], hierarchyContainer:HierarchyContainer):Option[Connection] = {
     /*mapping*/
-    var style:Option[Style] = if(styleRef isDefined) diagram.styleHierarchy.get(styleRef.get) else None
+    var style:Option[Style] = if(styleRef isDefined) hierarchyContainer.styleHierarchy.get(styleRef.get) else None
     val connection_type:Option[ConnectionStyle] = if(typ isDefined) Some(parse(connectionType, typ.get).get) else None
     if(anonymousStyle.isDefined && style.isEmpty) {
       style = Some(StyleParser(anonymousStyle.get))

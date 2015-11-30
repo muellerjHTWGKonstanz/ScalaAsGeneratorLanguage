@@ -1,14 +1,14 @@
 
 import model.shapecontainer.shape.Shape
 import model.style.Style
-import model.{ClassHierarchy, Diagram}
+import model.{ClassHierarchy, HierarchyContainer}
 import util.SprayParser
 
 object RegexTest extends App {
-  val diagram = Diagram(new ClassHierarchy[Style](new Style(name = "root")), new ClassHierarchy[Shape](new Shape(name = "root")))
-  val parser = new SprayParser(diagram)
+  val hierarchyContainer = HierarchyContainer(new ClassHierarchy[Style](new Style(name = "root")), new ClassHierarchy[Shape](new Shape(name = "root")))
+  val parser = new SprayParser(hierarchyContainer)
   val styleUno = """style BpmnDefaultStyle {
-                  description = "The default style of the petrinet diagram type."
+                  description = "The default style of the petrinet hierarchyContainer type."
                   transparency = 0.95
                   background-color = green
                   line-color = black

@@ -1,6 +1,6 @@
 package model.shapecontainer.shape.geometrics
 
-import model.Diagram
+import model.HierarchyContainer
 import model.shapecontainer.shape.geometrics.Alignment.{VAlign, HAlign}
 import model.style.{StyleParser, Style}
 import util.CommonParserMethodes
@@ -17,7 +17,7 @@ class Description(override val id:String,
 
 object Description extends CommonParserMethodes{
 
-  def parse(attrs:(String, String), parentStyle:Option[Style], diagram: Diagram):Option[Description] = {
+  def parse(attrs:(String, String), parentStyle:Option[Style], hierarchyContainer: HierarchyContainer):Option[Description] = {
     /*mapping*/
     var hali:Option[HAlign] = None
     var vali:Option[VAlign] = None
@@ -27,8 +27,8 @@ object Description extends CommonParserMethodes{
     if(attrs._1.contains("style")){
       val attrsArray = attrs._1.split(" ")
       val styleIndex = attrsArray.indexOf("style")+1
-      val newstyl = diagram.styleHierarchy.get(attrsArray(styleIndex))
-      styl = StyleParser.makeLove(diagram, parentStyle, newstyl)
+      val newstyl = hierarchyContainer.styleHierarchy.get(attrsArray(styleIndex))
+      styl = StyleParser.makeLove(hierarchyContainer, parentStyle, newstyl)
     }
 
     val attributes = attrs._2.split("\n")

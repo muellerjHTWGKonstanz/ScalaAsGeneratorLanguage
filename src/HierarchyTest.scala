@@ -1,6 +1,6 @@
 import model.shapecontainer.shape.Shape
 import model.style.Style
-import model.{ClassHierarchy, Diagram}
+import model.{ClassHierarchy, HierarchyContainer}
 import util.StringToObjectParser
 
 /**
@@ -9,7 +9,7 @@ import util.StringToObjectParser
  */
 object HierarchyTest extends App{
 
-  val diagram = new Diagram(new ClassHierarchy[Style](new Style(name = "root")),
+  val hierarchyContainer = new HierarchyContainer(new ClassHierarchy[Style](new Style(name = "root")),
                             new ClassHierarchy[Shape](new Shape(name = "root")))
 
   val class1 =
@@ -33,10 +33,10 @@ object HierarchyTest extends App{
   val class4 =
     "style D extends C"
 
-  val A = StringToObjectParser toStyle(class1, diagram)
-  val B = StringToObjectParser toStyle(class2, diagram)
-  val C = StringToObjectParser toStyle(class3, diagram)
-  val D = StringToObjectParser toStyle(class4, diagram)
+  val A = StringToObjectParser toStyle(class1, hierarchyContainer)
+  val B = StringToObjectParser toStyle(class2, hierarchyContainer)
+  val C = StringToObjectParser toStyle(class3, hierarchyContainer)
+  val D = StringToObjectParser toStyle(class4, hierarchyContainer)
 
   println("created style-classes A, B, C, D like the following")
   println(
@@ -51,7 +51,7 @@ object HierarchyTest extends App{
           D
        """)
 
-  diagram.styleHierarchy.root.rPrint()
+  hierarchyContainer.styleHierarchy.root.rPrint()
   println("see, C extends A and B (rprint-methode from classHierarchy shows [parent]:child):")
   println("\n")
   println("A, B, C and D are declared like this:")

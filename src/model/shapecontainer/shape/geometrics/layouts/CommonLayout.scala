@@ -1,6 +1,6 @@
 package model.shapecontainer.shape.geometrics.layouts
 
-import model.Diagram
+import model.HierarchyContainer
 import model.style.{StyleParser, Style}
 import util.{CommonParserMethodes, GeoModel}
 
@@ -19,14 +19,14 @@ trait CommonLayout extends Layout{
 }
 
 object CommonLayoutParser extends CommonParserMethodes{
-  def parse(geoModel:GeoModel, parentStyle:Option[Style], diagram: Diagram):Option[CommonLayout] = {
+  def parse(geoModel:GeoModel, parentStyle:Option[Style], hierarchyContainer: HierarchyContainer):Option[CommonLayout] = {
     val attributes = geoModel.attributes
 
     /*mapping*/
     var pos:Option[(Int,Int)] =None
     var size_w:Option[Int] = None
     var size_h:Option[Int] = None
-    var styl:Option[Style] = StyleParser.makeLove(diagram, parentStyle, geoModel.style) //if geoModel.style and parentstyle are defined a childStyle is created
+    var styl:Option[Style] = StyleParser.makeLove(hierarchyContainer, parentStyle, geoModel.style) //if geoModel.style and parentstyle are defined a childStyle is created
 
     attributes.foreach {
       case x if x.matches("position.+") => pos = {
@@ -43,7 +43,7 @@ object CommonLayoutParser extends CommonParserMethodes{
           size_h = Some(newSize.get._2)
         }
       case x if x.matches("style.+") & geoModel.style.isEmpty =>
-        styl = StyleParser.makeLove(diagram, parentStyle, Some(StyleParser.parse(x))) //generate anonymous style
+        styl = StyleParser.makeLove(hierarchyContainer, parentStyle, Some(StyleParser.parse(x))) //generate anonymous style
       case _ =>
     }
 

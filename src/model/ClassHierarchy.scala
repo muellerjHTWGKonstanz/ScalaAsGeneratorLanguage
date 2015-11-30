@@ -16,6 +16,7 @@ sealed class ClassHierarchy[T <% { def toString :String; val name:String}](rootC
   def apply(parent:T, className:T) = nodeView(parent.name) inheritedBy className
   def apply(parent:String, className:T) = nodeView(parent) inheritedBy className
   def apply(className:T)=nodeView(className.name)
+  def apply(className:Option[String])=if(className.isDefined)Some(nodeView(className.get).data)else None
   def apply(className:String) = nodeView(className)
   override def toString = root toString
 

@@ -1,6 +1,6 @@
 package model.shapecontainer.shape.geometrics
 
-import model.Diagram
+import model.HierarchyContainer
 import model.shapecontainer.shape.geometrics.layouts.{RoundedRectangleLayoutParser, RoundedRectangleLayout}
 import model.style.Style
 import util.GeoModel
@@ -29,11 +29,11 @@ object RoundedRectangle{
    * @param geoModel is the sketch to parse into a GeometricModel
    * @param parent is the parent instance that wraps the new GeometricModel
    * @param parentStyle is the style used by the parent and eventual will be merged with the geoModels style to a new style
-   * @param diagram holds hierarchical information about styles and is therefor needed*/
-  def apply(geoModel: GeoModel, parent: Option[GeometricModel], parentStyle:Option[Style], diagram:Diagram) = parse(geoModel, parent, parentStyle, diagram)
-  def parse(geoModel: GeoModel, parent: Option[GeometricModel], parentStyle:Option[Style], diagram:Diagram): Option[RoundedRectangle] = {
+   * @param hierarchyContainer holds hierarchical information about styles and is therefor needed*/
+  def apply(geoModel: GeoModel, parent: Option[GeometricModel], parentStyle:Option[Style], hierarchyContainer:HierarchyContainer) = parse(geoModel, parent, parentStyle, hierarchyContainer)
+  def parse(geoModel: GeoModel, parent: Option[GeometricModel], parentStyle:Option[Style], hierarchyContainer:HierarchyContainer): Option[RoundedRectangle] = {
     /*mapping*/
-    val rrLayout: Option[RoundedRectangleLayout] = RoundedRectangleLayoutParser.parse(geoModel, parentStyle, diagram)
+    val rrLayout: Option[RoundedRectangleLayout] = RoundedRectangleLayoutParser.parse(geoModel, parentStyle, hierarchyContainer)
 
     if (rrLayout.isEmpty)
       return None

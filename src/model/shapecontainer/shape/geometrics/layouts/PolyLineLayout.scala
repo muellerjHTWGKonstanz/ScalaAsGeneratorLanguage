@@ -1,6 +1,6 @@
 package model.shapecontainer.shape.geometrics.layouts
 
-import model.Diagram
+import model.HierarchyContainer
 import model.shapecontainer.shape.geometrics.{PointParser, Point}
 import model.style.{StyleParser, Style}
 import util.GeoModel
@@ -14,18 +14,18 @@ trait PolyLineLayout extends Layout{
 }
 
 object PolyLineLayoutParser{
-  def apply(geoModel: GeoModel, parentStyle:Option[Style], diagram:Diagram):Option[PolyLineLayout] = parse(geoModel, parentStyle, diagram)
-  def parse(geoModel:GeoModel, parentStyle:Option[Style], diagram:Diagram):Option[PolyLineLayout] ={
+  def apply(geoModel: GeoModel, parentStyle:Option[Style], hierarchyContainer:HierarchyContainer):Option[PolyLineLayout] = parse(geoModel, parentStyle, hierarchyContainer)
+  def parse(geoModel:GeoModel, parentStyle:Option[Style], hierarchyContainer:HierarchyContainer):Option[PolyLineLayout] ={
     val attributes = geoModel.attributes
 
     /*mapping*/
     var collectedPoints:List[Point] = List[Point]()
-    var styl:Option[Style] = StyleParser.makeLove(diagram, parentStyle, geoModel.style)
+    var styl:Option[Style] = StyleParser.makeLove(hierarchyContainer, parentStyle, geoModel.style)
     attributes.foreach{
       case x if x.matches("point.+") =>
         val newPoint = PointParser(x)
         if(newPoint.isDefined)collectedPoints = collectedPoints.::(newPoint.get)
-      case x if x.matches("style.+") & geoModel.style.isEmpty => styl = StyleParser.makeLove(diagram, parentStyle, Some(StyleParser.parse(x)))
+      case x if x.matches("style.+") & geoModel.style.isEmpty => styl = StyleParser.makeLove(hierarchyContainer, parentStyle, Some(StyleParser.parse(x)))
     }
     if(collectedPoints.length > 1)
       Some(new PolyLineLayout {

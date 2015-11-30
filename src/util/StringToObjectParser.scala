@@ -17,8 +17,8 @@ object StringToObjectParser {
   /**
    * Takes a given input-String and returns an instance of model.style.Style
    * @param input style class in string form to be parsed
-   * @param diagram for inheritance information*/
-  def toStyle(input: String, diagram: Diagram): Style = {
+   * @param hierarchyContainer for inheritance information*/
+  def toStyle(input: String, hierarchyContainer: HierarchyContainer): Style = {
     /*argument splitting*/
     val argArray = input.split("\\{|\\}") //to get header (class name) and attributes(foo = bar)
     val styleHead: Array[String] = argArray(0).split(" ")
@@ -27,11 +27,11 @@ object StringToObjectParser {
 
     /*check if class extends other class*/
     if (styleHead.contains("extends")) {
-      /*look up the extended classes in diagram's classHierarchy and push them on the stack*/
+      /*look up the extended classes in hierarchyContainer's classHierarchy and push them on the stack*/
       styleHead.splitAt(3)._2.map(s => s.replace(",", "")).foreach(elem =>
-        if (diagram.styleHierarchy.contains(elem)) {
+        if (hierarchyContainer.styleHierarchy.contains(elem)) {
           /*its important to add like this: elem::Tail to keep the most relevant element in the beginning*/
-          extendedStyle = diagram.styleHierarchy(elem).data :: extendedStyle
+          extendedStyle = hierarchyContainer.styleHierarchy(elem).data :: extendedStyle
         }) /*TODO if class was not found, to be inherited tell Logger*/
     }
 
@@ -100,9 +100,9 @@ object StringToObjectParser {
 
     /*include new style instance in stylehierarchie*/
     if (extendedStyle.nonEmpty) {
-      extendedStyle.reverse.foreach(elem => diagram.styleHierarchy(elem.name, newStyle))
+      extendedStyle.reverse.foreach(elem => hierarchyContainer.styleHierarchy(elem.name, newStyle))
     } else {
-      diagram.styleHierarchy.newBaseClass(newStyle)
+      hierarchyContainer.styleHierarchy.newBaseClass(newStyle)
     }
 
     /*return the new Style*/
@@ -113,10 +113,10 @@ object StringToObjectParser {
   /**
    * transforms a given input-String and returns a model.shapecontainer.shape.Shape object
    * @param input is the input String to be converted to a Shape instance
-   * @param diagram a Diagram, which includes all the class-hierarchy-information needed, to inherit
+   * @param hierarchyContainer a Diagram, which includes all the class-hierarchy-information needed, to inherit
    * from parent instances
    * */
-  def toShape(input: String, diagram: Diagram): Shape = {
+  def toShape(input: String, hierarchyContainer: HierarchyContainer): Shape = {
     var allLines:Array[String] = input.split("\n")
     val argArray = input.split("\\{|\\}") //to get header (class name) and attributes(foo = bar)
     val shapeHead: Array[String] = argArray(0).split(" ")
@@ -125,11 +125,11 @@ object StringToObjectParser {
 
     /*check if class extends other class*/
     if (shapeHead.contains("extends")) {
-      /*look up the extended classes in diagram's classHierarchy and push them on the stack*/
+      /*look up the extended classes in hierarchyContainer's classHierarchy and push them on the stack*/
       shapeHead.splitAt(3)._2.map(s => s.replace(",", "")).foreach(elem =>
-        if (diagram.styleHierarchy.contains(elem)) {
+        if (hierarchyContainer.styleHierarchy.contains(elem)) {
           /*its important to add like this: elem::Tail to keep the most relevant element in the beginning*/
-          extendedShape = diagram.shapeHierarchy(elem).data :: extendedShape
+          extendedShape = hierarchyContainer.shapeHierarchy(elem).data :: extendedShape
         }) /*TODO if class was not found, to be inherited, tell Logger*/
     }
 
@@ -159,7 +159,7 @@ object StringToObjectParser {
     var anchor: Option[AnchorType]             = relevant { _.anchor }
 
     shapeAttributes.foreach { line => line.trim.split(" = ")(0) match {
-      case x if x == "style" => style = Some(diagram.styleHierarchy(line.trim.split(" = ")(1)).data)
+      case x if x == "style" => style = Some(hierarchyContainer.styleHierarchy(line.trim.split(" = ")(1)).data)
       case x if x.contains("size") => x match {
         case `x` if `x`.contains("width") => `x` match {
           case `x` if `x`.contains("min") => size_width_min = Some(line.trim.split(" = ")(1).toInt)
@@ -192,9 +192,9 @@ object StringToObjectParser {
 
     /*include new shape instance in shapehierarchie*/
     if (extendedShape.nonEmpty) {
-      extendedShape.reverse.foreach(elem => diagram.shapeHierarchy(elem.name, newShape))
+      extendedShape.reverse.foreach(elem => hierarchyContainer.shapeHierarchy(elem.name, newShape))
     } else {
-      diagram.shapeHierarchy.newBaseClass(newShape)
+      hierarchyContainer.shapeHierarchy.newBaseClass(newShape)
     }
 
     /*return new Shape instance*/

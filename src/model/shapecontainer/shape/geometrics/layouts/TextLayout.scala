@@ -1,6 +1,6 @@
 package model.shapecontainer.shape.geometrics.layouts
 
-import model.Diagram
+import model.HierarchyContainer
 import model.shapecontainer.shape.geometrics.Alignment
 import model.shapecontainer.shape.geometrics.Alignment.{VAlign, HAlign}
 import model.style.Style
@@ -16,13 +16,13 @@ trait TextLayout extends CommonLayout {
 }
 
 object TextLayoutParser {
-  def apply(geoModel: GeoModel, parentStyle:Option[Style], diagram:Diagram): Option[TextLayout] = parse(geoModel, parentStyle, diagram)
+  def apply(geoModel: GeoModel, parentStyle:Option[Style], hierarchyContainer:HierarchyContainer): Option[TextLayout] = parse(geoModel, parentStyle, hierarchyContainer)
 
-  def parse(geoModel: GeoModel, parentStyle:Option[Style], diagram:Diagram): Option[TextLayout] = {
+  def parse(geoModel: GeoModel, parentStyle:Option[Style], hierarchyContainer:HierarchyContainer): Option[TextLayout] = {
     val attributes = geoModel.attributes
 
     /*mapping*/
-    val commonLayout = CommonLayoutParser.parse(geoModel, parentStyle, diagram)
+    val commonLayout = CommonLayoutParser.parse(geoModel, parentStyle, hierarchyContainer)
     if (commonLayout.isEmpty)
       return None
     var hali: Option[HAlign] = None
