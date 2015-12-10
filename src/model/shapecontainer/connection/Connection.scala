@@ -16,15 +16,18 @@ import util.{PlacingSketch, CommonParserMethodes}
 case class Connection(name:String,
                  connection_type:Option[ConnectionStyle] = None,
                  style:Option[Style] = None,
-                 placing:List[Placing] = List[Placing]()) extends ShapeContainerElement{
-
-}
+                 placing:List[Placing] = List[Placing]()) extends ShapeContainerElement
 object Connection extends CommonParserMethodes{
   val validConnectionAttributes = List("connection-type", "layout", "placing")
   /**
    * parse method
    * */
-  def apply(name:String, styleRef:Option[String], typ:Option[String], anonymousStyle:Option[String], placings:List[PlacingSketch], hierarchyContainer:HierarchyContainer):Option[Connection] = {
+  def apply(name:String,
+            styleRef:Option[String],
+            typ:Option[String],
+            anonymousStyle:Option[String],
+            placings:List[PlacingSketch],
+            hierarchyContainer:HierarchyContainer):Option[Connection] = {
     /*mapping*/
     var style:Option[Style] = if(styleRef isDefined) hierarchyContainer.styleHierarchy.get(styleRef.get) else None
     val connection_type:Option[ConnectionStyle] = if(typ isDefined) Some(parse(connectionType, typ.get).get) else None
@@ -35,8 +38,11 @@ object Connection extends CommonParserMethodes{
 
     if(placingList isEmpty)
       None
-    else
-      Some(new Connection(name, connection_type, style, placingList))
+    else {
+      val newConnection = new Connection(name, connection_type, style, placingList)
+      hierarchyContainer.connections += name -> newConnection
+      Some(newConnection)
+    }
   }
 
   def connectionType = "connection-type\\s*=".r ~> "(freeform|manhatten)".r ^^ {

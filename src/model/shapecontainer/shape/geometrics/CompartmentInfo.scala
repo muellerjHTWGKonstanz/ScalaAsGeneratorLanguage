@@ -1,5 +1,7 @@
 package model.shapecontainer.shape.geometrics
 
+import model.HierarchyContainer
+import model.shapecontainer.shape.Shape
 import util.CommonParserMethodes
 
 /**
@@ -24,9 +26,8 @@ abstract sealed class CompartmentLayout
 
 object CompartmentInfoParser extends CommonParserMethodes {
 
-  def apply(attributes: List[String]): Option[CompartmentInfo] = parse(attributes)
-
-  def parse(attributes: List[String]): Option[CompartmentInfo] = {
+  def apply(attributes: List[String], ancestorShape:Shape): Option[CompartmentInfo] = parse(attributes, ancestorShape)
+  def parse(attributes: List[String], ancestorShape:Shape): Option[CompartmentInfo] = {
 
     var layout: Option[CompartmentLayout] = None
     var margin: Option[Int] = None
@@ -56,16 +57,26 @@ object CompartmentInfoParser extends CommonParserMethodes {
       case x if x.startsWith("id") => id = Some(parse(parse_id, x).get)
     }
 
-    if(layout.isDefined)
-      Some(new CompartmentInfo {
-        override val compartment_layout:Option[CompartmentLayout] = layout
+    if(layout.isDefined) {
+     /*associate the new compartment with its name in the shape's compartmentMap*/
+      val newCompart = new CompartmentInfo {
+        override val compartment_layout: Option[CompartmentLayout] = layout
         override val compartment_margin: Option[Int] = margin
         override val compartment_spacing: Option[Int] = spacing
         override val compartment_stretching_horizontal: Option[Boolean] = stretching_horizontal
         override val compartment_stretching_vertical: Option[Boolean] = stretching_vertical
         override val compartment_id: Option[String] = id
         override val compartment_invisible: Option[Boolean] = invisible
-      })
+      }
+
+      /*associate the ancestorShape's compartmentMap with the new Compartment ID, so it can be found by the diagram*/
+      if(ancestorShape.compartmentMap.isDefined)
+        ancestorShape.compartmentMap.get += newCompart.compartment_id.get -> newCompart
+      else {
+        ancestorShape.compartmentMap = Some(Map(newCompart.compartment_id.get -> newCompart))
+      }
+      Some(newCompart)
+    }
     else
       None
   }

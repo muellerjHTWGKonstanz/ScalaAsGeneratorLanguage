@@ -4,7 +4,7 @@ import model.{ClassHierarchy, HierarchyContainer}
 import model.shapecontainer.ShapeContainerElement
 import model.shapecontainer.shape.anchor.Anchor
 import model.shapecontainer.shape.anchor.Anchor.AnchorType
-import model.shapecontainer.shape.geometrics.{Description, GeometricModel}
+import model.shapecontainer.shape.geometrics._
 import model.style.{StyleParser, Style}
 import util.{GeoModel, CommonParserMethodes}
 
@@ -27,6 +27,9 @@ case class Shape( name:String = "no name",
                   stretching_horizontal:Option[Boolean] = None, /*from ShapeLayout*/
                   stretching_vertical:Option[Boolean]   = None, /*from ShapeLayout*/
                   proportional:Option[Boolean]          = None, /*from ShapeLayout*/
+
+                  textMap:Option[Map[String, Text]]     = None, /*necessary addition*/
+                  var compartmentMap:Option[Map[String, CompartmentInfo]]= None, /*necessary addition*/
 
                   shapes:Option[List[GeometricModel]]   = None,
                   description:Option[Description]       = None,
@@ -77,6 +80,7 @@ object ShapeParser extends CommonParserMethodes{
     var description:Option[Description]       = relevant {_.description}
     var anchor:Option[AnchorType]             = relevant {_.anchor}
     val shapes:Option[List[GeometricModel]]   = relevant {_.shapes}
+    val textMap:Option[Map[String, Text]]     = relevant {_.textMap}
 
     /*initialize the mapping-variables with the actual parameter-values, if they exist*/
     if(styleArgument isDefined){
@@ -126,11 +130,18 @@ object ShapeParser extends CommonParserMethodes{
 
     /*if parentShape had GeometricModels in 'shapes'-attribute, both the lists (parents and new List of GeometricModels) need to be merged*/
     val geometricModels = parseGeometricModels(geos, style).getOrElse(List())
-    val inherited_and_new = {if(shapes isDefined)shapes.get else List()} ::: geometricModels
+    val inherited_and_new_geometrics = {if(shapes isDefined)shapes.get else List()} ::: geometricModels
+
+    /*if parentShape had TextOutputFields (Text) and if new TextFields were parsed, create a new Map[String, Text]*/
+    /*first check for new TextOutputs*/
+    var texts = geometricModels.filter(i => i.isInstanceOf[Text]).map(i => i.asInstanceOf[Text].id -> i.asInstanceOf[Text]).toMap
+    /*now check for old TextOutputs*/
+    if(textMap.isDefined)
+      textMap.get.foreach(i => texts += i)
 
     /*create the actual shape instance*/
     val newShape = new Shape(name, style, size_width_min, size_height_min, size_width_max, size_height_max,
-      stretching_horizontal, stretching_vertical, prop, if(inherited_and_new nonEmpty) Some(inherited_and_new) else None, description, anchor)
+      stretching_horizontal, stretching_vertical, prop, if(texts.nonEmpty)Some(texts) else None,if(inherited_and_new_geometrics nonEmpty) Some(inherited_and_new_geometrics) else None, description, anchor)
 
     /*include new shape instance in shapeHierarchie*/
     if (extendedStyle.nonEmpty) {
@@ -138,10 +149,8 @@ object ShapeParser extends CommonParserMethodes{
     } else {
       hierarchyContainer.shapeHierarchy.newBaseClass(newShape)
     }
-
     newShape
   }
-
 
   /*useful Methodes for generating shape-attribute specific content*/
   private def parseGeometricModels(geoModels:List[GeoModel], parentStyle:Option[Style]) =

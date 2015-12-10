@@ -1,9 +1,10 @@
 package util
 
-import model.diagram.action.{LocalActionGroup, ActionInclude, GlobalActionGroup, Action}
-import model.diagram.node.Node
+import model.diagram.action.{ActionGroup, LocalActionGroup, ActionInclude, Action}
+import model.diagram.methodes.{OnDelete, OnCreate, OnUpdate}
+import model.diagram.node.{ShapeCompartment, ShapeProperty, Node}
 import model.{ClassHierarchy, HierarchyContainer}
-import model.diagram.Diagram
+import model.diagram.{node, Diagram}
 import model.shapecontainer.connection.Connection
 import model.shapecontainer.shape.{ShapeParser, Shape}
 import model.shapecontainer.shape.geometrics._
@@ -15,8 +16,8 @@ import model.style.{StyleParser, Style}
  * offers functions like parseRawShape/Style, which parses style or shape strings to instances
  */
 class SprayParser(hierarchyContainer: HierarchyContainer =
-                  HierarchyContainer(new ClassHierarchy[Style](new Style(name = "root")),
-                                     new ClassHierarchy[Shape](new Shape(name = "root"))
+                  HierarchyContainer(new ClassHierarchy[Style](new Style(name = "rootStyle")),
+                                     new ClassHierarchy[Shape](new Shape(name = "rootShape"))
                   )) extends CommonParserMethodes {
 
 
@@ -135,60 +136,107 @@ class SprayParser(hierarchyContainer: HierarchyContainer =
   private def possibleActionDefinitionNr1 = {
     ("action" ~> ident) ~
     (("(" ~ "label") ~> argument) ~
-    ("implementation" ~> attributeAsString <~ ")") ^^ {
-      case name ~ label ~ realizedBy => Action(name, label, realizedBy)
+    ("class" ~> argument) ~
+    ("methode" ~> ident <~ ")") ^^ {
+      case name ~ label ~ className ~ methode => Action(name, label, className, methode)
     }
   }
   private def possibleActionDefinitionNr2 = {
     ("action" ~> ident) ~
-      (("(" ~ "implementation") ~> argument) ~
-      ("label" ~> attributeAsString <~ ")") ^^ {
-      case name ~ realizedBy ~ label  => Action(name, label, realizedBy)
+      (("(" ~ "label") ~> argument) ~
+      ("methode" ~> ident) ~
+      ("class" ~> argument <~ ")") ^^ {
+      case name ~ label ~ methode ~ className => Action(name, label, className, methode)
     }
   }
+
   private def action = {
     possibleActionDefinitionNr1 | possibleActionDefinitionNr2
   }
+  private def actionInclude = "include" ~> rep((","?) ~> ident ) <~ (";"?) ^^ {case includes => ("actionInclude",ActionInclude(includes))}
+
+  private def actions = "actions" ~ "{" ~> actionInclude ~ rep(action) <~ "}" ^^ { case includes ~ actions => ("actions", (includes._2, actions))}
   private def actionGroup = ("actionGroup" ~> ident) ~ ("{" ~> rep(action) <~ "}") ^^ {
-    case name ~ acts => GlobalActionGroup(name, acts)
-  }
-  private def actionInclude = rep((","?) ~ "include" ~> ident <~ ";") ^^ {case includes => ActionInclude(includes)}
-  private def localActionGroup = "actions" ~ ":" ~ "{" ~> rep(actionInclude) ~ rep(action) <~ "}" ^^ {
-    case includes ~ actions => ("localActionGroup", LocalActionGroup(includes, actions))
+    case name ~ acts => ActionGroup(name, acts)
   }
   private def globalActionGroups=  rep(actionGroup)
 
   private def palette = "palette" ~ ":" ~> argument <~ ";" ^^ {case arg => ("palette", arg.toString)}
   private def container = "container" ~ ":" ~> argument <~ ";" ^^ {case arg => ("container", arg.toString)} //TODO eigentlich ecore::EReference
-  private def onCreate = "onCreate" ~ ":" ~ "askFor" ~> argument <~ ";" ^^ {case arg => ("onCreate", arg.toString)} //TODO eigentlich ecore::EAttribute
+
+  private def actionBlock = rep(("call"?) ~ "action" ~> ident) ~ rep(("call"?) ~ "actionGroup" ~> ident) ^^ {
+    case actions ~ actionGroups => (actions, actionGroups)
+  }
+  private def askFor = "askFor" ~ ":" ~> ident ^^ {case identifier => "Object Mock, change this line!!!!"/*TODO this is only a mock, actually ecoreAttribute*/}
+  private def onCreate = "onCreate" ~ "{" ~> actionBlock ~ askFor <~ "}" ^^ {case actblock ~ askfor => ("onCreate", (actblock, askfor))} //TODO eigentlich ecore::EAttribute
+  private def onUpdate = "onUpdate" ~ "{" ~> actionBlock <~ "}" ^^ {case arg => ("onUpdate", arg)} //TODO eigentlich ecore::EAttribute
+  private def onDelete = "onDelete" ~ "{" ~> actionBlock <~ "}" ^^ {case arg => ("onDelete", arg)} //TODO eigentlich ecore::EAttribute
+
+  private def properties = rep(ident)/*TODO not right */
+  private def compartment = ("nest" ~> ident) ~ ("->" ~> ident) ^^ {case id ~ ident => /*TODO ask Markus why 2 IDs??? only need one to refer to an existing compartmentInfo*/}
+  private def diagramShape = ("shape" ~ ":" ~> ident) ~ (("(" ~> properties/*TODO eigentlicher inhalt*/ <~ ")")?) ^^ {
+    case shapeReference ~ propertiesAndCompartments =>
+      val referencedShape = hierarchyContainer.shapeHierarchy.get(shapeReference)
+      if(referencedShape isDefined) {
+        if(propertiesAndCompartments isDefined) {
+          var props: List[ShapeProperty] = List()
+          var compart: List[ShapeCompartment] = List()
+          props = propertiesAndCompartments.get.map(i => {
+            val compMap = referencedShape.get.compartmentMap
+            if (compMap isDefined) {
+              val compartmentOption = compMap.get.get(i)
+              if(compartmentOption isDefined)
+                new ShapeProperty()
+            }
+          })
+          if (referencedShape.isDefined)
+            new node.Shape(referencedShape.get,)
+        }
+      }
+      None
+  }
 
   private def node = {
-    "node" ~> ident ~
-    //TODO for Type=[ecore:Class|QualifiedName]
-    ("{" ~> rep(/*TODO shape |*/palette|container|onCreate|localActionGroup) <~ "}") ^^ {
-      case name ~ args =>
-        var shap:Option[model.diagram.node.Shape] = None
-        var actionGroup:Option[LocalActionGroup]=None
+    type diaShape = model.diagram.node.Shape
+    ("node" ~> ident) ~
+    ("for" ~> ident) ~
+    (("(" ~ "style" ~ ":" ~> ident <~ ")")?) ~
+    ("{" ~> rep(/*TODO diagramShape |*/palette|container|onCreate|onUpdate|onDelete|actions|actionInclude) <~ "}") ^^ {
+      case name ~ ecoreElement ~ style ~ args =>
+        //TODO for Type=[ecore:Class|QualifiedName]
+        val styleOpt = if(style.isDefined)hierarchyContainer.styleHierarchy.get(style.get) else None
+        var shap:Option[diaShape] = None
         var pal:Option[String] = None
         var con:Option[String] = None
-        var oncr:Option[String] = None
+        var onCr:Option[OnCreate] = None
+        var onUp:Option[OnUpdate] = None
+        var onDe:Option[OnDelete] = None
+        var actions:List[Action] = List()
+        var actionIncludes:Option[ActionInclude] = None
         args.foreach {
           case i if i._1 == "palette" => pal = i._2.asInstanceOf
           case i if i._1 == "container" => con = i._2.asInstanceOf
-          case i if i._1 == "onCreate" => oncr = i._2.asInstanceOf
-          case i if i._1 == "localActionGroup" => actionGroup = Some(i._2.asInstanceOf)
-          case i:(String, model.diagram.node.Shape) => shap = Some(i._2)
+          case i if i._1 == "onCreate" => onCr = i._2.asInstanceOf
+          case i if i._1 == "onUpdate" => onUp = i._2.asInstanceOf
+          case i if i._1 == "onDelete" => onDe = i._2.asInstanceOf
+          case i if i._1 == "actions" => {
+            actions = i._2.asInstanceOf[(ActionInclude, List[Action])]._2
+            actionIncludes = Some(i._2.asInstanceOf[(ActionInclude, List[Action])]._1)
+          }
+          case i:(String, diaShape) => shap = Some(i._2)
           case _ =>
         }
-        Node(name, None, actionGroup, None, pal.getOrElse(""), con.getOrElse(""), oncr.getOrElse(""))
+        Node(name, null, styleOpt, shap, pal, con, onCr, onUp, onDe, actions, actionIncludes)
     }
   }
 
   private def edge = ???
-  private def nodesOrEdges = rep(node|edge)
+  private def nodesOrEdges = rep(node|edge) ^^ ???
+
   def sprayDiagram:Parser[Diagram] = {
       ("diagram" ~> ident) ~
-       (("style" ~> ident)?) ~
+      ("for" ~> ident) ~
+      (("(" ~ "style" ~ ":" ~> ident <~ ")")?) ~
       //TODO for modelType=[ecore:Class|QualifiedName]
       globalActionGroups ~
       nodesOrEdges ^^ {
@@ -209,14 +257,15 @@ object SprayParser{
  * GeoModel is a sketch of a GeometricModel, only used for parsing a shape string and temporarily
  * save all the attributes in a struct for later compilation into a GeometricModel*/
 case class GeoModel(typ: String, style: Option[Style], attributes: List[String], children: List[GeoModel], hierarchyContainer: HierarchyContainer) {
-  def parse(parent: Option[GeometricModel], parentStyle:Option[Style]): Option[GeometricModel] = typ match {
-    case "ellipse" => Ellipse.parse(this, parent, parentStyle, hierarchyContainer)
-    case "line" => Line.parse(this, parent, parentStyle, hierarchyContainer)
-    case "polygon" => Polygon.parse(this, parent,parentStyle, hierarchyContainer)
-    case "polyline" => PolyLine.parse(this, parent,parentStyle, hierarchyContainer)
-    case "rectangle" => Rectangle.parse(this, parent,parentStyle, hierarchyContainer)
-    case "rounded-rectangle" => RoundedRectangle.parse(this, parent,parentStyle, hierarchyContainer)
-    case "text" => Text.parse(this, parent,parentStyle, hierarchyContainer)
+
+  def parse(parentGeometricModel: Option[GeometricModel], parentStyle:Option[Style], ancestorShape:Shape): Option[GeometricModel] = typ match {
+    case "ellipse" => Ellipse.parse(this, parentGeometricModel, parentStyle, hierarchyContainer, ancestorShape)
+    case "line" => Line.parse(this, parentGeometricModel, parentStyle, hierarchyContainer)
+    case "polygon" => Polygon.parse(this, parentGeometricModel,parentStyle, hierarchyContainer)
+    case "polyline" => PolyLine.parse(this, parentGeometricModel,parentStyle, hierarchyContainer)
+    case "rectangle" => Rectangle.parse(this, parentGeometricModel,parentStyle, hierarchyContainer, ancestorShape)
+    case "rounded-rectangle" => RoundedRectangle.parse(this, parentGeometricModel,parentStyle, hierarchyContainer)
+    case "text" => Text.parse(this, parentGeometricModel,parentStyle, hierarchyContainer)
     case _ => None
   }
 }
