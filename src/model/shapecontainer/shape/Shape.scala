@@ -15,28 +15,68 @@ import util.{GeoModel, CommonParserMethodes}
  *
  * @param name = id
  * @param style = model.style.Style
- * @param shapes is a list of model.shapecontainer.shape.geometrics.GeometricForm 's that can be nested inside the shape
  * TODO
  */
-case class Shape( name:String = "no name",
-                  style:Option[Style]                   = None,
-                  size_width_min:Option[Int]            = None, /*from ShapeLayout*/
-                  size_height_min:Option[Int]           = None, /*from ShapeLayout*/
-                  size_width_max:Option[Int]            = None, /*from ShapeLayout*/
-                  size_height_max:Option[Int]           = None, /*from ShapeLayout*/
-                  stretching_horizontal:Option[Boolean] = None, /*from ShapeLayout*/
-                  stretching_vertical:Option[Boolean]   = None, /*from ShapeLayout*/
-                  proportional:Option[Boolean]          = None, /*from ShapeLayout*/
+/*case */class Shape(val name:String = "no name",
+                  val style:Option[Style]                   = None,
+                  val size_width_min:Option[Int]            = None, /*from ShapeLayout*/
+                  val size_height_min:Option[Int]           = None, /*from ShapeLayout*/
+                  val size_width_max:Option[Int]            = None, /*from ShapeLayout*/
+                  val size_height_max:Option[Int]           = None, /*from ShapeLayout*/
+                  val stretching_horizontal:Option[Boolean] = None, /*from ShapeLayout*/
+                  val stretching_vertical:Option[Boolean]   = None, /*from ShapeLayout*/
+                  val proportional:Option[Boolean]          = None, /*from ShapeLayout*/
 
-                  textMap:Option[Map[String, Text]]     = None, /*necessary addition*/
-                  var compartmentMap:Option[Map[String, CompartmentInfo]]= None, /*necessary addition*/
+                  parentShapes:Option[List[GeometricModel]] = None,
+                  parentTextMap:Option[Map[String, Text]]   = None, /*necessary addition*/
+                  parentCompartmentMap:Option[Map[String, CompartmentInfo]]= None, /*necessary addition*/
+                  geos:List[GeoModel]                       = List(),
 
-                  shapes:Option[List[GeometricModel]]   = None,
-                  description:Option[Description]       = None,
-                  anchor:Option[AnchorType]             = None,
-                  extendedShape:List[Shape] = List()) extends ShapeContainerElement{
-  val key = hashCode
-  def apply() = shapes
+                  val description:Option[Description]       = None,
+                  val anchor:Option[AnchorType]             = None,
+                  val extendedShape:List[Shape] = List()) extends ShapeContainerElement{
+
+  /*if parentShape had GeometricModels in 'shapes'-attribute, both the lists (parents and new List of GeometricModels) need to be merged*/
+  val shapes = {
+    val geometricModels = parseGeometricModels(geos, style).getOrElse(List())
+    val inherited_and_new_geometrics = {if(parentShapes isDefined) parentShapes.get else List()} ::: geometricModels
+    if(inherited_and_new_geometrics nonEmpty)Some(inherited_and_new_geometrics)else None
+  }
+
+  /*if parentShape had TextOutputFields (Text) and if new TextFields were parsed, create a new Map[String, Text]*/
+  /*first check for new TextOutputs*/
+  val textMap = {
+    var texts = shapes.get.filter(i => i.isInstanceOf[Text]).map(i => i.asInstanceOf[Text].id -> i.asInstanceOf[Text]).toMap
+    /*now check for old TextOutputs*/
+    if(parentTextMap.isDefined)
+      parentTextMap.get.foreach(i => texts += i)
+    if(texts nonEmpty) Some(texts) else parentTextMap
+  }
+
+  val compartmentMap = {
+    /*if parentShape had CompartmentInfos and if new CompartmentInfos were parsed, create a new Map[String, CompartmentInfo]*/
+    /*first check for new CompartmentInfo*/
+    val comparts = List[CompartmentInfo]()
+    if(shapes isDefined) {
+      shapes.get.foreach {
+        case e: Ellipse =>  e.compartmentInfo :: comparts
+        case e: Rectangle => e.compartmentInfo :: comparts
+      }
+    }
+    /*now check for old TextOutputs*/
+    if(parentTextMap.isDefined)
+      parentTextMap.get.foreach(_ :: comparts)
+
+    if(comparts nonEmpty)
+      Some(comparts.map(i => i.compartment_id.get -> i).toMap)
+    else None
+  }
+
+
+  /*useful Methodes for generating shape-attribute specific content*/
+  private def parseGeometricModels(geoModels:List[GeoModel], parentStyle:Option[Style]) =
+    Some(geoModels.map{_.parse(None, parentStyle, this)}.
+      foldLeft(List[GeometricModel]())((r, c:Option[GeometricModel])=>if(c.isDefined)r.::(c.get) else r))
 }
 
 object ShapeParser extends CommonParserMethodes{
@@ -81,6 +121,7 @@ object ShapeParser extends CommonParserMethodes{
     var anchor:Option[AnchorType]             = relevant {_.anchor}
     val shapes:Option[List[GeometricModel]]   = relevant {_.shapes}
     val textMap:Option[Map[String, Text]]     = relevant {_.textMap}
+    val compartmentMap:Option[Map[String, CompartmentInfo]]= relevant {_.compartmentMap}
 
     /*initialize the mapping-variables with the actual parameter-values, if they exist*/
     if(styleArgument isDefined){
@@ -128,20 +169,9 @@ object ShapeParser extends CommonParserMethodes{
     if(anch nonEmpty)
       anchor = Some(Anchor.parse(Anchor.anchor, anch.get).get)
 
-    /*if parentShape had GeometricModels in 'shapes'-attribute, both the lists (parents and new List of GeometricModels) need to be merged*/
-    val geometricModels = parseGeometricModels(geos, style).getOrElse(List())
-    val inherited_and_new_geometrics = {if(shapes isDefined)shapes.get else List()} ::: geometricModels
-
-    /*if parentShape had TextOutputFields (Text) and if new TextFields were parsed, create a new Map[String, Text]*/
-    /*first check for new TextOutputs*/
-    var texts = geometricModels.filter(i => i.isInstanceOf[Text]).map(i => i.asInstanceOf[Text].id -> i.asInstanceOf[Text]).toMap
-    /*now check for old TextOutputs*/
-    if(textMap.isDefined)
-      textMap.get.foreach(i => texts += i)
-
     /*create the actual shape instance*/
     val newShape = new Shape(name, style, size_width_min, size_height_min, size_width_max, size_height_max,
-      stretching_horizontal, stretching_vertical, prop, if(texts.nonEmpty)Some(texts) else None,if(inherited_and_new_geometrics nonEmpty) Some(inherited_and_new_geometrics) else None, description, anchor)
+      stretching_horizontal, stretching_vertical, prop, shapes, textMap, compartmentMap, geos, description, anchor)
 
     /*include new shape instance in shapeHierarchie*/
     if (extendedStyle.nonEmpty) {
@@ -152,10 +182,6 @@ object ShapeParser extends CommonParserMethodes{
     newShape
   }
 
-  /*useful Methodes for generating shape-attribute specific content*/
-  private def parseGeometricModels(geoModels:List[GeoModel], parentStyle:Option[Style]) =
-    Some(geoModels.map{_.parse(None, parentStyle)}.
-      foldLeft(List[GeometricModel]())((r, c:Option[GeometricModel])=>if(c.isDefined)r.::(c.get) else r))
 
   /*parsingRules for special attributes*/
   def proportional:Parser[Option[Boolean]] = "=?".r ~> argument ^^ {

@@ -12,7 +12,7 @@ import util.GeoModel
  */
 class Rectangle(parent:Option[GeometricModel] = None,
                 commonLayout: CommonLayout,
-                compartmentInfo:Option[CompartmentInfo],
+                val compartmentInfo:Option[CompartmentInfo],
                 parentOf:List[GeometricModel] = List[GeometricModel]()
                  ) extends GeometricModel(parent) with RectangleEllipeLayout with Wrapper with CompartmentInfo{
 
@@ -28,6 +28,7 @@ class Rectangle(parent:Option[GeometricModel] = None,
   override val compartment_margin: Option[Int] = if(compartmentInfo isDefined)compartmentInfo.get.compartment_margin else None
   override val compartment_invisible: Option[Boolean] = if(compartmentInfo isDefined)compartmentInfo.get.compartment_invisible else None
   override val compartment_id: Option[String] = if(compartmentInfo isDefined)compartmentInfo.get.compartment_id else None
+
 }
 
 object Rectangle{

@@ -1,8 +1,8 @@
 package util
 
-import model.diagram.action.{ActionGroup, LocalActionGroup, ActionInclude, Action}
+import model.diagram.action.{ActionGroup, ActionInclude, Action}
 import model.diagram.methodes.{OnDelete, OnCreate, OnUpdate}
-import model.diagram.node.{ShapeCompartment, ShapeProperty, Node}
+import model.diagram.node.Node
 import model.{ClassHierarchy, HierarchyContainer}
 import model.diagram.{node, Diagram}
 import model.shapecontainer.connection.Connection
@@ -39,15 +39,6 @@ class SprayParser(hierarchyContainer: HierarchyContainer =
   private def geoVariable = ("""("""+SprayParser.validGeometricModelVariables.map(_+"|").mkString+""")""").r ^^ {_.toString}
   private def geoAttribute = geoVariable ~ (arguments | compartmentinfo ) ^^ {case v ~ a => v+a}
 
-
-  @Deprecated
-  private def geometricModels = rep(geoModel) ^^ {
-    case a:List[GeoModel] =>
-      (for(g <- a)yield{g.parse(None, None)}).
-        foldLeft(List[GeometricModel]())((r, c:Option[GeometricModel])=>if(c.isDefined)r.::(c.get) else r)
-  }
-
-
   /**parses a geoModel first ident is the GeometricModels name, second ident is an optional reference to a style*/
   private def geoModel: Parser[GeoModel] =
     geoIdentifier ~ ((("style" ~> ident)?) <~ "{") ~ rep(geoAttribute) ~ (rep(geoModel) <~ "}") ^^ {
@@ -56,10 +47,6 @@ class SprayParser(hierarchyContainer: HierarchyContainer =
       else None }, attr, children, hierarchyContainer)
   }
   private def geoIdentifier:Parser[String] = "(ellipse|line|polygon|polyline|rectangle|rounded-rectangle|text)".r ^^ {_.toString}
-
-  private def parseRawGeometricModel(input: String): List[GeometricModel] = {
-    parseAll(geometricModels, trimRight(input)).get
-  }
   /*------------------------------------------------------------------------------------------*/
 
 
@@ -172,28 +159,22 @@ class SprayParser(hierarchyContainer: HierarchyContainer =
   private def onUpdate = "onUpdate" ~ "{" ~> actionBlock <~ "}" ^^ {case arg => ("onUpdate", arg)} //TODO eigentlich ecore::EAttribute
   private def onDelete = "onDelete" ~ "{" ~> actionBlock <~ "}" ^^ {case arg => ("onDelete", arg)} //TODO eigentlich ecore::EAttribute
 
-  private def properties = rep(ident)/*TODO not right */
-  private def compartment = ("nest" ~> ident) ~ ("->" ~> ident) ^^ {case id ~ ident => /*TODO ask Markus why 2 IDs??? only need one to refer to an existing compartmentInfo*/}
-  private def diagramShape = ("shape" ~ ":" ~> ident) ~ (("(" ~> properties/*TODO eigentlicher inhalt*/ <~ ")")?) ^^ {
+  private def shapeVALPropertie = ("val" ~> ident) ~ ("->" ~> ident) ^^ {case key ~ value => ("val", key/*TODO eigentlich ecoreAttribute*/ -> value) }
+  private def shapeVARPropertie = ("var" ~> ident) ~ ("->" ~> ident) ^^ {case key ~ value => ("var", key -> value) }
+  private def shapePropertie = shapeVALPropertie|shapeVARPropertie
+  private def shapeCompartment = ("nest" ~> ident) ~ ("->" ~> ident) ^^ {case key ~ value => ("nest",key -> value) }
+  private def diagramShape = ("shape" ~ ":" ~> ident) ~ (("(" ~> rep(shapePropertie|shapeCompartment)/*TODO eigentlicher inhalt*/ <~ ")")?) ^^ {
     case shapeReference ~ propertiesAndCompartments =>
       val referencedShape = hierarchyContainer.shapeHierarchy.get(shapeReference)
       if(referencedShape isDefined) {
         if(propertiesAndCompartments isDefined) {
-          var props: List[ShapeProperty] = List()
-          var compart: List[ShapeCompartment] = List()
-          props = propertiesAndCompartments.get.map(i => {
-            val compMap = referencedShape.get.compartmentMap
-            if (compMap isDefined) {
-              val compartmentOption = compMap.get.get(i)
-              if(compartmentOption isDefined)
-                new ShapeProperty()
-            }
-          })
-          if (referencedShape.isDefined)
-            new node.Shape(referencedShape.get,)
+          val vars = propertiesAndCompartments.get.filter(i => i._1 == "var").map(_._2).map(i => i._1 -> referencedShape.get.textMap.get(i._2)).toMap/*TODO i._1 (at second use) needs to be resolved to an attribute but is not possible at the moment*/
+          val vals = propertiesAndCompartments.get.filter(i => i._1 == "val").map(_._2).map(i => i._1 -> referencedShape.get.textMap.get(i._2)).toMap
+          val nests = propertiesAndCompartments.get.filter(i => i._1 == "nest").map(_._2).map(i => i._1 -> referencedShape.get.compartmentMap.get(i._2)).toMap
+          ("shape", new node.Shape(referencedShape.get, vars, vals, nests))
         }
       }
-      None
+      ("shape", new node.Shape(referencedShape.get))
   }
 
   private def node = {
@@ -201,9 +182,9 @@ class SprayParser(hierarchyContainer: HierarchyContainer =
     ("node" ~> ident) ~
     ("for" ~> ident) ~
     (("(" ~ "style" ~ ":" ~> ident <~ ")")?) ~
-    ("{" ~> rep(/*TODO diagramShape |*/palette|container|onCreate|onUpdate|onDelete|actions|actionInclude) <~ "}") ^^ {
+    ("{" ~> rep(diagramShape|palette|container|onCreate|onUpdate|onDelete|actions) <~ "}") ^^ {
       case name ~ ecoreElement ~ style ~ args =>
-        //TODO for Type=[ecore:Class|QualifiedName]
+        //TODO ecoreElement should be resolved ... -> "for Type=[ecore:Class|QualifiedName]"
         val styleOpt = if(style.isDefined)hierarchyContainer.styleHierarchy.get(style.get) else None
         var shap:Option[diaShape] = None
         var pal:Option[String] = None
@@ -214,19 +195,18 @@ class SprayParser(hierarchyContainer: HierarchyContainer =
         var actions:List[Action] = List()
         var actionIncludes:Option[ActionInclude] = None
         args.foreach {
+          case i if i._1 == "shape" => shap = Some(i._2.asInstanceOf)
           case i if i._1 == "palette" => pal = i._2.asInstanceOf
           case i if i._1 == "container" => con = i._2.asInstanceOf
           case i if i._1 == "onCreate" => onCr = i._2.asInstanceOf
           case i if i._1 == "onUpdate" => onUp = i._2.asInstanceOf
           case i if i._1 == "onDelete" => onDe = i._2.asInstanceOf
-          case i if i._1 == "actions" => {
+          case i if i._1 == "actions" =>
             actions = i._2.asInstanceOf[(ActionInclude, List[Action])]._2
             actionIncludes = Some(i._2.asInstanceOf[(ActionInclude, List[Action])]._1)
-          }
-          case i:(String, diaShape) => shap = Some(i._2)
           case _ =>
         }
-        Node(name, null, styleOpt, shap, pal, con, onCr, onUp, onDe, actions, actionIncludes)
+        Node(name, ecoreElement, styleOpt, shap, pal, con, onCr, onUp, onDe, actions, actionIncludes)
     }
   }
 
