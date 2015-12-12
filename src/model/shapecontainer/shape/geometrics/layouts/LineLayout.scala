@@ -1,6 +1,6 @@
 package model.shapecontainer.shape.geometrics.layouts
 
-import model.HierarchyContainer
+import model.Cashe
 import model.shapecontainer.shape.geometrics.{PointParser, Point}
 import model.style.{StyleParser, Style}
 import util.GeoModel
@@ -14,7 +14,7 @@ trait LineLayout extends Layout{
 }
 
 object LineLayoutParser{
-  def parse(geoModel:GeoModel, parentStyle:Option[Style], hierarchyContainer: HierarchyContainer):Option[LineLayout]={
+  def parse(geoModel:GeoModel, parentStyle:Option[Style], hierarchyContainer: Cashe):Option[LineLayout]={
     val attributes = geoModel.attributes
 
     /*mapping*/

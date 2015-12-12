@@ -1,6 +1,7 @@
 package model.shapecontainer.shape.geometrics
 
-import model.HierarchyContainer
+import model.Cashe
+import model.shapecontainer.shape.Shape
 import model.shapecontainer.shape.geometrics.layouts.{PolyLineLayoutParser, PolyLineLayout}
 import model.style.Style
 import util.GeoModel
@@ -17,15 +18,15 @@ class Polygon(parent: Option[GeometricModel] = None,
                ) extends PolyLine(parent, polygonLayout) with Wrapper
 
 object Polygon {
-  def apply(geoModel: GeoModel, parent: Option[GeometricModel], parentStyle:Option[Style], hierarchyContainer:HierarchyContainer)=parse(geoModel, parent, parentStyle, hierarchyContainer)
-  def parse(geoModel: GeoModel, parent: Option[GeometricModel], parentStyle:Option[Style], hierarchyContainer:HierarchyContainer): Option[Polygon] = {
+  def apply(geoModel: GeoModel, parent: Option[GeometricModel], parentStyle:Option[Style], hierarchyContainer:Cashe, ancestorShape:Shape)=parse(geoModel, parent, parentStyle, hierarchyContainer, ancestorShape)
+  def parse(geoModel: GeoModel, parent: Option[GeometricModel], parentStyle:Option[Style], hierarchyContainer:Cashe, ancestorShape:Shape): Option[Polygon] = {
     val polygonLayout: Option[PolyLineLayout] = PolyLineLayoutParser(geoModel, parentStyle, hierarchyContainer)
     if (polygonLayout.isEmpty)
       return None
 
     val ret = new Polygon(parent, polygonLayout.get)
     ret.children = for (i <- geoModel.children) yield {
-      i.parse(Some(ret), ret.style).get
+      i.parse(Some(ret), ret.style, ancestorShape).get
     }
     Some(ret)
   }

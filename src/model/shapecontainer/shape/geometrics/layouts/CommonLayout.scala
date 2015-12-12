@@ -1,6 +1,6 @@
 package model.shapecontainer.shape.geometrics.layouts
 
-import model.HierarchyContainer
+import model.Cashe
 import model.style.{StyleParser, Style}
 import util.{CommonParserMethodes, GeoModel}
 
@@ -19,7 +19,7 @@ trait CommonLayout extends Layout{
 }
 
 object CommonLayoutParser extends CommonParserMethodes{
-  def parse(geoModel:GeoModel, parentStyle:Option[Style], hierarchyContainer: HierarchyContainer):Option[CommonLayout] = {
+  def parse(geoModel:GeoModel, parentStyle:Option[Style], hierarchyContainer: Cashe):Option[CommonLayout] = {
     val attributes = geoModel.attributes
 
     /*mapping*/

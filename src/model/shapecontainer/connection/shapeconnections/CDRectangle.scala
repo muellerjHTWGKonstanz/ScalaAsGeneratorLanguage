@@ -1,6 +1,6 @@
 package model.shapecontainer.connection.shapeconnections
 
-import model.shapecontainer.shape.geometrics.layouts.RectangleEllipeLayout
+import model.shapecontainer.shape.geometrics.layouts.RectangleEllipseLayout
 import model.style.Style
 
 /**
@@ -10,4 +10,4 @@ class CDRectangle(override val style: Option[Style] = None,
                   override val position:Option[(Int, Int)] = None,
                   override val size_width:Int,
                   override val size_height:Int
-                   ) extends ShapeConnection with RectangleEllipeLayout
+                   ) extends ShapeConnection with RectangleEllipseLayout

@@ -1,8 +1,6 @@
 import generators.StyleGenerator
-import model.shapecontainer.shape.Shape
-import model.style.Style
-import model.{ClassHierarchy, HierarchyContainer}
-import util.{SprayParser, StringToObjectParser}
+import model.Cashe
+import util.SprayParser
 
 /**
  * Created by julian on 9/3/15.
@@ -10,7 +8,7 @@ import util.{SprayParser, StringToObjectParser}
  */
 object ParserApp extends App {
 
-  val hierarchyContainer = HierarchyContainer(new ClassHierarchy[Style](new Style(name = "root")), new ClassHierarchy[Shape](new Shape(name = "root")))
+  val hierarchyContainer = Cashe()
 
   val classUno = """style BpmnDefaultStyle {
                   description = "The default style of the petrinet hierarchyContainer type."
@@ -92,23 +90,5 @@ object ParserApp extends App {
   //println(hierarchyContainer.styleHierarchy(C).data.font_size)
 
   println(StyleGenerator.compileDia(A))
-
-
-  println("_________________________Shapes_____________________________________________________________________")
-
-  val shapeString =
-    """shape S {
-        style = BpmnDefaultStyle
-      }"""
-
-  val S = StringToObjectParser.toShape(shapeString, hierarchyContainer)
-
-  val shapeString2 =
-    """shape T extends S """
-
-  val T = StringToObjectParser.toShape(shapeString2, hierarchyContainer)
-
-  println(hierarchyContainer.shapeHierarchy(T).data.style)
-  hierarchyContainer.shapeHierarchy.root.rPrint()
 }
 

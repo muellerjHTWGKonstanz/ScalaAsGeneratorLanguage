@@ -1,6 +1,7 @@
 package model.shapecontainer.shape
 
-import model.{ClassHierarchy, HierarchyContainer}
+import model.shapecontainer.shape.geometrics.compartment.CompartmentInfo
+import model.{ClassHierarchy, Cashe}
 import model.shapecontainer.ShapeContainerElement
 import model.shapecontainer.shape.anchor.Anchor
 import model.shapecontainer.shape.anchor.Anchor.AnchorType
@@ -46,11 +47,15 @@ import util.{GeoModel, CommonParserMethodes}
   /*if parentShape had TextOutputFields (Text) and if new TextFields were parsed, create a new Map[String, Text]*/
   /*first check for new TextOutputs*/
   val textMap = {
-    var texts = shapes.get.filter(i => i.isInstanceOf[Text]).map(i => i.asInstanceOf[Text].id -> i.asInstanceOf[Text]).toMap
-    /*now check for old TextOutputs*/
-    if(parentTextMap.isDefined)
-      parentTextMap.get.foreach(i => texts += i)
-    if(texts nonEmpty) Some(texts) else parentTextMap
+    var ret = parentTextMap
+    if(shapes isDefined) {
+      var texts = shapes.get.filter(i => i.isInstanceOf[Text]).map(i => i.asInstanceOf[Text].id -> i.asInstanceOf[Text]).toMap
+      /*now check for old TextOutputs*/
+      if (parentTextMap.isDefined)
+        parentTextMap.get.foreach(i => texts += i)
+      if (texts nonEmpty) ret = Some(texts)
+    }
+    ret
   }
 
   val compartmentMap = {
@@ -59,21 +64,35 @@ import util.{GeoModel, CommonParserMethodes}
     val comparts = List[CompartmentInfo]()
     if(shapes isDefined) {
       shapes.get.foreach {
-        case e: Ellipse =>  e.compartmentInfo :: comparts
-        case e: Rectangle => e.compartmentInfo :: comparts
+        case e: Ellipse if e.compartmentInfo.isDefined =>  e.compartmentInfo :: comparts
+        case e: Rectangle if e.compartmentInfo.isDefined => e.compartmentInfo :: comparts
+        case _ =>
       }
     }
-    /*now check for old TextOutputs*/
-    if(parentTextMap.isDefined)
-      parentTextMap.get.foreach(_ :: comparts)
-
     if(comparts nonEmpty)
       Some(comparts.map(i => i.compartment_id.get -> i).toMap)
     else None
   }
 
 
-  /*useful Methodes for generating shape-attribute specific content*/
+  /*useful Methodes */
+  override def toString = "Shape("+name +
+                       /*"; style: "                  +*/", " + style +
+                       /*"; size_width_min: "         +*/", " + size_width_min +
+                       /*"; size_height_min: "        +*/", " + size_height_min +
+                       /*"; size_width_max: "         +*/", " + size_width_max +
+                       /*"; size_height_max: "        +*/", " + size_height_max +
+                       /*"; stretching_horizontal: "  +*/", " + stretching_horizontal +
+                       /*"; stretching_vertical: "    +*/", " + stretching_vertical +
+                       /*"; proportional: "           +*/", " + proportional +
+                       /*"; shapes: "                 +*/", " + shapes +
+                       /*"; tests: "                  +*/", " + textMap +
+                       /*"; compartments: "           +*/", " + compartmentMap +
+                       /*"; description: "            +*/", " + description +
+                       /*"; anchor: "                 +*/", " + anchor +
+                       /*"; parentShapes: "           +*/", " + extendedShape +")"
+
+  /*for generating shape-attribute specific content*/
   private def parseGeometricModels(geoModels:List[GeoModel], parentStyle:Option[Style]) =
     Some(geoModels.map{_.parse(None, parentStyle, this)}.
       foldLeft(List[GeometricModel]())((r, c:Option[GeometricModel])=>if(c.isDefined)r.::(c.get) else r))
@@ -82,7 +101,7 @@ import util.{GeoModel, CommonParserMethodes}
 object ShapeParser extends CommonParserMethodes{
   val validShapeVariables = List("size-min", "size-max", "stretching", "proportional", "anchor", "description(\\s*style\\s*[a-zA-ZüäöÜÄÖ]+([-_][a-zA-ZüäöÜÄÖ])*)?\\s*")
 
-  def apply(name:String, parents:Option[List[String]], style:Option[String], attributes:List[(String, String)], geos:List[GeoModel], description:Option[(String, String)], anchor:Option[String], hierarchyContainer:HierarchyContainer) =
+  def apply(name:String, parents:Option[List[String]], style:Option[String], attributes:List[(String, String)], geos:List[GeoModel], description:Option[(String, String)], anchor:Option[String], hierarchyContainer:Cashe) =
     parse(name, parents, style, attributes, geos, description, anchor, hierarchyContainer)
 
   def parse(name:String,
@@ -92,22 +111,22 @@ object ShapeParser extends CommonParserMethodes{
             geos:List[GeoModel],
             desc:Option[(String, String)],
             anch:Option[String],
-            hierarchyContainer:HierarchyContainer):Shape = {
+            hierarchyContainer:Cashe):Shape = {
 
     val parents = if(parentShapes isDefined) parentShapes.get else List()
-    var extendedStyle:List[Shape] = List[Shape]()
+    var extendedShapes:List[Shape] = List[Shape]()
     if(parents.nonEmpty)
       parents.foreach{parent => {
         val parentName = parent.trim //trim just to make sure, could probably be removed
         if(hierarchyContainer.shapeHierarchy.contains(parentName))
-          extendedStyle = hierarchyContainer.shapeHierarchy(parentName).data :: extendedStyle
+          extendedShapes = hierarchyContainer.shapeHierarchy(parentName).data :: extendedShapes
       }
       }/*TODO if class was not found, to be inherited tell Logger*/
 
     /*mapping*/
     /** relevant is a help-methode, which shortens the actual call to mostRelevant of ClassHierarchy by ensuring the collection-parameter
       * relevant speaks for the hierarchical context -> "A extends B, C" -> C is most relevant */
-    def relevant[T](f: Shape => Option[T]) = ClassHierarchy.mostRelevant(extendedStyle) {f}
+    def relevant[T](f: Shape => Option[T]) = ClassHierarchy.mostRelevant(extendedShapes) {f}
 
     var style:Option[Style]                   = relevant {_.style}
     var size_width_min:Option[Int]            = relevant {_.size_width_min}
@@ -174,8 +193,8 @@ object ShapeParser extends CommonParserMethodes{
       stretching_horizontal, stretching_vertical, prop, shapes, textMap, compartmentMap, geos, description, anchor)
 
     /*include new shape instance in shapeHierarchie*/
-    if (extendedStyle.nonEmpty) {
-      extendedStyle.reverse.foreach(elem => hierarchyContainer.shapeHierarchy(elem.name, newShape))
+    if (extendedShapes.nonEmpty) {
+      extendedShapes.reverse.foreach(elem => hierarchyContainer.shapeHierarchy(elem.name, newShape))
     } else {
       hierarchyContainer.shapeHierarchy.newBaseClass(newShape)
     }

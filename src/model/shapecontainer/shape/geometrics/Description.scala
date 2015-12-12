@@ -1,6 +1,6 @@
 package model.shapecontainer.shape.geometrics
 
-import model.HierarchyContainer
+import model.Cashe
 import model.shapecontainer.shape.geometrics.Alignment.{VAlign, HAlign}
 import model.style.{StyleParser, Style}
 import util.CommonParserMethodes
@@ -17,7 +17,7 @@ class Description(override val id:String,
 
 object Description extends CommonParserMethodes{
 
-  def parse(attrs:(String, String), parentStyle:Option[Style], hierarchyContainer: HierarchyContainer):Option[Description] = {
+  def parse(attrs:(String, String), parentStyle:Option[Style], hierarchyContainer: Cashe):Option[Description] = {
     /*mapping*/
     var hali:Option[HAlign] = None
     var vali:Option[VAlign] = None

@@ -1,6 +1,7 @@
 package model.shapecontainer.shape.geometrics
 
-import model.HierarchyContainer
+import model.Cashe
+import model.shapecontainer.shape.Shape
 import model.shapecontainer.shape.geometrics.layouts.{TextLayoutParser, TextLayout}
 import model.style.Style
 import Alignment._
@@ -11,6 +12,7 @@ import util.{CommonParserMethodes, GeoModel}
  * representation of a text-element
  */
 class Text( parent:Option[GeometricModel] = None,
+            textType: TextType,
             override val id:String = "",
             textLayout: TextLayout/*textBody (GrammarSheet)*/
             ) extends GeometricModel(parent) with TextLayout with TextBody{
@@ -28,8 +30,9 @@ abstract class TextType
 
 
 object Text extends CommonParserMethodes{
-  def apply(geoModel:GeoModel, parent:Option[GeometricModel], parentStyle:Option[Style], hierarchyContainer:HierarchyContainer) = parse(geoModel, parent, parentStyle, hierarchyContainer)
-  def parse(geoModel:GeoModel, parent:Option[GeometricModel], parentStyle:Option[Style], hierarchyContainer:HierarchyContainer):Option[Text] = {
+  def apply(geoModel:GeoModel, parent:Option[GeometricModel], textType:TextType, parentStyle:Option[Style], hierarchyContainer:Cashe, ancestorShape:Shape) =
+    parse(geoModel, parent, textType, parentStyle, hierarchyContainer, ancestorShape)
+  def parse(geoModel:GeoModel, parent:Option[GeometricModel], textType:TextType, parentStyle:Option[Style], hierarchyContainer:Cashe, ancestorShape:Shape):Option[Text] = {
     var id:String = ""
     val textLayout:Option[TextLayout] = TextLayoutParser(geoModel, parentStyle, hierarchyContainer)
     if(textLayout isEmpty)
@@ -43,7 +46,7 @@ object Text extends CommonParserMethodes{
     if(textLayout.isEmpty || id == "")
       None
     else
-      Some(new Text(parent, id, textLayout.get))
+      Some(new Text(parent, textType, id, textLayout.get))
   }
 }
 

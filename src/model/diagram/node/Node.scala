@@ -19,8 +19,8 @@ case class Node(name:String,
                 override val onCreate:Option[OnCreate]= None,
                 override val onUpdate:Option[OnUpdate]= None,
                 override val onDelete:Option[OnDelete]= None,
-                override val actions:List[Action]     = None,
-                override val actionIncludes: Option[ActionInclude] = List()
+                override val actions:List[Action]     = List(),
+                override val actionIncludes: Option[ActionInclude] = None
                ) extends HasStyle with Palette with Container with Methodes with Actions
 /*TODO in constructor resolve open dependencies for example of the actionIncludes(are strings should be a list of actiongroups)*/
 

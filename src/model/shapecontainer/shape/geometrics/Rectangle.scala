@@ -1,8 +1,9 @@
 package model.shapecontainer.shape.geometrics
 
-import model.HierarchyContainer
+import model.Cashe
 import model.shapecontainer.shape.Shape
-import model.shapecontainer.shape.geometrics.layouts.{CommonLayoutParser, RectangleEllipeLayout, CommonLayout}
+import model.shapecontainer.shape.geometrics.compartment.{CompartmentInfoParser, CompartmentLayout, CompartmentInfo}
+import model.shapecontainer.shape.geometrics.layouts.{CommonLayoutParser, RectangleEllipseLayout, CommonLayout}
 import model.style.Style
 import util.GeoModel
 
@@ -14,7 +15,7 @@ class Rectangle(parent:Option[GeometricModel] = None,
                 commonLayout: CommonLayout,
                 val compartmentInfo:Option[CompartmentInfo],
                 parentOf:List[GeometricModel] = List[GeometricModel]()
-                 ) extends GeometricModel(parent) with RectangleEllipeLayout with Wrapper with CompartmentInfo{
+                 ) extends GeometricModel(parent) with RectangleEllipseLayout with Wrapper with CompartmentInfo{
 
   override val style:Option[Style] = commonLayout.style
   override val position:Option[(Int, Int)] = commonLayout.position
@@ -36,8 +37,8 @@ object Rectangle{
    * parses a GeoModel into an actual GeometricModel, in this case a Rectangle
    * @param geoModel is the sketch to parse into a GeometricModel
    * @param parent is the parent instance that wraps the new GeometricModel*/
-  def apply(geoModel:GeoModel, parent:Option[GeometricModel] = None, parentStyle:Option[Style], diagram:HierarchyContainer, ancestorShape:Shape)= parse(geoModel, parent, parentStyle, diagram, ancestorShape)
-  def parse(geoModel:GeoModel, parent:Option[GeometricModel] = None, parentStyle:Option[Style], diagram:HierarchyContainer, ancestorShape:Shape): Option[Rectangle] = {
+  def apply(geoModel:GeoModel, parent:Option[GeometricModel] = None, parentStyle:Option[Style], diagram:Cashe, ancestorShape:Shape)= parse(geoModel, parent, parentStyle, diagram, ancestorShape)
+  def parse(geoModel:GeoModel, parent:Option[GeometricModel] = None, parentStyle:Option[Style], diagram:Cashe, ancestorShape:Shape): Option[Rectangle] = {
     /*mapping*/
     val commonLayout:Option[CommonLayout] = CommonLayoutParser.parse(geoModel, parentStyle, diagram)
     val compartmentInfo:Option[CompartmentInfo] = CompartmentInfoParser.parse(geoModel.attributes, ancestorShape)

@@ -1,7 +1,8 @@
 package model.shapecontainer.shape.geometrics
 
-import model.HierarchyContainer
+import model.Cashe
 import model.shapecontainer.shape.Shape
+import model.shapecontainer.shape.geometrics.compartment.{CompartmentInfoParser, CompartmentInfo}
 import model.shapecontainer.shape.geometrics.layouts.{CommonLayoutParser, CommonLayout}
 import model.style.Style
 import util.GeoModel
@@ -24,8 +25,8 @@ object Ellipse {
    * parses a GeoModel into an actual GeometricModel, in this case a Rectangle
    * @param geoModel is the sketch to parse into a GeometricModel
    * @param parent is the parent instance that wraps the new GeometricModel*/
-  def apply(geoModel: GeoModel, parent: Option[GeometricModel], parentStyle:Option[Style], hierarchyContainer:HierarchyContainer, ancestorShape:Shape)= parse(geoModel, parent, parentStyle, hierarchyContainer, ancestorShape)
-  def parse(geoModel: GeoModel, parent: Option[GeometricModel], parentStyle:Option[Style], hierarchyContainer:HierarchyContainer, ancestorShape:Shape): Option[Ellipse] = {
+  def apply(geoModel: GeoModel, parent: Option[GeometricModel], parentStyle:Option[Style], hierarchyContainer:Cashe, ancestorShape:Shape)= parse(geoModel, parent, parentStyle, hierarchyContainer, ancestorShape)
+  def parse(geoModel: GeoModel, parent: Option[GeometricModel], parentStyle:Option[Style], hierarchyContainer:Cashe, ancestorShape:Shape): Option[Ellipse] = {
     /*mapping*/
     val commonLayout: Option[CommonLayout] = CommonLayoutParser.parse(geoModel, parentStyle, hierarchyContainer)
     val compartmentInfo: Option[CompartmentInfo] = CompartmentInfoParser.parse(geoModel.attributes, ancestorShape)

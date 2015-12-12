@@ -1,9 +1,10 @@
 package util
 
 import model.diagram.action.{ActionGroup, ActionInclude, Action}
-import model.diagram.methodes.{OnDelete, OnCreate, OnUpdate}
+import model.diagram.edge.Edge
+import model.diagram.methodes.{ActionBlock, OnDelete, OnCreate, OnUpdate}
 import model.diagram.node.Node
-import model.{ClassHierarchy, HierarchyContainer}
+import model.{ClassHierarchy, Cashe}
 import model.diagram.{node, Diagram}
 import model.shapecontainer.connection.Connection
 import model.shapecontainer.shape.{ShapeParser, Shape}
@@ -15,10 +16,8 @@ import model.style.{StyleParser, Style}
  * Created by julian on 23.10.15.
  * offers functions like parseRawShape/Style, which parses style or shape strings to instances
  */
-class SprayParser(hierarchyContainer: HierarchyContainer =
-                  HierarchyContainer(new ClassHierarchy[Style](new Style(name = "rootStyle")),
-                                     new ClassHierarchy[Shape](new Shape(name = "rootShape"))
-                  )) extends CommonParserMethodes {
+class SprayParser(cashe: Cashe = Cashe()) extends CommonParserMethodes {
+  type diaShape = model.diagram.node.Shape
 
 
   /*Style-specific----------------------------------------------------------------------------*/
@@ -26,7 +25,7 @@ class SprayParser(hierarchyContainer: HierarchyContainer =
   private def styleAttribute = styleVariable ~ arguments ^^ {case v ~ a => (v, a)}
   private def style: Parser[Style] =
     ("style" ~> ident) ~ (("extends" ~> rep(ident <~ ",?".r))?) ~ ("{" ~> rep(styleAttribute)) <~ "}" ^^ {
-      case name ~ parents ~ attributes => StyleParser(name, parents, attributes, hierarchyContainer)
+      case name ~ parents ~ attributes => StyleParser(name, parents, attributes, cashe)
     }
   def parseRawStyle(input: String) = parseAll(style, trimRight(input)).get
   /*------------------------------------------------------------------------------------------*/
@@ -39,14 +38,14 @@ class SprayParser(hierarchyContainer: HierarchyContainer =
   private def geoVariable = ("""("""+SprayParser.validGeometricModelVariables.map(_+"|").mkString+""")""").r ^^ {_.toString}
   private def geoAttribute = geoVariable ~ (arguments | compartmentinfo ) ^^ {case v ~ a => v+a}
 
-  /**parses a geoModel first ident is the GeometricModels name, second ident is an optional reference to a style*/
+  /**parses a geoModel. first ident is the GeometricModels name, second ident is an optional reference to a style*/
   private def geoModel: Parser[GeoModel] =
     geoIdentifier ~ ((("style" ~> ident)?) <~ "{") ~ rep(geoAttribute) ~ (rep(geoModel) <~ "}") ^^ {
     case name ~ style ~ attr ~ children => GeoModel(name, {
-      if(style.isDefined) Some(hierarchyContainer.styleHierarchy(style.get).data)
-      else None }, attr, children, hierarchyContainer)
+      if(style.isDefined) Some(cashe.styleHierarchy(style.get).data)
+      else None }, attr, children, cashe)
   }
-  private def geoIdentifier:Parser[String] = "(ellipse|line|polygon|polyline|rectangle|rounded-rectangle|text)".r ^^ {_.toString}
+  private def geoIdentifier:Parser[String] = "(ellipse|line|polygon|polyline|rectangle|rounded-rectangle|text|wrapped-text)".r ^^ {_.toString}
   /*------------------------------------------------------------------------------------------*/
 
 
@@ -69,8 +68,7 @@ class SprayParser(hierarchyContainer: HierarchyContainer =
     (descriptionAttribute?) ~
     (anchorAttribute?) <~ "}" ^^
     {case name ~ parent ~ style ~ attrs ~ geos ~ desc ~ anch =>
-      val pStyle = if(style isDefined)hierarchyContainer.styleHierarchy.get(style.get) else None
-      ShapeParser(name, parent, style, attrs, geos, desc, anch, hierarchyContainer)
+      ShapeParser(name, parent, style, attrs, geos, desc, anch, cashe)
     }
 
   private def shapes = rep(shape)
@@ -101,7 +99,7 @@ class SprayParser(hierarchyContainer: HierarchyContainer =
     ("{" ~> (c_type?)) ~
     (c_style?) ~
     rep(c_placing) <~ "}" ^^ {
-      case name ~ style ~ typ ~ anonymousStyle ~ placings => Connection(name, style, typ, anonymousStyle, placings, hierarchyContainer).get
+      case name ~ style ~ typ ~ anonymousStyle ~ placings => Connection(name, style, typ, anonymousStyle, placings, cashe).get
     }
   private def connections = rep(connection)
 
@@ -125,7 +123,10 @@ class SprayParser(hierarchyContainer: HierarchyContainer =
     (("(" ~ "label") ~> argument) ~
     ("class" ~> argument) ~
     ("methode" ~> ident <~ ")") ^^ {
-      case name ~ label ~ className ~ methode => Action(name, label, className, methode)
+      case name ~ label ~ className ~ methode =>
+        val newAction = Action(name, label, className, methode)
+        cashe.actions += name -> newAction
+        newAction
     }
   }
   private def possibleActionDefinitionNr2 = {
@@ -133,7 +134,10 @@ class SprayParser(hierarchyContainer: HierarchyContainer =
       (("(" ~ "label") ~> argument) ~
       ("methode" ~> ident) ~
       ("class" ~> argument <~ ")") ^^ {
-      case name ~ label ~ methode ~ className => Action(name, label, className, methode)
+      case name ~ label ~ methode ~ className =>
+        val newAction = Action(name, label, className, methode)
+        cashe.actions += name -> newAction
+        newAction
     }
   }
 
@@ -144,48 +148,62 @@ class SprayParser(hierarchyContainer: HierarchyContainer =
 
   private def actions = "actions" ~ "{" ~> actionInclude ~ rep(action) <~ "}" ^^ { case includes ~ actions => ("actions", (includes._2, actions))}
   private def actionGroup = ("actionGroup" ~> ident) ~ ("{" ~> rep(action) <~ "}") ^^ {
-    case name ~ acts => ActionGroup(name, acts)
+    case name ~ acts =>
+      val newActionGroup = ActionGroup(name, acts)
+      cashe.actionGroups += name -> newActionGroup
+      newActionGroup
   }
   private def globalActionGroups=  rep(actionGroup)
 
-  private def palette = "palette" ~ ":" ~> argument <~ ";" ^^ {case arg => ("palette", arg.toString)}
-  private def container = "container" ~ ":" ~> argument <~ ";" ^^ {case arg => ("container", arg.toString)} //TODO eigentlich ecore::EReference
-
-  private def actionBlock = rep(("call"?) ~ "action" ~> ident) ~ rep(("call"?) ~ "actionGroup" ~> ident) ^^ {
-    case actions ~ actionGroups => (actions, actionGroups)
+  private def palette = "palette" ~ ":" ~> argument <~ ";" ^^ {
+    case arg => ("palette", arg.toString)
   }
-  private def askFor = "askFor" ~ ":" ~> ident ^^ {case identifier => "Object Mock, change this line!!!!"/*TODO this is only a mock, actually ecoreAttribute*/}
-  private def onCreate = "onCreate" ~ "{" ~> actionBlock ~ askFor <~ "}" ^^ {case actblock ~ askfor => ("onCreate", (actblock, askfor))} //TODO eigentlich ecore::EAttribute
-  private def onUpdate = "onUpdate" ~ "{" ~> actionBlock <~ "}" ^^ {case arg => ("onUpdate", arg)} //TODO eigentlich ecore::EAttribute
-  private def onDelete = "onDelete" ~ "{" ~> actionBlock <~ "}" ^^ {case arg => ("onDelete", arg)} //TODO eigentlich ecore::EAttribute
+  private def container = "container" ~ ":" ~> argument <~ ";" ^^ {
+    case arg => ("container", arg.toString)//TODO eigentlich ecore::EReference
+  }
+  private def actionBlock = rep(("call"?) ~ "action" ~> ident) ~ rep(("call"?) ~ "actionGroup" ~> ident) ^^ {
+    case actions ~ actionGroups => ActionBlock(actions.map(i => cashe.actions(i)), actionGroups.map(i => cashe.actionGroups(i)))
+  }
+  private def askFor = "askFor" ~ ":" ~> ident ^^ {
+    case identifier => "Object Mock, change this line!!!!"/*TODO this is only a mock, actually ecoreAttribute*/
+  }
+
+  private def onCreate = "onCreate" ~ "{" ~> (actionBlock?) ~ (askFor?) <~ "}" ^^ {
+    case actblock ~ askfor => ("onCreate", OnCreate(actblock, askfor))//TODO eigentlich ecore::EAttribute
+  }
+  private def onUpdate = "onUpdate" ~ "{" ~> (actionBlock?) <~ "}" ^^ {
+    case actBlock => ("onUpdate", OnUpdate(actBlock))//TODO eigentlich ecore::EAttribute
+  }
+  private def onDelete = "onDelete" ~ "{" ~> (actionBlock?) <~ "}" ^^ {
+      case actBlock => ("onDelete", OnDelete(actBlock))//TODO eigentlich ecore::EAttribute
+    }
 
   private def shapeVALPropertie = ("val" ~> ident) ~ ("->" ~> ident) ^^ {case key ~ value => ("val", key/*TODO eigentlich ecoreAttribute*/ -> value) }
   private def shapeVARPropertie = ("var" ~> ident) ~ ("->" ~> ident) ^^ {case key ~ value => ("var", key -> value) }
   private def shapePropertie = shapeVALPropertie|shapeVARPropertie
   private def shapeCompartment = ("nest" ~> ident) ~ ("->" ~> ident) ^^ {case key ~ value => ("nest",key -> value) }
-  private def diagramShape = ("shape" ~ ":" ~> ident) ~ (("(" ~> rep(shapePropertie|shapeCompartment)/*TODO eigentlicher inhalt*/ <~ ")")?) ^^ {
+  private def diagramShape:Parser[(String, diaShape)] = ("shape" ~ ":" ~> ident) ~ (("(" ~> rep(shapePropertie|shapeCompartment)/*TODO eigentlicher inhalt*/ <~ ")")?) ^^ {
     case shapeReference ~ propertiesAndCompartments =>
-      val referencedShape = hierarchyContainer.shapeHierarchy.get(shapeReference)
+      val referencedShape = cashe.shapeHierarchy.get(shapeReference)
       if(referencedShape isDefined) {
         if(propertiesAndCompartments isDefined) {
           val vars = propertiesAndCompartments.get.filter(i => i._1 == "var").map(_._2).map(i => i._1 -> referencedShape.get.textMap.get(i._2)).toMap/*TODO i._1 (at second use) needs to be resolved to an attribute but is not possible at the moment*/
           val vals = propertiesAndCompartments.get.filter(i => i._1 == "val").map(_._2).map(i => i._1 -> referencedShape.get.textMap.get(i._2)).toMap
           val nests = propertiesAndCompartments.get.filter(i => i._1 == "nest").map(_._2).map(i => i._1 -> referencedShape.get.compartmentMap.get(i._2)).toMap
-          ("shape", new node.Shape(referencedShape.get, vars, vals, nests))
+          ("shape", new diaShape(referencedShape.get, vars, vals, nests))
         }
       }
-      ("shape", new node.Shape(referencedShape.get))
+      ("shape", new diaShape(referencedShape.get))
   }
 
-  private def node = {
-    type diaShape = model.diagram.node.Shape
+  private def node:Parser[Node] = {
     ("node" ~> ident) ~
     ("for" ~> ident) ~
     (("(" ~ "style" ~ ":" ~> ident <~ ")")?) ~
     ("{" ~> rep(diagramShape|palette|container|onCreate|onUpdate|onDelete|actions) <~ "}") ^^ {
       case name ~ ecoreElement ~ style ~ args =>
         //TODO ecoreElement should be resolved ... -> "for Type=[ecore:Class|QualifiedName]"
-        val styleOpt = if(style.isDefined)hierarchyContainer.styleHierarchy.get(style.get) else None
+        val styleOpt = if(style.isDefined)cashe.styleHierarchy.get(style.get) else None
         var shap:Option[diaShape] = None
         var pal:Option[String] = None
         var con:Option[String] = None
@@ -210,8 +228,39 @@ class SprayParser(hierarchyContainer: HierarchyContainer =
     }
   }
 
-  private def edge = ???
-  private def nodesOrEdges = rep(node|edge) ^^ ???
+  private def diagramConnection = {
+    type diaConnection = model.diagram.edge.Connection
+    ("connection" ~ ":" ~> ident) ~
+      (("(" ~> rep(shapePropertie) <~ ")") ?) ^^ {
+      case connectionName ~ properties =>
+        val referencedConnection = cashe.connections(connectionName)
+        val vars = properties.get.filter(i => i._1 == "var").map(_._2).map(i => i._1 -> new Object()).toMap/*TODO new Object (at second use) needs to be resolved to an attribute but is not possible at the moment*/
+        val vals = properties.get.filter(i => i._1 == "val").map(_._2).map(i => i._1 -> new Object()).toMap/*TODO new Object (at second use) needs to be resolved to an attribute but is not possible at the moment*/
+        type diaConnection = model.diagram.edge.Connection
+        new diaConnection(referencedConnection,vars, vals)
+    }
+  }
+  private def edge = {
+    type diaConnection = model.diagram.edge.Connection
+    ("edge" ~> ident) ~
+      ("for" ~> ident) ~
+      (("(" ~ "style" ~ ":" ~> ident <~ ")") ?) ~
+      ("{" ~> diagramConnection) ~
+      ("from" ~ ":" ~> ident) ~
+      ("to" ~ ":" ~> ident) ~ (palette?) ~ (container?) ~ (onCreate?) ~ (onUpdate?) ~ (onDelete?) ~ (actions?) <~ "}" ^^ {
+      case edgeName ~ ecoreElement ~ styleOpt ~ diaCon ~ from ~ to ~ pal ~ cont ~ oncr ~ onup ~ onde ~ acts =>
+        val style = if(styleOpt isDefined)cashe.styleHierarchy.get(styleOpt.get)else None
+        val ret_palette = if(pal isDefined)Some(pal.get._2) else None
+        val ret_container = if(cont isDefined)Some(cont.get._2) else None
+        val onCr = if(oncr isDefined) Some(oncr.get._2) else None
+        val onUp = if(onup isDefined) Some(onup.get._2) else None
+        val onDe = if(onde isDefined) Some(onde.get._2) else None
+        val ret_actions = if(acts isDefined)Some(acts.get._2._2)else None
+        val ret_actionIncludes = if(acts isDefined)Some(acts.get._2._1)else None
+        Edge(edgeName, ecoreElement, style, diaCon, from, to, ret_palette, ret_container, onCr, onUp, onDe, ret_actions.getOrElse(List()), ret_actionIncludes)
+    }
+  }
+  private def nodesOrEdges = rep(node|edge)
 
   def sprayDiagram:Parser[Diagram] = {
       ("diagram" ~> ident) ~
@@ -220,12 +269,10 @@ class SprayParser(hierarchyContainer: HierarchyContainer =
       //TODO for modelType=[ecore:Class|QualifiedName]
       globalActionGroups ~
       nodesOrEdges ^^ {
-        case name ~ style ~ actionGroups ~ nodesAndEdges => Diagram(actionGroups.map(i => i.name -> i).toMap, nodesAndEdges, hierarchyContainer.styleHierarchy(style), ""/*TODO*/)
+        case name ~ style ~ actionGroups ~ nodesAndEdges => Diagram(actionGroups.map(i => i.name -> i).toMap, nodesAndEdges, cashe.styleHierarchy(style), ""/*TODO*/)
       }
   }
-
-
-  /*------------------------------------------------------------------------------------------*/
+/*------------------------------------------------------------------------------------------*/
 
   private def trimRight(s:String) = s.replaceAll("\\/\\/.+", "").split("\n").map(s => s.trim + "\n").mkString
 }
@@ -236,16 +283,17 @@ object SprayParser{
 /**
  * GeoModel is a sketch of a GeometricModel, only used for parsing a shape string and temporarily
  * save all the attributes in a struct for later compilation into a GeometricModel*/
-case class GeoModel(typ: String, style: Option[Style], attributes: List[String], children: List[GeoModel], hierarchyContainer: HierarchyContainer) {
+case class GeoModel(typ: String, style: Option[Style], attributes: List[String], children: List[GeoModel], hierarchyContainer: Cashe) {
 
   def parse(parentGeometricModel: Option[GeometricModel], parentStyle:Option[Style], ancestorShape:Shape): Option[GeometricModel] = typ match {
     case "ellipse" => Ellipse.parse(this, parentGeometricModel, parentStyle, hierarchyContainer, ancestorShape)
-    case "line" => Line.parse(this, parentGeometricModel, parentStyle, hierarchyContainer)
-    case "polygon" => Polygon.parse(this, parentGeometricModel,parentStyle, hierarchyContainer)
-    case "polyline" => PolyLine.parse(this, parentGeometricModel,parentStyle, hierarchyContainer)
+    case "line" => Line.parse(this, parentGeometricModel, parentStyle, hierarchyContainer, ancestorShape)
+    case "polygon" => Polygon.parse(this, parentGeometricModel,parentStyle, hierarchyContainer, ancestorShape)
+    case "polyline" => PolyLine.parse(this, parentGeometricModel,parentStyle, hierarchyContainer, ancestorShape)
     case "rectangle" => Rectangle.parse(this, parentGeometricModel,parentStyle, hierarchyContainer, ancestorShape)
-    case "rounded-rectangle" => RoundedRectangle.parse(this, parentGeometricModel,parentStyle, hierarchyContainer)
-    case "text" => Text.parse(this, parentGeometricModel,parentStyle, hierarchyContainer)
+    case "rounded-rectangle" => RoundedRectangle.parse(this, parentGeometricModel,parentStyle, hierarchyContainer, ancestorShape)
+    case "text" => Text.parse(this, parentGeometricModel, DefaultText, parentStyle, hierarchyContainer, ancestorShape)
+    case "text-wrapped" => Text.parse(this, parentGeometricModel, Multiline, parentStyle, hierarchyContainer, ancestorShape)
     case _ => None
   }
 }

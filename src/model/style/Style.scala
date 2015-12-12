@@ -1,6 +1,6 @@
 package model.style
 
-import model.{ClassHierarchy, HierarchyContainer}
+import model.{ClassHierarchy, Cashe}
 import util.CommonParserMethodes
 
 import scala.util.Random
@@ -57,7 +57,7 @@ object StyleParser extends CommonParserMethodes {
    * @note note, that attributes are inherited by the latest bound principle: Style A extends B -> B overrides attributes of A a call like:
    *       StyleParser.makeLove(someDiagram, B, C, D, A) -> A's attributes have highest priority!!
    */
-  def makeLove(hierarchyContainer: HierarchyContainer, parents:Option[Style]*):Option[Style] ={
+  def makeLove(hierarchyContainer: Cashe, parents:Option[Style]*):Option[Style] ={
     val parentStyles = parents.filter(_.isDefined)
     if(parentStyles.length == 1) return parentStyles.head
     else if(parentStyles.isEmpty) return None
@@ -135,8 +135,8 @@ object StyleParser extends CommonParserMethodes {
    * @param parents the style instance's names from which the new Style will inherit information
    * @param attributes List of Tuples of Strings -> List[(String, String)] consist of tuple._1 = attribute's name and tuple._2 the according value
    * @param hierarchyContainer is a Diagram which contains the styleHierarchy which gives information about inheritance*/
-  def apply(name:String, parents:Option[List[String]], attributes: List[(String, String)], hierarchyContainer: HierarchyContainer) = parse(name, parents, attributes, hierarchyContainer)
-  def parse(name:String, parents:Option[List[String]], attributes: List[(String, String)], hierarchyContainer: HierarchyContainer):Style ={
+  def apply(name:String, parents:Option[List[String]], attributes: List[(String, String)], hierarchyContainer: Cashe) = parse(name, parents, attributes, hierarchyContainer)
+  def parse(name:String, parents:Option[List[String]], attributes: List[(String, String)], hierarchyContainer: Cashe):Style ={
 
     var extendedStyle:List[Style] = List[Style]()
 

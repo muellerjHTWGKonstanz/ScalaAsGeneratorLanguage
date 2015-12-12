@@ -1,6 +1,6 @@
 package model.shapecontainer.shape.geometrics.layouts
 
-import model.HierarchyContainer
+import model.Cashe
 import model.shapecontainer.shape.geometrics.{PointParser, Point}
 import model.style.{StyleParser, Style}
 import util.GeoModel
@@ -14,8 +14,8 @@ trait PolyLineLayout extends Layout{
 }
 
 object PolyLineLayoutParser{
-  def apply(geoModel: GeoModel, parentStyle:Option[Style], hierarchyContainer:HierarchyContainer):Option[PolyLineLayout] = parse(geoModel, parentStyle, hierarchyContainer)
-  def parse(geoModel:GeoModel, parentStyle:Option[Style], hierarchyContainer:HierarchyContainer):Option[PolyLineLayout] ={
+  def apply(geoModel: GeoModel, parentStyle:Option[Style], hierarchyContainer:Cashe):Option[PolyLineLayout] = parse(geoModel, parentStyle, hierarchyContainer)
+  def parse(geoModel:GeoModel, parentStyle:Option[Style], hierarchyContainer:Cashe):Option[PolyLineLayout] ={
     val attributes = geoModel.attributes
 
     /*mapping*/

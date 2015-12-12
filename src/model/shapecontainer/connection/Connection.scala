@@ -1,6 +1,6 @@
 package model.shapecontainer.connection
 
-import model.HierarchyContainer
+import model.Cashe
 import model.shapecontainer.ShapeContainerElement
 import model.style.{StyleParser, Style}
 import util.{PlacingSketch, CommonParserMethodes}
@@ -17,6 +17,7 @@ case class Connection(name:String,
                  connection_type:Option[ConnectionStyle] = None,
                  style:Option[Style] = None,
                  placing:List[Placing] = List[Placing]()) extends ShapeContainerElement
+
 object Connection extends CommonParserMethodes{
   val validConnectionAttributes = List("connection-type", "layout", "placing")
   /**
@@ -27,14 +28,14 @@ object Connection extends CommonParserMethodes{
             typ:Option[String],
             anonymousStyle:Option[String],
             placings:List[PlacingSketch],
-            hierarchyContainer:HierarchyContainer):Option[Connection] = {
+            hierarchyContainer:Cashe):Option[Connection] = {
     /*mapping*/
     var style:Option[Style] = if(styleRef isDefined) hierarchyContainer.styleHierarchy.get(styleRef.get) else None
     val connection_type:Option[ConnectionStyle] = if(typ isDefined) Some(parse(connectionType, typ.get).get) else None
     if(anonymousStyle.isDefined && style.isEmpty) {
       style = Some(StyleParser(anonymousStyle.get))
     }
-    val placingList = placings.map{Placing(_, style)}
+    val placingList = placings.map{Placing(_, style, hierarchyContainer.shapeHierarchy.root.data)}
 
     if(placingList isEmpty)
       None

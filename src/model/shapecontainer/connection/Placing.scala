@@ -1,5 +1,6 @@
 package model.shapecontainer.connection
 
+import model.shapecontainer.shape.Shape
 import model.shapecontainer.shape.geometrics.GeometricModel
 import model.style.Style
 import util.{PlacingSketch, CommonParserMethodes}
@@ -13,12 +14,12 @@ case class Placing(position_offset:Double,
                    shapeCon:GeometricModel)//ShapeConnection
 
 object Placing extends CommonParserMethodes{
-  def apply(attributes:PlacingSketch, parentStyle:Option[Style]) = parse(attributes, parentStyle)
-  def parse(attributes:PlacingSketch, parentStyle:Option[Style]):Placing = {
+  def apply(attributes:PlacingSketch, parentStyle:Option[Style], ancestorShape:Shape) = parse(attributes, parentStyle, ancestorShape)
+  def parse(attributes:PlacingSketch, parentStyle:Option[Style], ancestorShape:Shape):Placing = {
     /*mapping*/
     val tup = parse(placingPosition, attributes.position).get
 
-    new Placing(tup._1, tup._2, attributes.shape.parse(None, parentStyle).get)
+    new Placing(tup._1, tup._2, attributes.shape.parse(None, parentStyle, ancestorShape).get)
   }
 
   def placingPosition:Parser[(Double, Option[Int])] = ("\\(\\s*offset\\s*=".r ~> argument_double) ~ (((",\\s*distance\\s*=".r ~> argument_int)?) <~ ")") ^^ {

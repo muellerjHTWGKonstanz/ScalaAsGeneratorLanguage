@@ -1,6 +1,6 @@
 package model.shapecontainer.shape.geometrics.layouts
 
-import model.HierarchyContainer
+import model.Cashe
 import model.shapecontainer.shape.geometrics.Alignment
 import model.shapecontainer.shape.geometrics.Alignment.{VAlign, HAlign}
 import model.style.Style
@@ -16,9 +16,9 @@ trait TextLayout extends CommonLayout {
 }
 
 object TextLayoutParser {
-  def apply(geoModel: GeoModel, parentStyle:Option[Style], hierarchyContainer:HierarchyContainer): Option[TextLayout] = parse(geoModel, parentStyle, hierarchyContainer)
+  def apply(geoModel: GeoModel, parentStyle:Option[Style], hierarchyContainer:Cashe): Option[TextLayout] = parse(geoModel, parentStyle, hierarchyContainer)
 
-  def parse(geoModel: GeoModel, parentStyle:Option[Style], hierarchyContainer:HierarchyContainer): Option[TextLayout] = {
+  def parse(geoModel: GeoModel, parentStyle:Option[Style], hierarchyContainer:Cashe): Option[TextLayout] = {
     val attributes = geoModel.attributes
 
     /*mapping*/

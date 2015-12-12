@@ -1,6 +1,5 @@
-package model.shapecontainer.shape.geometrics
+package model.shapecontainer.shape.geometrics.compartment
 
-import model.HierarchyContainer
 import model.shapecontainer.shape.Shape
 import util.CommonParserMethodes
 
@@ -58,8 +57,7 @@ object CompartmentInfoParser extends CommonParserMethodes {
     }
 
     if(layout.isDefined) {
-     /*associate the new compartment with its name in the shape's compartmentMap*/
-      val newCompart = new CompartmentInfo {
+      Some(new CompartmentInfo {
         override val compartment_layout: Option[CompartmentLayout] = layout
         override val compartment_margin: Option[Int] = margin
         override val compartment_spacing: Option[Int] = spacing
@@ -67,15 +65,7 @@ object CompartmentInfoParser extends CommonParserMethodes {
         override val compartment_stretching_vertical: Option[Boolean] = stretching_vertical
         override val compartment_id: Option[String] = id
         override val compartment_invisible: Option[Boolean] = invisible
-      }
-
-      /*associate the ancestorShape's compartmentMap with the new Compartment ID, so it can be found by the diagram*/
-      if(ancestorShape.compartmentMap.isDefined)
-        ancestorShape.compartmentMap.get += newCompart.compartment_id.get -> newCompart
-      else {
-        ancestorShape.compartmentMap = Some(Map(newCompart.compartment_id.get -> newCompart))
-      }
-      Some(newCompart)
+      })
     }
     else
       None
