@@ -30,9 +30,9 @@ abstract class TextType
 
 
 object Text extends CommonParserMethodes{
-  def apply(geoModel:GeoModel, parent:Option[GeometricModel], textType:TextType, parentStyle:Option[Style], hierarchyContainer:Cashe, ancestorShape:Shape) =
-    parse(geoModel, parent, textType, parentStyle, hierarchyContainer, ancestorShape)
-  def parse(geoModel:GeoModel, parent:Option[GeometricModel], textType:TextType, parentStyle:Option[Style], hierarchyContainer:Cashe, ancestorShape:Shape):Option[Text] = {
+  def apply(geoModel:GeoModel, parent:Option[GeometricModel], textType:TextType, parentStyle:Option[Style], hierarchyContainer:Cashe) =
+    parse(geoModel, parent, textType, parentStyle, hierarchyContainer)
+  def parse(geoModel:GeoModel, parent:Option[GeometricModel], textType:TextType, parentStyle:Option[Style], hierarchyContainer:Cashe):Option[Text] = {
     var id:String = ""
     val textLayout:Option[TextLayout] = TextLayoutParser(geoModel, parentStyle, hierarchyContainer)
     if(textLayout isEmpty)

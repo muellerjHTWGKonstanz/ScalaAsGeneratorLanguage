@@ -77,7 +77,7 @@ object RegexTest extends App {
                         }"""
 
   val nonfailingShape = """//Messages
-                       shape BPMN_EventMail extends EClassShape style BpmnDefaultStyle{
+                       shape BPMN_EventMail  style BpmnDefaultStyle{
                            ellipse style aicaramba{
                                compartment(
                                   id = blablablu
@@ -92,6 +92,10 @@ object RegexTest extends App {
                                    position (x=10, y=15)
                                    size (width=30, height=20)
                                    style (line-width=2)
+                                   compartment(
+                                        id = fooID
+                                        layout = fixed
+                                   )
                                    polygon {
                                        point (x=0, y=0)
                                        point (x=15, y=10)
@@ -147,6 +151,6 @@ object RegexTest extends App {
 
   parser.parseRawShape(shapeA)
   parser.parseRawShape(shapeB)
-  val testShapes = parser.parseRawShape(shapeC)
+  val testShapes = parser.parseRawShape(nonfailingShape)
   println(testShapes)
 }

@@ -16,8 +16,8 @@ class Line(parent:Option[GeometricModel]=None,
   extends GeometricModel(parent) with LineLayout
 
 object Line{
-  def apply(geoModel: GeoModel, parent:Option[GeometricModel], parentStyle:Option[Style], hierarchyContainer: Cashe, ancestorShape:Shape) = parse(geoModel, parent, parentStyle, hierarchyContainer, ancestorShape)
-  def parse(geoModel: GeoModel, parent:Option[GeometricModel], parentStyle:Option[Style], hierarchyContainer: Cashe, ancestorShape:Shape): Option[Line] = {
+  def apply(geoModel: GeoModel, parent:Option[GeometricModel], parentStyle:Option[Style], hierarchyContainer: Cashe) = parse(geoModel, parent, parentStyle, hierarchyContainer)
+  def parse(geoModel: GeoModel, parent:Option[GeometricModel], parentStyle:Option[Style], hierarchyContainer: Cashe): Option[Line] = {
     val lineLayout = LineLayoutParser.parse(geoModel, parentStyle, hierarchyContainer)
     if(lineLayout.isEmpty)
       None

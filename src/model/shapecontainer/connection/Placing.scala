@@ -19,7 +19,7 @@ object Placing extends CommonParserMethodes{
     /*mapping*/
     val tup = parse(placingPosition, attributes.position).get
 
-    new Placing(tup._1, tup._2, attributes.shape.parse(None, parentStyle, ancestorShape).get)
+    new Placing(tup._1, tup._2, attributes.shape.parse(None, parentStyle).get)
   }
 
   def placingPosition:Parser[(Double, Option[Int])] = ("\\(\\s*offset\\s*=".r ~> argument_double) ~ (((",\\s*distance\\s*=".r ~> argument_int)?) <~ ")") ^^ {

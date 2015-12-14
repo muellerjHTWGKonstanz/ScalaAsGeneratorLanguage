@@ -18,15 +18,15 @@ class Polygon(parent: Option[GeometricModel] = None,
                ) extends PolyLine(parent, polygonLayout) with Wrapper
 
 object Polygon {
-  def apply(geoModel: GeoModel, parent: Option[GeometricModel], parentStyle:Option[Style], hierarchyContainer:Cashe, ancestorShape:Shape)=parse(geoModel, parent, parentStyle, hierarchyContainer, ancestorShape)
-  def parse(geoModel: GeoModel, parent: Option[GeometricModel], parentStyle:Option[Style], hierarchyContainer:Cashe, ancestorShape:Shape): Option[Polygon] = {
+  def apply(geoModel: GeoModel, parent: Option[GeometricModel], parentStyle:Option[Style], hierarchyContainer:Cashe)=parse(geoModel, parent, parentStyle, hierarchyContainer)
+  def parse(geoModel: GeoModel, parent: Option[GeometricModel], parentStyle:Option[Style], hierarchyContainer:Cashe): Option[Polygon] = {
     val polygonLayout: Option[PolyLineLayout] = PolyLineLayoutParser(geoModel, parentStyle, hierarchyContainer)
     if (polygonLayout.isEmpty)
       return None
 
     val ret = new Polygon(parent, polygonLayout.get)
     ret.children = for (i <- geoModel.children) yield {
-      i.parse(Some(ret), ret.style, ancestorShape).get
+      i.parse(Some(ret), ret.style).get
     }
     Some(ret)
   }

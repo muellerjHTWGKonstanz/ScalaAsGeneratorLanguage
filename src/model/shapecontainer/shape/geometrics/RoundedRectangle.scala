@@ -31,8 +31,8 @@ object RoundedRectangle{
    * @param parent is the parent instance that wraps the new GeometricModel
    * @param parentStyle is the style used by the parent and eventual will be merged with the geoModels style to a new style
    * @param hierarchyContainer holds hierarchical information about styles and is therefor needed*/
-  def apply(geoModel: GeoModel, parent: Option[GeometricModel], parentStyle:Option[Style], hierarchyContainer:Cashe, ancestorShape:Shape) = parse(geoModel, parent, parentStyle, hierarchyContainer, ancestorShape)
-  def parse(geoModel: GeoModel, parent: Option[GeometricModel], parentStyle:Option[Style], hierarchyContainer:Cashe, ancestorShape:Shape): Option[RoundedRectangle] = {
+  def apply(geoModel: GeoModel, parent: Option[GeometricModel], parentStyle:Option[Style], hierarchyContainer:Cashe) = parse(geoModel, parent, parentStyle, hierarchyContainer)
+  def parse(geoModel: GeoModel, parent: Option[GeometricModel], parentStyle:Option[Style], hierarchyContainer:Cashe): Option[RoundedRectangle] = {
     /*mapping*/
     val rrLayout: Option[RoundedRectangleLayout] = RoundedRectangleLayoutParser.parse(geoModel, parentStyle, hierarchyContainer)
 
@@ -41,7 +41,7 @@ object RoundedRectangle{
 
     val ret:RoundedRectangle = new RoundedRectangle(parent, rrLayout.get)
     ret.children = for (i <- geoModel.children) yield {
-      val re = i.parse(Some(ret), ret.style, ancestorShape)
+      val re = i.parse(Some(ret), ret.style)
         re.get
     }
     Some(ret)

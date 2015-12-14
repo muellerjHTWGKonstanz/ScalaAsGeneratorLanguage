@@ -15,10 +15,10 @@ import util.{GeoModel, CommonParserMethodes}
  * will hold all the relevant attributes
  *
  * @param name = id
- * @param style = model.style.Style
- * TODO
+ * @param parentShapes are the shapes that this new shape will inherit its attributes of
+ * @param geos is a list of GeoModels kind of like sketch-GeometricModels, which will be converted into real GeometricModels inside the constructor
  */
-/*case */class Shape(val name:String = "no name",
+class Shape(val name:String = "no name",
                   val style:Option[Style]                   = None,
                   val size_width_min:Option[Int]            = None, /*from ShapeLayout*/
                   val size_height_min:Option[Int]           = None, /*from ShapeLayout*/
@@ -61,14 +61,9 @@ import util.{GeoModel, CommonParserMethodes}
   val compartmentMap = {
     /*if parentShape had CompartmentInfos and if new CompartmentInfos were parsed, create a new Map[String, CompartmentInfo]*/
     /*first check for new CompartmentInfo*/
-    val comparts = List[CompartmentInfo]()
-    if(shapes isDefined) {
-      shapes.get.foreach {
-        case e: Ellipse if e.compartmentInfo.isDefined =>  e.compartmentInfo :: comparts
-        case e: Rectangle if e.compartmentInfo.isDefined => e.compartmentInfo :: comparts
-        case _ =>
-      }
-    }
+    val comparts = if (shapes isDefined) {
+      rCompartment(shapes.get)
+    } else List[CompartmentInfo]()
     if(comparts nonEmpty)
       Some(comparts.map(i => i.compartment_id.get -> i).toMap)
     else None
@@ -94,8 +89,25 @@ import util.{GeoModel, CommonParserMethodes}
 
   /*for generating shape-attribute specific content*/
   private def parseGeometricModels(geoModels:List[GeoModel], parentStyle:Option[Style]) =
-    Some(geoModels.map{_.parse(None, parentStyle, this)}.
+    Some(geoModels.map{_.parse(None, parentStyle)}.
       foldLeft(List[GeometricModel]())((r, c:Option[GeometricModel])=>if(c.isDefined)r.::(c.get) else r))
+
+  /*recursively searches for Compartments in the geometricModels*/
+  private def rCompartment(g:List[GeometricModel], compartments:List[CompartmentInfo] = List[CompartmentInfo]()):List[CompartmentInfo] = {
+    var ret:List[CompartmentInfo] = compartments
+    g foreach{
+      case e: Ellipse if e.compartmentInfo.isDefined =>
+        ret = e.compartmentInfo.get :: ret
+      case e: Rectangle if e.compartmentInfo.isDefined =>
+        ret = e.compartmentInfo.get :: ret
+      case _ =>
+    }
+    g foreach {
+      case e: Wrapper =>
+        ret = ret ::: rCompartment(e.children, ret) case _ =>
+    }
+    ret
+  }
 }
 
 object ShapeParser extends CommonParserMethodes{
@@ -121,7 +133,7 @@ object ShapeParser extends CommonParserMethodes{
         if(hierarchyContainer.shapeHierarchy.contains(parentName))
           extendedShapes = hierarchyContainer.shapeHierarchy(parentName).data :: extendedShapes
       }
-      }/*TODO if class was not found, to be inherited tell Logger*/
+      }
 
     /*mapping*/
     /** relevant is a help-methode, which shortens the actual call to mostRelevant of ClassHierarchy by ensuring the collection-parameter

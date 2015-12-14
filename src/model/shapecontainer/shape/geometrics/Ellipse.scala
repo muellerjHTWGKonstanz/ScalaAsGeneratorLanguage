@@ -25,17 +25,17 @@ object Ellipse {
    * parses a GeoModel into an actual GeometricModel, in this case a Rectangle
    * @param geoModel is the sketch to parse into a GeometricModel
    * @param parent is the parent instance that wraps the new GeometricModel*/
-  def apply(geoModel: GeoModel, parent: Option[GeometricModel], parentStyle:Option[Style], hierarchyContainer:Cashe, ancestorShape:Shape)= parse(geoModel, parent, parentStyle, hierarchyContainer, ancestorShape)
-  def parse(geoModel: GeoModel, parent: Option[GeometricModel], parentStyle:Option[Style], hierarchyContainer:Cashe, ancestorShape:Shape): Option[Ellipse] = {
+  def apply(geoModel: GeoModel, parent: Option[GeometricModel], parentStyle:Option[Style], hierarchyContainer:Cashe)= parse(geoModel, parent, parentStyle, hierarchyContainer)
+  def parse(geoModel: GeoModel, parent: Option[GeometricModel], parentStyle:Option[Style], hierarchyContainer:Cashe): Option[Ellipse] = {
     /*mapping*/
     val commonLayout: Option[CommonLayout] = CommonLayoutParser.parse(geoModel, parentStyle, hierarchyContainer)
-    val compartmentInfo: Option[CompartmentInfo] = CompartmentInfoParser.parse(geoModel.attributes, ancestorShape)
+    val compartmentInfo: Option[CompartmentInfo] = CompartmentInfoParser.parse(geoModel.attributes)
 
     if (commonLayout.isEmpty)
       return None
 
     val ret = new Ellipse(parent, commonLayout.get, compartmentInfo)
-    ret.children = for (i <- geoModel.children) yield {i.parse(Some(ret), ret.style, ancestorShape).get}
+    ret.children = for (i <- geoModel.children) yield {i.parse(Some(ret), ret.style).get}
     Some(ret)
   }
 }

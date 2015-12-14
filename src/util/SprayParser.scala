@@ -151,9 +151,8 @@ class SprayParser(cashe: Cashe = Cashe()) extends CommonParserMethodes {
     case name ~ acts =>
       val newActionGroup = ActionGroup(name, acts)
       cashe.actionGroups += name -> newActionGroup
-      newActionGroup
+      ("actionGroup", newActionGroup)
   }
-  private def globalActionGroups=  rep(actionGroup)
 
   private def palette = "palette" ~ ":" ~> argument <~ ";" ^^ {
     case arg => ("palette", arg.toString)
@@ -196,7 +195,7 @@ class SprayParser(cashe: Cashe = Cashe()) extends CommonParserMethodes {
       ("shape", new diaShape(referencedShape.get))
   }
 
-  private def node:Parser[Node] = {
+  private def node:Parser[(String, Node)] = {
     ("node" ~> ident) ~
     ("for" ~> ident) ~
     (("(" ~ "style" ~ ":" ~> ident <~ ")")?) ~
@@ -224,7 +223,7 @@ class SprayParser(cashe: Cashe = Cashe()) extends CommonParserMethodes {
             actionIncludes = Some(i._2.asInstanceOf[(ActionInclude, List[Action])]._1)
           case _ =>
         }
-        Node(name, ecoreElement, styleOpt, shap, pal, con, onCr, onUp, onDe, actions, actionIncludes)
+        ("node", Node(name, ecoreElement, styleOpt, shap, pal, con, onCr, onUp, onDe, actions, actionIncludes))
     }
   }
 
@@ -240,7 +239,7 @@ class SprayParser(cashe: Cashe = Cashe()) extends CommonParserMethodes {
         new diaConnection(referencedConnection,vars, vals)
     }
   }
-  private def edge = {
+  private def edge:Parser[(String, Edge)] = {
     type diaConnection = model.diagram.edge.Connection
     ("edge" ~> ident) ~
       ("for" ~> ident) ~
@@ -257,19 +256,23 @@ class SprayParser(cashe: Cashe = Cashe()) extends CommonParserMethodes {
         val onDe = if(onde isDefined) Some(onde.get._2) else None
         val ret_actions = if(acts isDefined)Some(acts.get._2._2)else None
         val ret_actionIncludes = if(acts isDefined)Some(acts.get._2._1)else None
-        Edge(edgeName, ecoreElement, style, diaCon, from, to, ret_palette, ret_container, onCr, onUp, onDe, ret_actions.getOrElse(List()), ret_actionIncludes)
+        ("edge", Edge(edgeName, ecoreElement, style, diaCon, from, to, ret_palette, ret_container, onCr, onUp, onDe, ret_actions.getOrElse(List()), ret_actionIncludes))
     }
   }
-  private def nodesOrEdges = rep(node|edge)
+  private def nodeOrEdge = node|edge
 
   def sprayDiagram:Parser[Diagram] = {
       ("diagram" ~> ident) ~
       ("for" ~> ident) ~
       (("(" ~ "style" ~ ":" ~> ident <~ ")")?) ~
       //TODO for modelType=[ecore:Class|QualifiedName]
-      globalActionGroups ~
-      nodesOrEdges ^^ {
-        case name ~ style ~ actionGroups ~ nodesAndEdges => Diagram(actionGroups.map(i => i.name -> i).toMap, nodesAndEdges, cashe.styleHierarchy(style), ""/*TODO*/)
+      ("{" ~> rep(actionGroup|nodeOrEdge) <~ "}") ^^ {
+        case name ~ ecoreElement ~ style ~ arguments =>
+          val actionGroups = arguments.filter(i => i._1 == "actionGroup").map(i => i._2.asInstanceOf[ActionGroup].name -> i._2.asInstanceOf[ActionGroup]).toMap
+          val nodes = arguments.filter(i => i._1 == "node").map(i => i._2.asInstanceOf[Node].name -> i._2.asInstanceOf[Node]).toMap
+          val edges = arguments.filter(i => i._1 == "edge").map(i => i._2.asInstanceOf[Edge].name -> i._2.asInstanceOf[Edge]).toMap
+
+          Diagram(name, actionGroups, nodes, edges, cashe.styleHierarchy(style), ""/*TODO*/)
       }
   }
 /*------------------------------------------------------------------------------------------*/
@@ -285,15 +288,15 @@ object SprayParser{
  * save all the attributes in a struct for later compilation into a GeometricModel*/
 case class GeoModel(typ: String, style: Option[Style], attributes: List[String], children: List[GeoModel], hierarchyContainer: Cashe) {
 
-  def parse(parentGeometricModel: Option[GeometricModel], parentStyle:Option[Style], ancestorShape:Shape): Option[GeometricModel] = typ match {
-    case "ellipse" => Ellipse.parse(this, parentGeometricModel, parentStyle, hierarchyContainer, ancestorShape)
-    case "line" => Line.parse(this, parentGeometricModel, parentStyle, hierarchyContainer, ancestorShape)
-    case "polygon" => Polygon.parse(this, parentGeometricModel,parentStyle, hierarchyContainer, ancestorShape)
-    case "polyline" => PolyLine.parse(this, parentGeometricModel,parentStyle, hierarchyContainer, ancestorShape)
-    case "rectangle" => Rectangle.parse(this, parentGeometricModel,parentStyle, hierarchyContainer, ancestorShape)
-    case "rounded-rectangle" => RoundedRectangle.parse(this, parentGeometricModel,parentStyle, hierarchyContainer, ancestorShape)
-    case "text" => Text.parse(this, parentGeometricModel, DefaultText, parentStyle, hierarchyContainer, ancestorShape)
-    case "text-wrapped" => Text.parse(this, parentGeometricModel, Multiline, parentStyle, hierarchyContainer, ancestorShape)
+  def parse(parentGeometricModel: Option[GeometricModel], parentStyle:Option[Style]): Option[GeometricModel] = typ match {
+    case "ellipse" => Ellipse.parse(this, parentGeometricModel, parentStyle, hierarchyContainer)
+    case "line" => Line.parse(this, parentGeometricModel, parentStyle, hierarchyContainer)
+    case "polygon" => Polygon.parse(this, parentGeometricModel,parentStyle, hierarchyContainer)
+    case "polyline" => PolyLine.parse(this, parentGeometricModel,parentStyle, hierarchyContainer)
+    case "rectangle" => Rectangle.parse(this, parentGeometricModel,parentStyle, hierarchyContainer)
+    case "rounded-rectangle" => RoundedRectangle.parse(this, parentGeometricModel,parentStyle, hierarchyContainer)
+    case "text" => Text.parse(this, parentGeometricModel, DefaultText, parentStyle, hierarchyContainer)
+    case "text-wrapped" => Text.parse(this, parentGeometricModel, Multiline, parentStyle, hierarchyContainer)
     case _ => None
   }
 }

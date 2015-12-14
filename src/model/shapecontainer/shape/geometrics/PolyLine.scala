@@ -20,9 +20,9 @@ class PolyLine(parent:Option[GeometricModel]=None,
 }
 
 object PolyLine{
-  def apply(geoModel:GeoModel, parent:Option[GeometricModel], parentStyle:Option[Style], hierarchyContainer: Cashe, ancestorShape:Shape):Option[PolyLine] = parse(geoModel, parent, parentStyle, hierarchyContainer, ancestorShape)
+  def apply(geoModel:GeoModel, parent:Option[GeometricModel], parentStyle:Option[Style], hierarchyContainer: Cashe):Option[PolyLine] = parse(geoModel, parent, parentStyle, hierarchyContainer)
 
-  def parse(geoModel:GeoModel, parent:Option[GeometricModel], parentStyle:Option[Style], hierarchyContainer: Cashe, ancestorShape:Shape):Option[PolyLine] = {
+  def parse(geoModel:GeoModel, parent:Option[GeometricModel], parentStyle:Option[Style], hierarchyContainer: Cashe):Option[PolyLine] = {
     val polyLineLayout:Option[PolyLineLayout] = PolyLineLayoutParser.parse(geoModel, parentStyle, hierarchyContainer)
     if(polyLineLayout.isEmpty)
       None

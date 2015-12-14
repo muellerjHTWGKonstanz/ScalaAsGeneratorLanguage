@@ -25,8 +25,8 @@ abstract sealed class CompartmentLayout
 
 object CompartmentInfoParser extends CommonParserMethodes {
 
-  def apply(attributes: List[String], ancestorShape:Shape): Option[CompartmentInfo] = parse(attributes, ancestorShape)
-  def parse(attributes: List[String], ancestorShape:Shape): Option[CompartmentInfo] = {
+  def apply(attributes: List[String]): Option[CompartmentInfo] = parse(attributes)
+  def parse(attributes: List[String]): Option[CompartmentInfo] = {
 
     var layout: Option[CompartmentLayout] = None
     var margin: Option[Int] = None
