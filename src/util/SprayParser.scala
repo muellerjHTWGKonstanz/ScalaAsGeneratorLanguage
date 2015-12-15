@@ -4,8 +4,9 @@ import model.diagram.action.{ActionGroup, ActionInclude, Action}
 import model.diagram.edge.Edge
 import model.diagram.methodes.{ActionBlock, OnDelete, OnCreate, OnUpdate}
 import model.diagram.node.Node
-import model.{ClassHierarchy, Cashe}
-import model.diagram.{node, Diagram}
+import model.shapecontainer.shape.geometrics.compartment.CompartmentInfo
+import model.Cashe
+import model.diagram.Diagram
 import model.shapecontainer.connection.Connection
 import model.shapecontainer.shape.{ShapeParser, Shape}
 import model.shapecontainer.shape.geometrics._
@@ -18,6 +19,7 @@ import model.style.{StyleParser, Style}
  */
 class SprayParser(cashe: Cashe = Cashe()) extends CommonParserMethodes {
   type diaShape = model.diagram.node.Shape
+  type diaConnection = model.diagram.edge.Connection
 
 
   /*Style-specific----------------------------------------------------------------------------*/
@@ -120,9 +122,9 @@ class SprayParser(cashe: Cashe = Cashe()) extends CommonParserMethodes {
   /*Diagram-Specific--------------------------------------------------------------------------*/
   private def possibleActionDefinitionNr1 = {
     ("action" ~> ident) ~
-    (("(" ~ "label") ~> argument) ~
-    ("class" ~> argument) ~
-    ("methode" ~> ident <~ ")") ^^ {
+    (("(" ~ "label" ~ ":" ) ~> argument <~ ",") ~
+    ("class" ~ ":"  ~> argument <~ ",") ~
+    ("method" ~ ":"  ~> ident <~ ")") ^^ {
       case name ~ label ~ className ~ methode =>
         val newAction = Action(name, label, className, methode)
         cashe.actions += name -> newAction
@@ -131,9 +133,9 @@ class SprayParser(cashe: Cashe = Cashe()) extends CommonParserMethodes {
   }
   private def possibleActionDefinitionNr2 = {
     ("action" ~> ident) ~
-      (("(" ~ "label") ~> argument) ~
-      ("methode" ~> ident) ~
-      ("class" ~> argument <~ ")") ^^ {
+      (("(" ~ "label" ~ ":" ) ~> argument <~ ",") ~
+      ("method" ~ ":" ~> ident <~ ",") ~
+      ("class" ~ ":" ~> argument <~ ")") ^^ {
       case name ~ label ~ methode ~ className =>
         val newAction = Action(name, label, className, methode)
         cashe.actions += name -> newAction
@@ -144,9 +146,11 @@ class SprayParser(cashe: Cashe = Cashe()) extends CommonParserMethodes {
   private def action = {
     possibleActionDefinitionNr1 | possibleActionDefinitionNr2
   }
-  private def actionInclude = "include" ~> rep((","?) ~> ident ) <~ (";"?) ^^ {case includes => ("actionInclude",ActionInclude(includes))}
+  private def actionInclude = "include" ~> rep((","?) ~> ident ) <~ ";" ^^ {case includes =>
+    ("actionInclude",ActionInclude(includes.map(cashe.actionGroups(_))))}
 
-  private def actions = "actions" ~ "{" ~> actionInclude ~ rep(action) <~ "}" ^^ { case includes ~ actions => ("actions", (includes._2, actions))}
+  private def actions = "actions" ~ "{" ~> (actionInclude?) ~ rep(action) <~ "}" ^^ { case includes ~ actions =>
+    ("actions", (includes.get._2 , actions))}
   private def actionGroup = ("actionGroup" ~> ident) ~ ("{" ~> rep(action) <~ "}") ^^ {
     case name ~ acts =>
       val newActionGroup = ActionGroup(name, acts)
@@ -160,11 +164,14 @@ class SprayParser(cashe: Cashe = Cashe()) extends CommonParserMethodes {
   private def container = "container" ~ ":" ~> argument <~ ";" ^^ {
     case arg => ("container", arg.toString)//TODO eigentlich ecore::EReference
   }
-  private def actionBlock = rep(("call"?) ~ "action" ~> ident) ~ rep(("call"?) ~ "actionGroup" ~> ident) ^^ {
-    case actions ~ actionGroups => ActionBlock(actions.map(i => cashe.actions(i)), actionGroups.map(i => cashe.actionGroups(i)))
+  private def actionBlock = rep(("call"?) ~ "(?!actionGroup)action".r ~> ident) ~ rep(("call"?) ~ "actionGroup" ~> ident) ^^ {
+    case actions ~ actionGroups =>
+      val acts = actions.map(i => cashe.actions(i))
+      val actGrps = actionGroups.map(i => cashe.actionGroups(i))
+      ActionBlock(acts, actGrps)
   }
   private def askFor = "askFor" ~ ":" ~> ident ^^ {
-    case identifier => "Object Mock, change this line!!!!"/*TODO this is only a mock, actually ecoreAttribute*/
+    case identifier => identifier +" is a Mock, change this line!!!!"/*TODO this is only a mock, actually ecoreAttribute*/
   }
 
   private def onCreate = "onCreate" ~ "{" ~> (actionBlock?) ~ (askFor?) <~ "}" ^^ {
@@ -179,20 +186,22 @@ class SprayParser(cashe: Cashe = Cashe()) extends CommonParserMethodes {
 
   private def shapeVALPropertie = ("val" ~> ident) ~ ("->" ~> ident) ^^ {case key ~ value => ("val", key/*TODO eigentlich ecoreAttribute*/ -> value) }
   private def shapeVARPropertie = ("var" ~> ident) ~ ("->" ~> ident) ^^ {case key ~ value => ("var", key -> value) }
-  private def shapePropertie = shapeVALPropertie|shapeVARPropertie
+  private def shapePropertie = shapeVALPropertie|shapeVARPropertie <~ ",?".r
   private def shapeCompartment = ("nest" ~> ident) ~ ("->" ~> ident) ^^ {case key ~ value => ("nest",key -> value) }
   private def diagramShape:Parser[(String, diaShape)] = ("shape" ~ ":" ~> ident) ~ (("(" ~> rep(shapePropertie|shapeCompartment)/*TODO eigentlicher inhalt*/ <~ ")")?) ^^ {
     case shapeReference ~ propertiesAndCompartments =>
       val referencedShape = cashe.shapeHierarchy.get(shapeReference)
+      var vars = Map[String, Text]()
+      var vals = Map[String, Text]()
+      var nests = Map[String, CompartmentInfo]()
       if(referencedShape isDefined) {
         if(propertiesAndCompartments isDefined) {
-          val vars = propertiesAndCompartments.get.filter(i => i._1 == "var").map(_._2).map(i => i._1 -> referencedShape.get.textMap.get(i._2)).toMap/*TODO i._1 (at second use) needs to be resolved to an attribute but is not possible at the moment*/
-          val vals = propertiesAndCompartments.get.filter(i => i._1 == "val").map(_._2).map(i => i._1 -> referencedShape.get.textMap.get(i._2)).toMap
-          val nests = propertiesAndCompartments.get.filter(i => i._1 == "nest").map(_._2).map(i => i._1 -> referencedShape.get.compartmentMap.get(i._2)).toMap
-          ("shape", new diaShape(referencedShape.get, vars, vals, nests))
+          vars = propertiesAndCompartments.get.filter(i => i._1 == "var").map(_._2).map(i => i._1 -> referencedShape.get.textMap.get(i._2)).toMap/*TODO i._1 (at second use) needs to be resolved to an attribute but is not possible at the moment*/
+          vals = propertiesAndCompartments.get.filter(i => i._1 == "val").map(_._2).map(i => i._1 -> referencedShape.get.textMap.get(i._2)).toMap
+          nests = propertiesAndCompartments.get.filter(i => i._1 == "nest").map(_._2).map(i => i._1 -> referencedShape.get.compartmentMap.get(i._2)).toMap
         }
       }
-      ("shape", new diaShape(referencedShape.get))
+      ("shape", new diaShape(referencedShape.get, vars, vals, nests))
   }
 
   private def node:Parser[(String, Node)] = {
@@ -205,19 +214,19 @@ class SprayParser(cashe: Cashe = Cashe()) extends CommonParserMethodes {
         val styleOpt = if(style.isDefined)cashe.styleHierarchy.get(style.get) else None
         var shap:Option[diaShape] = None
         var pal:Option[String] = None
-        var con:Option[String] = None
+        var con:Option[AnyRef] = None
         var onCr:Option[OnCreate] = None
         var onUp:Option[OnUpdate] = None
         var onDe:Option[OnDelete] = None
         var actions:List[Action] = List()
         var actionIncludes:Option[ActionInclude] = None
         args.foreach {
-          case i if i._1 == "shape" => shap = Some(i._2.asInstanceOf)
-          case i if i._1 == "palette" => pal = i._2.asInstanceOf
-          case i if i._1 == "container" => con = i._2.asInstanceOf
-          case i if i._1 == "onCreate" => onCr = i._2.asInstanceOf
-          case i if i._1 == "onUpdate" => onUp = i._2.asInstanceOf
-          case i if i._1 == "onDelete" => onDe = i._2.asInstanceOf
+          case i if i._1 == "shape" => shap = Some(i._2.asInstanceOf[diaShape])
+          case i if i._1 == "palette" => pal = Some(i._2.asInstanceOf[String])
+          case i if i._1 == "container" => con = Some(i._2.asInstanceOf[AnyRef])
+          case i if i._1 == "onCreate" => onCr = Some(i._2.asInstanceOf[OnCreate])
+          case i if i._1 == "onUpdate" => onUp = Some(i._2.asInstanceOf[OnUpdate])
+          case i if i._1 == "onDelete" => onDe = Some(i._2.asInstanceOf[OnDelete])
           case i if i._1 == "actions" =>
             actions = i._2.asInstanceOf[(ActionInclude, List[Action])]._2
             actionIncludes = Some(i._2.asInstanceOf[(ActionInclude, List[Action])]._1)
@@ -233,9 +242,12 @@ class SprayParser(cashe: Cashe = Cashe()) extends CommonParserMethodes {
       (("(" ~> rep(shapePropertie) <~ ")") ?) ^^ {
       case connectionName ~ properties =>
         val referencedConnection = cashe.connections(connectionName)
-        val vars = properties.get.filter(i => i._1 == "var").map(_._2).map(i => i._1 -> new Object()).toMap/*TODO new Object (at second use) needs to be resolved to an attribute but is not possible at the moment*/
-        val vals = properties.get.filter(i => i._1 == "val").map(_._2).map(i => i._1 -> new Object()).toMap/*TODO new Object (at second use) needs to be resolved to an attribute but is not possible at the moment*/
-        type diaConnection = model.diagram.edge.Connection
+        var vars = Map[String, AnyRef]()
+        var vals = Map[String, AnyRef]()
+        if(properties isDefined) {
+          vars = properties.get.filter(i => i._1 == "var").map(_._2).map(i => i._1 -> new Object()).toMap /*TODO new Object (at second use) needs to be resolved to an attribute but is not possible at the moment*/
+          vals = properties.get.filter(i => i._1 == "val").map(_._2).map(i => i._1 -> new Object()).toMap /*TODO new Object (at second use) needs to be resolved to an attribute but is not possible at the moment*/
+        }
         new diaConnection(referencedConnection,vars, vals)
     }
   }
@@ -265,16 +277,18 @@ class SprayParser(cashe: Cashe = Cashe()) extends CommonParserMethodes {
       ("diagram" ~> ident) ~
       ("for" ~> ident) ~
       (("(" ~ "style" ~ ":" ~> ident <~ ")")?) ~
-      //TODO for modelType=[ecore:Class|QualifiedName]
       ("{" ~> rep(actionGroup|nodeOrEdge) <~ "}") ^^ {
         case name ~ ecoreElement ~ style ~ arguments =>
           val actionGroups = arguments.filter(i => i._1 == "actionGroup").map(i => i._2.asInstanceOf[ActionGroup].name -> i._2.asInstanceOf[ActionGroup]).toMap
           val nodes = arguments.filter(i => i._1 == "node").map(i => i._2.asInstanceOf[Node].name -> i._2.asInstanceOf[Node]).toMap
           val edges = arguments.filter(i => i._1 == "edge").map(i => i._2.asInstanceOf[Edge].name -> i._2.asInstanceOf[Edge]).toMap
 
-          Diagram(name, actionGroups, nodes, edges, cashe.styleHierarchy(style), ""/*TODO*/)
+          Diagram(name, actionGroups, nodes, edges, cashe.styleHierarchy(style), ecoreElement/*TODO convert to actual EcoreElement*/)
       }
   }
+
+  def sprayDiagrams = rep(sprayDiagram)
+  def parseRawDiagram(e:String) = parseAll(sprayDiagrams, trimRight(e)).get
 /*------------------------------------------------------------------------------------------*/
 
   private def trimRight(s:String) = s.replaceAll("\\/\\/.+", "").split("\n").map(s => s.trim + "\n").mkString

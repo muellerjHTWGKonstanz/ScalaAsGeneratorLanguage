@@ -151,6 +151,67 @@ object RegexTest extends App {
 
   parser.parseRawShape(shapeA)
   parser.parseRawShape(shapeB)
+  parser.parseRawShape(shapeC)
   val testShapes = parser.parseRawShape(nonfailingShape)
   println(testShapes)
+
+  val diagramA =
+    """diagram DIAGRAM_A for FOO {
+       actionGroup actGrp1 {
+          action act1 ( label : foo.foo.foo , method : fooImpl1, class : Foo)
+          action act2 ( label : foo.foo.foo , method : fooImpl2, class : Foo)
+          action act4 ( label : foo.foo.foo , method : fooImpl4, class : Foo)
+       }
+       edge fooEdge for mock {
+        connection : BPMN_DataAssoziation
+        from : fromMock
+        to : toMock
+        palette : fooPal;
+        container : fooCont;
+          onCreate{
+            call action act1
+            call actionGroup actGrp1
+            askFor : MockReference
+          }
+          onUpdate{
+            call action act1
+            call action act2
+            call actionGroup actGrp1
+          }
+          onDelete{
+            call action act4
+          }
+          actions {
+            include actGrp1;
+            action act3 ( label : foo.foo.foo , method : fooImpl3, class : Foo)
+          }
+       }
+       node fooNode for mock {
+          shape : C ( val testReference -> Hallo )
+          palette : fooPalette;
+          container : fooContainer;
+          onCreate{
+            call action act1
+            call actionGroup actGrp1
+            askFor : MockReference
+          }
+          onUpdate{
+            call action act1
+            call action act2
+            call actionGroup actGrp1
+          }
+          onDelete{
+            call action act4
+          }
+
+          actions {
+            include actGrp1;
+            action act3 ( label : foo.foo.foo , method : fooImpl3, class : Foo)
+          }
+       }
+      }
+    """
+
+  val testDiagram = parser.parseRawDiagram(diagramA)
+  println(testDiagram)
 }

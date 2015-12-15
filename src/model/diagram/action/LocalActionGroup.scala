@@ -25,5 +25,5 @@ class ActionInclude(var globalActionIncludes:List[ActionGroup] = List[ActionGrou
   def solveOpenDependencies(diagram: Diagram) {globalActionIncludes = globalActionIncludes ::: openReferences.map(diagram.globalActionGroups(_))}
 }
 object ActionInclude{
-  def apply(openActionReferences:List[String]) = new ActionInclude(openReferences = openActionReferences)
+  def apply(actionGroupReferences:List[ActionGroup]) = new ActionInclude(actionGroupReferences)
 }

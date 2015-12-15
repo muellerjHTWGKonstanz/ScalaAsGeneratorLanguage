@@ -15,7 +15,7 @@ case class Node(name:String,
                                 /*node-block*/
                 shape:Option[Shape]                   = None,
                 override val palette:Option[String]   = None,
-                override val container:Option[String] = None,
+                override val container:Option[AnyRef] = None,
                 override val onCreate:Option[OnCreate]= None,
                 override val onUpdate:Option[OnUpdate]= None,
                 override val onDelete:Option[OnDelete]= None,
