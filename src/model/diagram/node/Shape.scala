@@ -1,7 +1,7 @@
 package model.diagram.node
 
 import model.shapecontainer.shape.geometrics.Text
-import model.shapecontainer.shape.geometrics.compartment.CompartmentInfo
+import model.shapecontainer.shape.geometrics.compartment.{Compartment, CompartmentInfo}
 
 /**
  * Created by julian on 30.11.15.

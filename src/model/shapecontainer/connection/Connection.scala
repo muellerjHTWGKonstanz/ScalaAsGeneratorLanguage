@@ -28,20 +28,20 @@ object Connection extends CommonParserMethodes{
             typ:Option[String],
             anonymousStyle:Option[String],
             placings:List[PlacingSketch],
-            hierarchyContainer:Cashe):Option[Connection] = {
+            cashe:Cashe):Option[Connection] = {
     /*mapping*/
-    var style:Option[Style] = if(styleRef isDefined) hierarchyContainer.styleHierarchy.get(styleRef.get) else None
+    var style:Option[Style] = if(styleRef isDefined) cashe.styleHierarchy.get(styleRef.get) else None
     val connection_type:Option[ConnectionStyle] = if(typ isDefined) Some(parse(connectionType, typ.get).get) else None
     if(anonymousStyle.isDefined && style.isEmpty) {
       style = Some(StyleParser(anonymousStyle.get))
     }
-    val placingList = placings.map{Placing(_, style, hierarchyContainer.shapeHierarchy.root.data)}
+    val placingList = placings.map{Placing(_, style, cashe.shapeHierarchy.root.data)}
 
     if(placingList isEmpty)
       None
     else {
       val newConnection = new Connection(name, connection_type, style, placingList)
-      hierarchyContainer.connections += name -> newConnection
+      cashe.connections += name -> newConnection
       Some(newConnection)
     }
   }

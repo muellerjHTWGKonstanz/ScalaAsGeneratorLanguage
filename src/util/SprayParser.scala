@@ -4,7 +4,7 @@ import model.diagram.action.{ActionGroup, ActionInclude, Action}
 import model.diagram.edge.Edge
 import model.diagram.methodes.{ActionBlock, OnDelete, OnCreate, OnUpdate}
 import model.diagram.node.Node
-import model.shapecontainer.shape.geometrics.compartment.CompartmentInfo
+import model.shapecontainer.shape.geometrics.compartment.{Compartment, CompartmentInfo}
 import model.Cashe
 import model.diagram.Diagram
 import model.shapecontainer.connection.Connection

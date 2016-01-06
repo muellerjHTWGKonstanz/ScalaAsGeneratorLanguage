@@ -1,6 +1,5 @@
 package model.shapecontainer.shape.geometrics.compartment
 
-import model.shapecontainer.shape.Shape
 import util.CommonParserMethodes
 
 /**

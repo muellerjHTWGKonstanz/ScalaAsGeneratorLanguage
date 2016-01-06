@@ -1,7 +1,7 @@
 package model.shapecontainer.connection
 
 import model.shapecontainer.shape.Shape
-import model.shapecontainer.shape.geometrics.GeometricModel
+import model.shapecontainer.shape.geometrics.{Text, GeometricModel}
 import model.style.Style
 import util.{PlacingSketch, CommonParserMethodes}
 
@@ -11,7 +11,13 @@ import util.{PlacingSketch, CommonParserMethodes}
  */
 case class Placing(position_offset:Double,
                    position_distance:Option[Int]=None,
-                   shapeCon:GeometricModel)//ShapeConnection
+                   shapeCon:GeometricModel){
+  /*TODO placing hat keine direkte beziehung zu einer Shape lediglich eine geomtric form, welche ein CDText sein kann ???*/
+  def text = shapeCon match {
+    case t:Text => Some(t)
+    case _ => None
+  }
+}
 
 object Placing extends CommonParserMethodes{
   def apply(attributes:PlacingSketch, parentStyle:Option[Style], ancestorShape:Shape) = parse(attributes, parentStyle, ancestorShape)
