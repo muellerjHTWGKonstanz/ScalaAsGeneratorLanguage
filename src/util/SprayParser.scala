@@ -37,8 +37,9 @@ class SprayParser(cashe: Cashe = Cashe()) extends CommonParserMethodes {
 
 
   /*GeometricModel-specific-------------------------------------------------------------------*/
-  private def geoVariable = ("""("""+SprayParser.validGeometricModelVariables.map(_+"|").mkString+""")""").r ^^ {_.toString}
-  private def geoAttribute = geoVariable ~ (arguments | compartmentinfo ) ^^ {case v ~ a => v+a}
+  private def geoVariable:Parser[String] = "(position|size|style|point|curve|align|id|textBody|compartment)".r ^^ {_.toString}
+  private def geoAttribute = geoVariable ~ (arguments | compartmentinfo) ^^ {case v ~ a => v+a}
+  private def geoIdentifier:Parser[String] = "(ellipse|line|polygon|polyline|rectangle|rounded-rectangle|text|wrapped-text)".r ^^ {_.toString}
 
   /**parses a geoModel. first ident is the GeometricModels name, second ident is an optional reference to a style*/
   private def geoModel: Parser[GeoModel] =
@@ -47,7 +48,6 @@ class SprayParser(cashe: Cashe = Cashe()) extends CommonParserMethodes {
       if(style.isDefined) Some(cashe.styleHierarchy(style.get).data)
       else None }, attr, children, cashe)
   }
-  private def geoIdentifier:Parser[String] = "(ellipse|line|polygon|polyline|rectangle|rounded-rectangle|text|wrapped-text)".r ^^ {_.toString}
   /*------------------------------------------------------------------------------------------*/
 
 
@@ -294,23 +294,20 @@ class SprayParser(cashe: Cashe = Cashe()) extends CommonParserMethodes {
   private def trimRight(s:String) = s.replaceAll("\\/\\/.+", "").split("\n").map(s => s.trim + "\n").mkString
 }
 
-object SprayParser{
-  val validGeometricModelVariables = List("position", "size", "style", "point", "curve", "align", "id", "compartment")
-}
 /**
  * GeoModel is a sketch of a GeometricModel, only used for parsing a shape string and temporarily
  * save all the attributes in a struct for later compilation into a GeometricModel*/
-case class GeoModel(typ: String, style: Option[Style], attributes: List[String], children: List[GeoModel], hierarchyContainer: Cashe) {
+case class GeoModel(typ: String, style: Option[Style], attributes: List[String], children: List[GeoModel], hierarchyCashe: Cashe) {
 
   def parse(parentGeometricModel: Option[GeometricModel], parentStyle:Option[Style]): Option[GeometricModel] = typ match {
-    case "ellipse" => Ellipse.parse(this, parentGeometricModel, parentStyle, hierarchyContainer)
-    case "line" => Line.parse(this, parentGeometricModel, parentStyle, hierarchyContainer)
-    case "polygon" => Polygon.parse(this, parentGeometricModel,parentStyle, hierarchyContainer)
-    case "polyline" => PolyLine.parse(this, parentGeometricModel,parentStyle, hierarchyContainer)
-    case "rectangle" => Rectangle.parse(this, parentGeometricModel,parentStyle, hierarchyContainer)
-    case "rounded-rectangle" => RoundedRectangle.parse(this, parentGeometricModel,parentStyle, hierarchyContainer)
-    case "text" => Text.parse(this, parentGeometricModel, DefaultText, parentStyle, hierarchyContainer)
-    case "text-wrapped" => Text.parse(this, parentGeometricModel, Multiline, parentStyle, hierarchyContainer)
+    case "ellipse" => Ellipse.parse(this, parentGeometricModel, parentStyle, hierarchyCashe)
+    case "line" => Line.parse(this, parentGeometricModel, parentStyle, hierarchyCashe)
+    case "polygon" => Polygon.parse(this, parentGeometricModel,parentStyle, hierarchyCashe)
+    case "polyline" => PolyLine.parse(this, parentGeometricModel,parentStyle, hierarchyCashe)
+    case "rectangle" => Rectangle.parse(this, parentGeometricModel,parentStyle, hierarchyCashe)
+    case "rounded-rectangle" => RoundedRectangle.parse(this, parentGeometricModel,parentStyle, hierarchyCashe)
+    case "text" => Text.parse(this, parentGeometricModel, DefaultText, parentStyle, hierarchyCashe)
+    case "text-wrapped" => Text.parse(this, parentGeometricModel, Multiline, parentStyle, hierarchyCashe)
     case _ => None
   }
 }

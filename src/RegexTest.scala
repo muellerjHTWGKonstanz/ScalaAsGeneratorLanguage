@@ -46,11 +46,12 @@ object RegexTest extends App {
       font-size = 10
       }""")
 
-  parser.parseRawStyle(
+  println(parser.parseRawStyle(
     """style C extends A, B {
       line-color = green
       font-size = 10
-      }""")
+      }"""))
+
   val shapeWithText = """shape EClassShape style B{
                             size-min (width=4, height=6)
                             size-max (width=10, height=11)
@@ -59,6 +60,7 @@ object RegexTest extends App {
                             text{
                               size(width=10, height=40)
                               id = Hallo
+                              textBody = "pipapo popapi pappipo"
                             }
                             rectangle {
                               style (line-width=2)
@@ -146,12 +148,13 @@ object RegexTest extends App {
            text{
              size(width=10, height=40)
              id = Hallo
+             textBody = "hallo Julian"
            }
       }"""
 
   parser.parseRawShape(shapeA)
   parser.parseRawShape(shapeB)
-  parser.parseRawShape(shapeC)
+  val C = parser.parseRawShape(shapeC)
   val testShapes = parser.parseRawShape(nonfailingShape)
   println(testShapes)
 
