@@ -147,7 +147,7 @@ object RegexTest extends App {
     """shape C extends B style A{
            text{
              size(width=10, height=40)
-             id = Hallo
+             id = Hallo1
              textBody = "hallo Julian"
            }
       }"""
@@ -190,7 +190,7 @@ object RegexTest extends App {
           }
        }
        node fooNode for mock {
-          shape : C ( val testReference -> Hallo )
+          shape : C ( val testReference -> Hallo1 )
           palette : fooPalette;
           container : fooContainer;
           onCreate{
