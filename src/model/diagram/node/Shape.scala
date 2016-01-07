@@ -7,7 +7,7 @@ import model.shapecontainer.shape.geometrics.compartment.{Compartment, Compartme
  * Created by julian on 30.11.15.
  * diagrams shape definition
  */
-case class Shape(shape: model.shapecontainer.shape.Shape,
-                 vars:Map[String, Text] = Map(),/*TODO String is a Mockup for EcoreAttribute*/
-                 vals:Map[String, Text] = Map(),
-                 nests:Map[String, CompartmentInfo] = Map())/*TODO String is a Mockup for EcoreAttribute*/
+class Shape(val shape: model.shapecontainer.shape.Shape,
+            val vars:Map[String, Text] = Map(),/*TODO String is a Mockup for EcoreAttribute*/
+            val vals:Map[String, Text] = Map(),
+            val nests:Map[String, CompartmentInfo] = Map())/*TODO String is a Mockup for EcoreAttribute*/

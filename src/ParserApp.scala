@@ -1,5 +1,5 @@
 import generators.StyleGenerator
-import model.Cashe
+import model.Cache
 import util.SprayParser
 
 /**
@@ -8,7 +8,7 @@ import util.SprayParser
  */
 object ParserApp extends App {
 
-  val hierarchyContainer = Cashe()
+  val hierarchyContainer = Cache()
 
   val classUno = """style BpmnDefaultStyle {
                   description = "The default style of the petrinet hierarchyContainer type."

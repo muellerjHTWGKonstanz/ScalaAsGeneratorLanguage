@@ -1,6 +1,6 @@
 package model.shapecontainer.shape.geometrics
 
-import model.Cashe
+import model.Cache
 import model.shapecontainer.shape.Shape
 import model.shapecontainer.shape.geometrics.compartment.{CompartmentInfoParser, CompartmentLayout, CompartmentInfo}
 import model.shapecontainer.shape.geometrics.layouts.{CommonLayoutParser, RectangleEllipseLayout, CommonLayout}
@@ -37,8 +37,8 @@ object Rectangle{
    * parses a GeoModel into an actual GeometricModel, in this case a Rectangle
    * @param geoModel is the sketch to parse into a GeometricModel
    * @param parent is the parent instance that wraps the new GeometricModel*/
-  def apply(geoModel:GeoModel, parent:Option[GeometricModel] = None, parentStyle:Option[Style], diagram:Cashe)= parse(geoModel, parent, parentStyle, diagram)
-  def parse(geoModel:GeoModel, parent:Option[GeometricModel] = None, parentStyle:Option[Style], diagram:Cashe): Option[Rectangle] = {
+  def apply(geoModel:GeoModel, parent:Option[GeometricModel] = None, parentStyle:Option[Style], diagram:Cache)= parse(geoModel, parent, parentStyle, diagram)
+  def parse(geoModel:GeoModel, parent:Option[GeometricModel] = None, parentStyle:Option[Style], diagram:Cache): Option[Rectangle] = {
     /*mapping*/
     val commonLayout:Option[CommonLayout] = CommonLayoutParser.parse(geoModel, parentStyle, diagram)
     val compartmentInfo:Option[CompartmentInfo] = CompartmentInfoParser.parse(geoModel.attributes)

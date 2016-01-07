@@ -1,6 +1,6 @@
 package model.shapecontainer.shape.geometrics
 
-import model.Cashe
+import model.Cache
 import model.shapecontainer.shape.Shape
 import model.shapecontainer.shape.geometrics.layouts.{TextLayoutParser, TextLayout}
 import model.style.Style
@@ -31,9 +31,9 @@ abstract class TextType
 
 
 object Text extends CommonParserMethodes{
-  def apply(geoModel:GeoModel, parent:Option[GeometricModel], textType:TextType, parentStyle:Option[Style], hierarchyContainer:Cashe) =
+  def apply(geoModel:GeoModel, parent:Option[GeometricModel], textType:TextType, parentStyle:Option[Style], hierarchyContainer:Cache) =
     parse(geoModel, parent, textType, parentStyle, hierarchyContainer)
-  def parse(geoModel:GeoModel, parent:Option[GeometricModel], textType:TextType, parentStyle:Option[Style], hierarchyContainer:Cashe):Option[Text] = {
+  def parse(geoModel:GeoModel, parent:Option[GeometricModel], textType:TextType, parentStyle:Option[Style], hierarchyContainer:Cache):Option[Text] = {
     var id:String = ""
     val textLayout:Option[TextLayout] = TextLayoutParser(geoModel, parentStyle, hierarchyContainer)
     if(textLayout isEmpty)

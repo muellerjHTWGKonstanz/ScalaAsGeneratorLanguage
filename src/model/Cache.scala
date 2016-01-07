@@ -10,7 +10,7 @@ import model.style.Style
  * Created by julian on 24.09.15.
  * representation of a container element for shapes and styles
  */
-case class Cashe(var diagrams:Map[String, Diagram] = Map[String, Diagram](),
+case class Cache(var diagrams:Map[String, Diagram] = Map[String, Diagram](),
                  styleHierarchy: ClassHierarchy[Style] = new ClassHierarchy[Style](new Style(name = "rootStyle")),
                  shapeHierarchy: ClassHierarchy[Shape] = new ClassHierarchy[Shape](new Shape(name = "rootShape")),
                  var connections:Map[String, Connection] = Map[String, Connection](),

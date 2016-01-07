@@ -1,6 +1,6 @@
 package model.shapecontainer.shape.geometrics.layouts
 
-import model.Cashe
+import model.Cache
 import model.style.Style
 import util.{CommonParserMethodes, GeoModel}
 
@@ -14,8 +14,8 @@ trait RoundedRectangleLayout extends CommonLayout{
 }
 
 object RoundedRectangleLayoutParser extends CommonParserMethodes{
-  def apply(geoModel: GeoModel, parentStyle:Option[Style], hierarchyContainer:Cashe) = parse(geoModel, parentStyle, hierarchyContainer)
-  def parse(geoModel:GeoModel, parentStyle:Option[Style], hierarchyContainer:Cashe):Option[RoundedRectangleLayout]={
+  def apply(geoModel: GeoModel, parentStyle:Option[Style], hierarchyContainer:Cache) = parse(geoModel, parentStyle, hierarchyContainer)
+  def parse(geoModel:GeoModel, parentStyle:Option[Style], hierarchyContainer:Cache):Option[RoundedRectangleLayout]={
    val attributes = geoModel.attributes
     /*mapping*/
     val commonLayout = CommonLayoutParser.parse(geoModel, parentStyle, hierarchyContainer)

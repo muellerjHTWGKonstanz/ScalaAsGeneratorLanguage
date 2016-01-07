@@ -1,9 +1,10 @@
 package model.shapecontainer.connection
 
-import model.Cashe
+import model.Cache
 import model.shapecontainer.ShapeContainerElement
-import model.style.{StyleParser, Style}
+import model.style.Style
 import util.{PlacingSketch, CommonParserMethodes}
+import model.CacheEvaluation._
 
 /**
  * Created by julian on 20.10.15.
@@ -28,20 +29,21 @@ object Connection extends CommonParserMethodes{
             typ:Option[String],
             anonymousStyle:Option[String],
             placings:List[PlacingSketch],
-            cashe:Cashe):Option[Connection] = {
+            hierarchyContainer:Cache):Option[Connection] = {
+    implicit val cache = hierarchyContainer
     /*mapping*/
-    var style:Option[Style] = if(styleRef isDefined) cashe.styleHierarchy.get(styleRef.get) else None
+    var style:Option[Style] = if(styleRef isDefined) styleRef.get else None
     val connection_type:Option[ConnectionStyle] = if(typ isDefined) Some(parse(connectionType, typ.get).get) else None
     if(anonymousStyle.isDefined && style.isEmpty) {
-      style = Some(StyleParser(anonymousStyle.get))
+      style = Some(Style(anonymousStyle.get))
     }
-    val placingList = placings.map{Placing(_, style, cashe.shapeHierarchy.root.data)}
+    val placingList = placings.map{Placing(_, style, cache.shapeHierarchy.root.data)}
 
     if(placingList isEmpty)
       None
     else {
       val newConnection = new Connection(name, connection_type, style, placingList)
-      cashe.connections += name -> newConnection
+      cache + newConnection
       Some(newConnection)
     }
   }

@@ -1,6 +1,6 @@
 package model.style
 
-import model.{ClassHierarchy, Cashe}
+import model.{ClassHierarchy, Cache}
 import util.CommonParserMethodes
 
 import scala.util.Random
@@ -36,7 +36,7 @@ case class Style( name: String = "noName",
 /**
  * StyleParser
  * either parses a complete style or just generates an anonymous Style out of only a list of attributes*/
-object StyleParser extends CommonParserMethodes {
+object Style extends CommonParserMethodes {
   val validStyleAttributes = List("description", "transparency", "background-color", "line-color", "line-style", "line-width",
     "font-color", "font-name", "font-size", "font-bold", "font-italic", "gradient-orientation", "gradient-area-color",
     "gradient-area-offset", "highlighting-allowed", "highlighting-unallowed", "highlighting-selected", "highlighting-multiselected")
@@ -44,7 +44,7 @@ object StyleParser extends CommonParserMethodes {
   private def parseAttributes(input:String) = parse(attributes, input).get
 
   private def attributes = "style\\s*\\(".r ~> rep(styleAttribute) <~ ")" ^^ {case attr:List[(String, String)] => attr}
-  private def styleVariable =("""("""+StyleParser.validStyleAttributes.map(_+"|").mkString+""")""").r ^^ {_.toString}
+  private def styleVariable =("""("""+Style.validStyleAttributes.map(_+"|").mkString+""")""").r ^^ {_.toString}
   private def styleAttribute = styleVariable ~ (styleArguments <~ ",?".r)^^ {case v ~ a => (v, a)}
   private def styleArguments = styleVariable ~> ("=?\\s*".r ~> argument) ^^ {case arg => arg}
 
@@ -55,20 +55,19 @@ object StyleParser extends CommonParserMethodes {
    *                if only one style is given, the given style is returned -> you need two to make an actual child
    * @return an Option including a new Style or None if no parentstyles were given
    * @note note, that attributes are inherited by the latest bound principle: Style A extends B -> B overrides attributes of A a call like:
-   *       StyleParser.makeLove(someDiagram, B, C, D, A) -> A's attributes have highest priority!!
+   *       StyleParser.makeLove(someCacheInstance, B, C, D, A) -> A's attributes have highest priority!!
    */
-  def makeLove(hierarchyContainer: Cashe, parents:Option[Style]*):Option[Style] ={
+  def makeLove(hierarchyContainer: Cache, parents:Option[Style]*):Option[Style] ={
     val parentStyles = parents.filter(_.isDefined)
     if(parentStyles.length == 1) return parentStyles.head
     else if(parentStyles.isEmpty) return None
     val childName = "(child_of -> "+parentStyles.map( p => p.get.name+{if(p != parentStyles.last)" & "else ""}).mkString+")"
-    val ret = Some(StyleParser(childName, Some(parentStyles.toList.map(i => i.get.name)), List[(String, String)](), hierarchyContainer))
-    ret
+    Some(Style(childName, Some(parentStyles.toList.map(i => i.get.name)), List[(String, String)](), hierarchyContainer))
   }
 
   /**
    * parse
-   * @param attributes is the string containing all the information needed to generate the attributes to generate a anonymous Style instance
+   * @param attributes is the string containing all the information needed to generate the attributes to generate an anonymous Style instance
    */
   def apply(attributes:String) = parse(attributes)
   def parse(attributes:String):Style = {
@@ -135,8 +134,8 @@ object StyleParser extends CommonParserMethodes {
    * @param parents the style instance's names from which the new Style will inherit information
    * @param attributes List of Tuples of Strings -> List[(String, String)] consist of tuple._1 = attribute's name and tuple._2 the according value
    * @param hierarchyContainer is a Diagram which contains the styleHierarchy which gives information about inheritance*/
-  def apply(name:String, parents:Option[List[String]], attributes: List[(String, String)], hierarchyContainer: Cashe) = parse(name, parents, attributes, hierarchyContainer)
-  def parse(name:String, parents:Option[List[String]], attributes: List[(String, String)], hierarchyContainer: Cashe):Style ={
+  def apply(name:String, parents:Option[List[String]], attributes: List[(String, String)], hierarchyContainer: Cache) = parse(name, parents, attributes, hierarchyContainer)
+  def parse(name:String, parents:Option[List[String]], attributes: List[(String, String)], hierarchyContainer: Cache):Style ={
 
     var extendedStyle:List[Style] = List[Style]()
 

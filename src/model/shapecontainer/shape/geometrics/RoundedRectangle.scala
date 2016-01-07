@@ -1,6 +1,6 @@
 package model.shapecontainer.shape.geometrics
 
-import model.Cashe
+import model.Cache
 import model.shapecontainer.shape.Shape
 import model.shapecontainer.shape.geometrics.layouts.{RoundedRectangleLayoutParser, RoundedRectangleLayout}
 import model.style.Style
@@ -31,8 +31,8 @@ object RoundedRectangle{
    * @param parent is the parent instance that wraps the new GeometricModel
    * @param parentStyle is the style used by the parent and eventual will be merged with the geoModels style to a new style
    * @param hierarchyContainer holds hierarchical information about styles and is therefor needed*/
-  def apply(geoModel: GeoModel, parent: Option[GeometricModel], parentStyle:Option[Style], hierarchyContainer:Cashe) = parse(geoModel, parent, parentStyle, hierarchyContainer)
-  def parse(geoModel: GeoModel, parent: Option[GeometricModel], parentStyle:Option[Style], hierarchyContainer:Cashe): Option[RoundedRectangle] = {
+  def apply(geoModel: GeoModel, parent: Option[GeometricModel], parentStyle:Option[Style], hierarchyContainer:Cache) = parse(geoModel, parent, parentStyle, hierarchyContainer)
+  def parse(geoModel: GeoModel, parent: Option[GeometricModel], parentStyle:Option[Style], hierarchyContainer:Cache): Option[RoundedRectangle] = {
     /*mapping*/
     val rrLayout: Option[RoundedRectangleLayout] = RoundedRectangleLayoutParser.parse(geoModel, parentStyle, hierarchyContainer)
 

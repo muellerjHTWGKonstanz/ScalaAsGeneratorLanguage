@@ -5,29 +5,31 @@ import model.diagram.edge.Edge
 import model.diagram.methodes.{ActionBlock, OnDelete, OnCreate, OnUpdate}
 import model.diagram.node.Node
 import model.shapecontainer.shape.geometrics.compartment.{Compartment, CompartmentInfo}
-import model.Cashe
+import model.Cache
 import model.diagram.Diagram
 import model.shapecontainer.connection.Connection
-import model.shapecontainer.shape.{ShapeParser, Shape}
+import model.shapecontainer.shape.Shape
 import model.shapecontainer.shape.geometrics._
-import model.style.{StyleParser, Style}
+import model.style.Style
+import model.CacheEvaluation._
 
 
 /**
  * Created by julian on 23.10.15.
  * offers functions like parseRawShape/Style, which parses style or shape strings to instances
  */
-class SprayParser(cashe: Cashe = Cashe()) extends CommonParserMethodes {
+class SprayParser(c: Cache = Cache()) extends CommonParserMethodes {
+  implicit val cache = c
   type diaShape = model.diagram.node.Shape
   type diaConnection = model.diagram.edge.Connection
 
 
   /*Style-specific----------------------------------------------------------------------------*/
-  private def styleVariable =("""("""+StyleParser.validStyleAttributes.map(_+"|").mkString+""")""").r ^^ {_.toString}
+  private def styleVariable =("""("""+Style.validStyleAttributes.map(_+"|").mkString+""")""").r ^^ {_.toString}
   private def styleAttribute = styleVariable ~ arguments ^^ {case v ~ a => (v, a)}
   private def style: Parser[Style] =
     ("style" ~> ident) ~ (("extends" ~> rep(ident <~ ",?".r))?) ~ ("{" ~> rep(styleAttribute)) <~ "}" ^^ {
-      case name ~ parents ~ attributes => StyleParser(name, parents, attributes, cashe)
+      case name ~ parents ~ attributes => Style(name, parents, attributes, cache)
     }
   def parseRawStyle(input: String) = parseAll(style, trimRight(input)).get
   /*------------------------------------------------------------------------------------------*/
@@ -43,11 +45,13 @@ class SprayParser(cashe: Cashe = Cashe()) extends CommonParserMethodes {
 
   /**parses a geoModel. first ident is the GeometricModels name, second ident is an optional reference to a style*/
   private def geoModel: Parser[GeoModel] =
-    geoIdentifier ~ ((("style" ~> ident)?) <~ "{") ~ rep(geoAttribute) ~ (rep(geoModel) <~ "}") ^^ {
-    case name ~ style ~ attr ~ children => GeoModel(name, {
-      if(style.isDefined) Some(cashe.styleHierarchy(style.get).data)
-      else None }, attr, children, cashe)
-  }
+    geoIdentifier ~
+    ((("style" ~> ident)?) <~ "{") ~
+    rep(geoAttribute) ~
+    (rep(geoModel) <~ "}") ^^ {
+      case name ~ style ~ attr ~ children =>
+        GeoModel(name, {if(style.isDefined) Some(style.get) else None }, attr, children, cache)
+      }
   /*------------------------------------------------------------------------------------------*/
 
 
@@ -56,7 +60,7 @@ class SprayParser(cashe: Cashe = Cashe()) extends CommonParserMethodes {
 
 
   /*Shape-specific----------------------------------------------------------------------------*/
-  private def shapeVariable = ("""("""+ShapeParser.validShapeVariables.map(_+"|").mkString+""")""").r ^^ {_.toString}
+  private def shapeVariable = ("""("""+Shape.validShapeVariables.map(_+"|").mkString+""")""").r ^^ {_.toString}
   private def shapeAttribute = shapeVariable ~ arguments ^^ {case v ~ a => (v, a)}
   private def descriptionAttribute = "description\\s*(style ([a-zA-ZüäöÜÄÖ][-_]?)+)?".r ~ argument_wrapped ^^ {case des ~ arg => (des, arg)}
   private def anchorAttribute = "anchor" ~> arguments ^^ {_.toString}
@@ -70,7 +74,7 @@ class SprayParser(cashe: Cashe = Cashe()) extends CommonParserMethodes {
     (descriptionAttribute?) ~
     (anchorAttribute?) <~ "}" ^^
     {case name ~ parent ~ style ~ attrs ~ geos ~ desc ~ anch =>
-      ShapeParser(name, parent, style, attrs, geos, desc, anch, cashe)
+      Shape(name, parent, style, attrs, geos, desc, anch, cache)
     }
 
   private def shapes = rep(shape)
@@ -101,7 +105,7 @@ class SprayParser(cashe: Cashe = Cashe()) extends CommonParserMethodes {
     ("{" ~> (c_type?)) ~
     (c_style?) ~
     rep(c_placing) <~ "}" ^^ {
-      case name ~ style ~ typ ~ anonymousStyle ~ placings => Connection(name, style, typ, anonymousStyle, placings, cashe).get
+      case name ~ style ~ typ ~ anonymousStyle ~ placings => Connection(name, style, typ, anonymousStyle, placings, cache).get
     }
   private def connections = rep(connection)
 
@@ -127,7 +131,7 @@ class SprayParser(cashe: Cashe = Cashe()) extends CommonParserMethodes {
     ("method" ~ ":"  ~> ident <~ ")") ^^ {
       case name ~ label ~ className ~ methode =>
         val newAction = Action(name, label, className, methode)
-        cashe.actions += name -> newAction
+        cache + newAction
         newAction
     }
   }
@@ -138,7 +142,7 @@ class SprayParser(cashe: Cashe = Cashe()) extends CommonParserMethodes {
       ("class" ~ ":" ~> argument <~ ")") ^^ {
       case name ~ label ~ methode ~ className =>
         val newAction = Action(name, label, className, methode)
-        cashe.actions += name -> newAction
+        cache + newAction
         newAction
     }
   }
@@ -147,14 +151,14 @@ class SprayParser(cashe: Cashe = Cashe()) extends CommonParserMethodes {
     possibleActionDefinitionNr1 | possibleActionDefinitionNr2
   }
   private def actionInclude = "include" ~> rep((","?) ~> ident ) <~ ";" ^^ {case includes =>
-    ("actionInclude",ActionInclude(includes.map(cashe.actionGroups(_))))}
+    ("actionInclude",ActionInclude(includes.map(cache.actionGroups(_))))}
 
   private def actions = "actions" ~ "{" ~> (actionInclude?) ~ rep(action) <~ "}" ^^ { case includes ~ actions =>
     ("actions", (includes.get._2 , actions))}
   private def actionGroup = ("actionGroup" ~> ident) ~ ("{" ~> rep(action) <~ "}") ^^ {
     case name ~ acts =>
       val newActionGroup = ActionGroup(name, acts)
-      cashe.actionGroups += name -> newActionGroup
+      cache + newActionGroup
       ("actionGroup", newActionGroup)
   }
 
@@ -166,8 +170,8 @@ class SprayParser(cashe: Cashe = Cashe()) extends CommonParserMethodes {
   }
   private def actionBlock = rep(("call"?) ~ "(?!actionGroup)action".r ~> ident) ~ rep(("call"?) ~ "actionGroup" ~> ident) ^^ {
     case actions ~ actionGroups =>
-      val acts = actions.map(i => cashe.actions(i))
-      val actGrps = actionGroups.map(i => cashe.actionGroups(i))
+      val acts = actions.map(i => cache.actions(i))
+      val actGrps = actionGroups.map(i => cache.actionGroups(i))
       ActionBlock(acts, actGrps)
   }
   private def askFor = "askFor" ~ ":" ~> ident ^^ {
@@ -190,7 +194,7 @@ class SprayParser(cashe: Cashe = Cashe()) extends CommonParserMethodes {
   private def shapeCompartment = ("nest" ~> ident) ~ ("->" ~> ident) ^^ {case key ~ value => ("nest",key -> value) }
   private def diagramShape:Parser[(String, diaShape)] = ("shape" ~ ":" ~> ident) ~ (("(" ~> rep(shapePropertie|shapeCompartment)/*TODO eigentlicher inhalt*/ <~ ")")?) ^^ {
     case shapeReference ~ propertiesAndCompartments =>
-      val referencedShape = cashe.shapeHierarchy.get(shapeReference)
+      val referencedShape:Option[Shape] = shapeReference
       var vars = Map[String, Text]()
       var vals = Map[String, Text]()
       var nests = Map[String, CompartmentInfo]()
@@ -211,7 +215,7 @@ class SprayParser(cashe: Cashe = Cashe()) extends CommonParserMethodes {
     ("{" ~> rep(diagramShape|palette|container|onCreate|onUpdate|onDelete|actions) <~ "}") ^^ {
       case name ~ ecoreElement ~ style ~ args =>
         //TODO ecoreElement should be resolved ... -> "for Type=[ecore:Class|QualifiedName]"
-        val styleOpt = if(style.isDefined)cashe.styleHierarchy.get(style.get) else None
+        val styleOpt:Option[Style] = if(style.isDefined)style.get else None
         var shap:Option[diaShape] = None
         var pal:Option[String] = None
         var con:Option[AnyRef] = None
@@ -241,7 +245,7 @@ class SprayParser(cashe: Cashe = Cashe()) extends CommonParserMethodes {
     ("connection" ~ ":" ~> ident) ~
       (("(" ~> rep(shapePropertie) <~ ")") ?) ^^ {
       case connectionName ~ properties =>
-        val referencedConnection = cashe.connections(connectionName)
+        val referencedConnection:Connection = connectionName
         var vars = Map[String, AnyRef]()
         var vals = Map[String, AnyRef]()
         if(properties isDefined) {
@@ -260,7 +264,7 @@ class SprayParser(cashe: Cashe = Cashe()) extends CommonParserMethodes {
       ("from" ~ ":" ~> ident) ~
       ("to" ~ ":" ~> ident) ~ (palette?) ~ (container?) ~ (onCreate?) ~ (onUpdate?) ~ (onDelete?) ~ (actions?) <~ "}" ^^ {
       case edgeName ~ ecoreElement ~ styleOpt ~ diaCon ~ from ~ to ~ pal ~ cont ~ oncr ~ onup ~ onde ~ acts =>
-        val style = if(styleOpt isDefined)cashe.styleHierarchy.get(styleOpt.get)else None
+        val style: Option[Style] = if(styleOpt isDefined)styleOpt.get else None
         val ret_palette = if(pal isDefined)Some(pal.get._2) else None
         val ret_container = if(cont isDefined)Some(cont.get._2) else None
         val onCr = if(oncr isDefined) Some(oncr.get._2) else None
@@ -273,7 +277,7 @@ class SprayParser(cashe: Cashe = Cashe()) extends CommonParserMethodes {
   }
   private def nodeOrEdge = node|edge
 
-  def sprayDiagram:Parser[Diagram] = {
+  private def sprayDiagram:Parser[Diagram] = {
       ("diagram" ~> ident) ~
       ("for" ~> ident) ~
       (("(" ~ "style" ~ ":" ~> ident <~ ")")?) ~
@@ -283,11 +287,11 @@ class SprayParser(cashe: Cashe = Cashe()) extends CommonParserMethodes {
           val nodes = arguments.filter(i => i._1 == "node").map(i => i._2.asInstanceOf[Node].name -> i._2.asInstanceOf[Node]).toMap
           val edges = arguments.filter(i => i._1 == "edge").map(i => i._2.asInstanceOf[Edge].name -> i._2.asInstanceOf[Edge]).toMap
 
-          Diagram(name, actionGroups, nodes, edges, cashe.styleHierarchy(style), ecoreElement/*TODO convert to actual EcoreElement*/)
+          Diagram(name, actionGroups, nodes, edges, style, ecoreElement/*TODO convert to actual EcoreElement*/)
       }
   }
 
-  def sprayDiagrams = rep(sprayDiagram)
+  private def sprayDiagrams = rep(sprayDiagram)
   def parseRawDiagram(e:String) = parseAll(sprayDiagrams, trimRight(e)).get
 /*------------------------------------------------------------------------------------------*/
 
@@ -297,7 +301,7 @@ class SprayParser(cashe: Cashe = Cashe()) extends CommonParserMethodes {
 /**
  * GeoModel is a sketch of a GeometricModel, only used for parsing a shape string and temporarily
  * save all the attributes in a struct for later compilation into a GeometricModel*/
-case class GeoModel(typ: String, style: Option[Style], attributes: List[String], children: List[GeoModel], hierarchyCashe: Cashe) {
+case class GeoModel(typ: String, style: Option[Style], attributes: List[String], children: List[GeoModel], hierarchyCashe: Cache) {
 
   def parse(parentGeometricModel: Option[GeometricModel], parentStyle:Option[Style]): Option[GeometricModel] = typ match {
     case "ellipse" => Ellipse.parse(this, parentGeometricModel, parentStyle, hierarchyCashe)

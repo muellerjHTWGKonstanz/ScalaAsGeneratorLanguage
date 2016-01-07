@@ -1,9 +1,9 @@
 
-import model.Cashe
+import model.Cache
 import util.SprayParser
 
 object RegexTest extends App {
-  val hierarchyContainer = Cashe()
+  val hierarchyContainer = Cache()
   val parser = new SprayParser(hierarchyContainer)
   val styleUno = """style BpmnDefaultStyle {
                   description = "The default style of the petrinet hierarchyContainer type."

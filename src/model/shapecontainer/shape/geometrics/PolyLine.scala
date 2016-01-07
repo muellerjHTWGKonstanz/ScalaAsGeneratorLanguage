@@ -1,6 +1,6 @@
 package model.shapecontainer.shape.geometrics
 
-import model.Cashe
+import model.Cache
 import model.shapecontainer.shape.Shape
 import model.shapecontainer.shape.geometrics.layouts.{PolyLineLayoutParser, PolyLineLayout}
 import model.style.Style
@@ -20,9 +20,9 @@ class PolyLine(parent:Option[GeometricModel]=None,
 }
 
 object PolyLine{
-  def apply(geoModel:GeoModel, parent:Option[GeometricModel], parentStyle:Option[Style], hierarchyContainer: Cashe):Option[PolyLine] = parse(geoModel, parent, parentStyle, hierarchyContainer)
+  def apply(geoModel:GeoModel, parent:Option[GeometricModel], parentStyle:Option[Style], hierarchyContainer: Cache):Option[PolyLine] = parse(geoModel, parent, parentStyle, hierarchyContainer)
 
-  def parse(geoModel:GeoModel, parent:Option[GeometricModel], parentStyle:Option[Style], hierarchyContainer: Cashe):Option[PolyLine] = {
+  def parse(geoModel:GeoModel, parent:Option[GeometricModel], parentStyle:Option[Style], hierarchyContainer: Cache):Option[PolyLine] = {
     val polyLineLayout:Option[PolyLineLayout] = PolyLineLayoutParser.parse(geoModel, parentStyle, hierarchyContainer)
     if(polyLineLayout.isEmpty)
       None

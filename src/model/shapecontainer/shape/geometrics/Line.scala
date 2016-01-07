@@ -1,6 +1,6 @@
 package model.shapecontainer.shape.geometrics
 
-import model.Cashe
+import model.Cache
 import model.shapecontainer.shape.Shape
 import model.shapecontainer.shape.geometrics.layouts.{LineLayoutParser, LineLayout}
 import model.style.Style
@@ -16,8 +16,8 @@ class Line(parent:Option[GeometricModel]=None,
   extends GeometricModel(parent) with LineLayout
 
 object Line{
-  def apply(geoModel: GeoModel, parent:Option[GeometricModel], parentStyle:Option[Style], hierarchyContainer: Cashe) = parse(geoModel, parent, parentStyle, hierarchyContainer)
-  def parse(geoModel: GeoModel, parent:Option[GeometricModel], parentStyle:Option[Style], hierarchyContainer: Cashe): Option[Line] = {
+  def apply(geoModel: GeoModel, parent:Option[GeometricModel], parentStyle:Option[Style], hierarchyContainer: Cache) = parse(geoModel, parent, parentStyle, hierarchyContainer)
+  def parse(geoModel: GeoModel, parent:Option[GeometricModel], parentStyle:Option[Style], hierarchyContainer: Cache): Option[Line] = {
     val lineLayout = LineLayoutParser.parse(geoModel, parentStyle, hierarchyContainer)
     if(lineLayout.isEmpty)
       None

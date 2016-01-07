@@ -1,0 +1,32 @@
+package model
+
+import model.diagram.Diagram
+import model.diagram.action.{Action, ActionGroup}
+import model.shapecontainer.connection.Connection
+import model.shapecontainer.shape.Shape
+import model.style.Style
+
+/**
+ * Created by julian on 06.01.16.
+ * attempt to make acces on several instances of the cache much easier
+ */
+package object CacheEvaluation {
+  implicit def IDtoStyle(id:String)(implicit c:Cache): Style = c.styleHierarchy(id).data
+  implicit def IDtoOptionStyle(id:String)(implicit c:Cache): Option[Style] = c.styleHierarchy.get(id)
+  implicit def OptionToStyle(id:Option[String])(implicit c:Cache): Option[Style] = c.styleHierarchy(id)
+
+  implicit def IDtoShape(id:String)(implicit c:Cache): Shape = c.shapeHierarchy(id).data
+  implicit def IDtoOptionShape(id:String)(implicit c:Cache): Option[Shape] = c.shapeHierarchy.get(id)
+
+  implicit def IDtoDiagram(id:String)(implicit c:Cache): Diagram = c.diagrams(id)
+  implicit def IDtoOptionDiagram(id:String)(implicit c:Cache): Option[Diagram] = c.diagrams.get(id)
+
+  implicit def IDtoConnection(id:String)(implicit c:Cache): Connection = c.connections(id)
+  implicit def IDtoOptionConnection(id:String)(implicit c:Cache): Option[Connection] = c.connections.get(id)
+
+  implicit def IDtoActionGroup(id:String)(implicit c:Cache): ActionGroup = c.actionGroups(id)
+  implicit def IDtoOptionActionGroup(id:String)(implicit c:Cache): Option[ActionGroup] = c.actionGroups.get(id)
+
+  implicit def IDtoAction(id:String)(implicit c:Cache):Action = c.actions(id)
+  implicit def IDtoOptionAction(id:String)(implicit c:Cache):Option[Action] = c.actions.get(id)
+}

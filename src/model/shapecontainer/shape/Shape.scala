@@ -1,12 +1,13 @@
 package model.shapecontainer.shape
 
+import model.CacheEvaluation._
 import model.shapecontainer.shape.geometrics.compartment.CompartmentInfo
-import model.{ClassHierarchy, Cashe}
+import model.{ClassHierarchy, Cache}
 import model.shapecontainer.ShapeContainerElement
 import model.shapecontainer.shape.anchor.Anchor
 import model.shapecontainer.shape.anchor.Anchor.AnchorType
 import model.shapecontainer.shape.geometrics._
-import model.style.{StyleParser, Style}
+import model.style.Style
 import util.{GeoModel, CommonParserMethodes}
 
 /**
@@ -110,10 +111,10 @@ class Shape(val name:String = "no name",
   }
 }
 
-object ShapeParser extends CommonParserMethodes{
+object Shape extends CommonParserMethodes{
   val validShapeVariables = List("size-min", "size-max", "stretching", "proportional", "anchor", "description(\\s*style\\s*[a-zA-ZüäöÜÄÖ]+([-_][a-zA-ZüäöÜÄÖ])*)?\\s*")
 
-  def apply(name:String, parents:Option[List[String]], style:Option[String], attributes:List[(String, String)], geos:List[GeoModel], description:Option[(String, String)], anchor:Option[String], hierarchyContainer:Cashe) =
+  def apply(name:String, parents:Option[List[String]], style:Option[String], attributes:List[(String, String)], geos:List[GeoModel], description:Option[(String, String)], anchor:Option[String], hierarchyContainer:Cache) =
     parse(name, parents, style, attributes, geos, description, anchor, hierarchyContainer)
 
   def parse(name:String,
@@ -123,15 +124,16 @@ object ShapeParser extends CommonParserMethodes{
             geos:List[GeoModel],
             desc:Option[(String, String)],
             anch:Option[String],
-            hierarchyContainer:Cashe):Shape = {
+            hierarchyContainer:Cache):Shape = {
+    implicit val cache = hierarchyContainer
 
     val parents = if(parentShapes isDefined) parentShapes.get else List()
     var extendedShapes:List[Shape] = List[Shape]()
     if(parents.nonEmpty)
       parents.foreach{parent => {
         val parentName = parent.trim //trim just to make sure, could probably be removed
-        if(hierarchyContainer.shapeHierarchy.contains(parentName))
-          extendedShapes = hierarchyContainer.shapeHierarchy(parentName).data :: extendedShapes
+        if(cache.shapeHierarchy.contains(parentName))
+          extendedShapes = parentName :: extendedShapes
       }
      }
 
@@ -156,10 +158,10 @@ object ShapeParser extends CommonParserMethodes{
 
     /*initialize the mapping-variables with the actual parameter-values, if they exist*/
     if(styleArgument isDefined){
-      val newStyle: Option[Style] = hierarchyContainer.styleHierarchy.get(styleArgument.get)
+      val newStyle: Option[Style] = styleArgument.get
       if(newStyle isDefined) {
         if(style isDefined){
-          style = StyleParser.makeLove(hierarchyContainer, style, newStyle)
+          style = Style.makeLove(cache, style, newStyle)
         }else
           style = newStyle
       }
@@ -192,11 +194,11 @@ object ShapeParser extends CommonParserMethodes{
         else
           Some(anch.get)
       }
-      case x if x._1.matches("description.*") => description = Description.parse(x, style, hierarchyContainer)
+      case x if x._1.matches("description.*") => description = Description.parse(x, style, cache)
       case _ =>
     }
     if(desc nonEmpty)
-      description = Description.parse(desc.get, style, hierarchyContainer)
+      description = Description.parse(desc.get, style, cache)
     if(anch nonEmpty)
       anchor = Some(Anchor.parse(Anchor.anchor, anch.get).get)
 
@@ -206,9 +208,9 @@ object ShapeParser extends CommonParserMethodes{
 
     /*include new shape instance in shapeHierarchie*/
     if (extendedShapes.nonEmpty) {
-      extendedShapes.reverse.foreach(elem => hierarchyContainer.shapeHierarchy(elem.name, newShape))
+      extendedShapes.reverse.foreach(elem => cache.shapeHierarchy(elem.name, newShape))
     } else {
-      hierarchyContainer.shapeHierarchy.newBaseClass(newShape)
+      cache.shapeHierarchy.newBaseClass(newShape)
     }
     newShape
   }

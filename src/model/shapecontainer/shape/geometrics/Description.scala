@@ -1,8 +1,8 @@
 package model.shapecontainer.shape.geometrics
 
-import model.Cashe
+import model.Cache
 import model.shapecontainer.shape.geometrics.Alignment.{VAlign, HAlign}
-import model.style.{StyleParser, Style}
+import model.style.Style
 import util.CommonParserMethodes
 
 /**
@@ -17,7 +17,7 @@ class Description(override val id:String,
 
 object Description extends CommonParserMethodes{
 
-  def parse(attrs:(String, String), parentStyle:Option[Style], hierarchyContainer: Cashe):Option[Description] = {
+  def parse(attrs:(String, String), parentStyle:Option[Style], hierarchyContainer: Cache):Option[Description] = {
     /*mapping*/
     var hali:Option[HAlign] = None
     var vali:Option[VAlign] = None
@@ -28,7 +28,7 @@ object Description extends CommonParserMethodes{
       val attrsArray = attrs._1.split(" ")
       val styleIndex = attrsArray.indexOf("style")+1
       val newstyl = hierarchyContainer.styleHierarchy.get(attrsArray(styleIndex))
-      styl = StyleParser.makeLove(hierarchyContainer, parentStyle, newstyl)
+      styl = Style.makeLove(hierarchyContainer, parentStyle, newstyl)
     }
 
     val attributes = attrs._2.split("\n")
@@ -37,7 +37,7 @@ object Description extends CommonParserMethodes{
         hali = Alignment.parseHAlign("(center|right|left)".r.findFirstIn(x).get)
         vali = Alignment.parseVAlign("(top|middle|bottom)".r.findFirstIn(x).get)
       case x if x.matches("id.*") => id = parse(idAsString, x).get
-      case x if x.matches("style.+") & styl.isEmpty => styl = Some(StyleParser.parse(x))
+      case x if x.matches("style.+") & styl.isEmpty => styl = Some(Style.parse(x))
       case _ =>
     }
     if(id != "")
