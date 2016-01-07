@@ -286,7 +286,6 @@ class SprayParser(c: Cache = Cache()) extends CommonParserMethodes {
           val actionGroups = arguments.filter(i => i._1 == "actionGroup").map(i => i._2.asInstanceOf[ActionGroup].name -> i._2.asInstanceOf[ActionGroup]).toMap
           val nodes = arguments.filter(i => i._1 == "node").map(i => i._2.asInstanceOf[Node].name -> i._2.asInstanceOf[Node]).toMap
           val edges = arguments.filter(i => i._1 == "edge").map(i => i._2.asInstanceOf[Edge].name -> i._2.asInstanceOf[Edge]).toMap
-
           Diagram(name, actionGroups, nodes, edges, style, ecoreElement/*TODO convert to actual EcoreElement*/)
       }
   }
@@ -304,14 +303,14 @@ class SprayParser(c: Cache = Cache()) extends CommonParserMethodes {
 case class GeoModel(typ: String, style: Option[Style], attributes: List[String], children: List[GeoModel], hierarchyCashe: Cache) {
 
   def parse(parentGeometricModel: Option[GeometricModel], parentStyle:Option[Style]): Option[GeometricModel] = typ match {
-    case "ellipse" => Ellipse.parse(this, parentGeometricModel, parentStyle, hierarchyCashe)
-    case "line" => Line.parse(this, parentGeometricModel, parentStyle, hierarchyCashe)
-    case "polygon" => Polygon.parse(this, parentGeometricModel,parentStyle, hierarchyCashe)
-    case "polyline" => PolyLine.parse(this, parentGeometricModel,parentStyle, hierarchyCashe)
-    case "rectangle" => Rectangle.parse(this, parentGeometricModel,parentStyle, hierarchyCashe)
-    case "rounded-rectangle" => RoundedRectangle.parse(this, parentGeometricModel,parentStyle, hierarchyCashe)
-    case "text" => Text.parse(this, parentGeometricModel, DefaultText, parentStyle, hierarchyCashe)
-    case "text-wrapped" => Text.parse(this, parentGeometricModel, Multiline, parentStyle, hierarchyCashe)
+    case "ellipse" => Ellipse(this, parentGeometricModel, parentStyle, hierarchyCashe)
+    case "line" => Line(this, parentGeometricModel, parentStyle, hierarchyCashe)
+    case "polygon" => Polygon(this, parentGeometricModel, parentStyle, hierarchyCashe)
+    case "polyline" => PolyLine(this, parentGeometricModel, parentStyle, hierarchyCashe)
+    case "rectangle" => Rectangle(this, parentGeometricModel, parentStyle, hierarchyCashe)
+    case "rounded-rectangle" => RoundedRectangle(this, parentGeometricModel, parentStyle, hierarchyCashe)
+    case "text" => Text(this, parentGeometricModel, DefaultText, parentStyle, hierarchyCashe)
+    case "text-wrapped" => Text(this, parentGeometricModel, Multiline, parentStyle, hierarchyCashe)
     case _ => None
   }
 }

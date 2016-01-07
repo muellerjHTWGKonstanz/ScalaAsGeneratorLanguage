@@ -5,28 +5,29 @@ import util.CommonParserMethodes
 
 import scala.util.Random
 
-case class Style( name: String = "noName",
-                  description: Option[String] = None,
-                  transparency: Option[Double] = None,
-                  background_color: Option[ColorOrGradient] = None,
-                  line_color: Option[Color] = None,
-                  line_style: Option[LineStyle] = None,
-                  line_width: Option[Int] = None,
-                  font_color: Option[ColorOrGradient] = None,
-                  font_name: Option[String] = None,
-                  font_size: Option[Int] = None,
-                  font_bold: Option[Boolean] = None,
-                  font_italic: Option[Boolean] = None,
-                  gradient_orientation: Option[GradientAlignment] = None,
-                  gradient_area_color: Option[ColorOrGradient] = None,
-                  gradient_area_offset: Option[Double] = None,
-                  selected_highlighting: Option[ColorOrGradient] = None,
-                  multiselected_highlighting: Option[ColorOrGradient] = None,
-                  allowed_highlighting: Option[ColorOrGradient] = None,
-                  unallowed_highlighting: Option[ColorOrGradient] = None,
+class Style(val name: String = "noName",
+            val description: Option[String] = None,
+            val transparency: Option[Double] = None,
+            val background_color: Option[ColorOrGradient] = None,
+            val line_color: Option[Color] = None,
+            val line_style: Option[LineStyle] = None,
+            val line_width: Option[Int] = None,
+            val font_color: Option[ColorOrGradient] = None,
+            val font_name: Option[String] = None,
+            val font_size: Option[Int] = None,
+            val font_bold: Option[Boolean] = None,
+            val font_italic: Option[Boolean] = None,
+            val gradient_orientation: Option[GradientAlignment] = None,
+            val gradient_area_color: Option[ColorOrGradient] = None,
+            val gradient_area_offset: Option[Double] = None,
+            val selected_highlighting: Option[ColorOrGradient] = None,
+            val multiselected_highlighting: Option[ColorOrGradient] = None,
+            val allowed_highlighting: Option[ColorOrGradient] = None,
+            val unallowed_highlighting: Option[ColorOrGradient] = None,
 
-                  childOf: List[Style] = List()) {
+            val childOf: List[Style] = List()) {
   val key: Long = hashCode
+  override def toString = name
 }
 
 
@@ -43,7 +44,7 @@ object Style extends CommonParserMethodes {
 
   private def parseAttributes(input:String) = parse(attributes, input).get
 
-  private def attributes = "style\\s*\\(".r ~> rep(styleAttribute) <~ ")" ^^ {case attr:List[(String, String)] => attr}
+  private def attributes = "style\\s*[\\(\\{]".r ~> rep(styleAttribute) <~ "[\\)\\}]".r ^^ {case attr:List[(String, String)] => attr}
   private def styleVariable =("""("""+Style.validStyleAttributes.map(_+"|").mkString+""")""").r ^^ {_.toString}
   private def styleAttribute = styleVariable ~ (styleArguments <~ ",?".r)^^ {case v ~ a => (v, a)}
   private def styleArguments = styleVariable ~> ("=?\\s*".r ~> argument) ^^ {case arg => arg}
@@ -66,11 +67,12 @@ object Style extends CommonParserMethodes {
   }
 
   /**
-   * parse
+   * parse an anonymous Style
    * @param attributes is the string containing all the information needed to generate the attributes to generate an anonymous Style instance
    */
-  def apply(attributes:String) = parse(attributes)
-  def parse(attributes:String):Style = {
+  def apply(attributes:List[(String, String)], cache: Cache) = parse(attributes, cache)
+  def apply(attributes:String, cache: Cache) = parse(parseAttributes(attributes), cache)
+  def parse(attributes:List[(String, String)], cache: Cache):Style = {
     var description: Option[String]                        = None
     var transparency: Option[Double]                       = None
     var background_color: Option[ColorOrGradient]          = None
@@ -99,9 +101,9 @@ object Style extends CommonParserMethodes {
         ret
       }}
 
-    val attrList = parseAttributes(attributes)
-    if(attrList.nonEmpty){
-     attrList.foreach{
+    //val attrList = parseAttributes(attributes)
+    if(attributes.nonEmpty){
+     attributes.foreach{
        case tuple:(String, String) if tuple._1 == "description" => description = Some(tuple._2)
        case ("transparency", x:String) => transparency = ifValid(x.toDouble)
        case ("background-color", x) => background_color = Some(knownColors.getOrElse(x, GRAY))
@@ -124,9 +126,13 @@ object Style extends CommonParserMethodes {
     }
 
     /*create the instance of the actual new Style*/
-    Style("Anonymous_Style"+Random.nextString(5), description, transparency, background_color, line_color, line_style, line_width, font_color,
+    val ret = new Style("Anonymous_Style"+Random.nextString(5), description, transparency, background_color, line_color, line_style, line_width, font_color,
       font_name, font_size, font_bold, font_italic, gradient_orientation, gradient_area_color, gradient_area_offset,
       selected_highlighting, multiselected_highlighting, allowed_highlighting, unallowed_highlighting, List())
+
+    /*include new style instance in stylehierarchie*/
+    cache.styleHierarchy.newBaseClass(ret)
+    ret
   }
 
   /**
@@ -202,7 +208,7 @@ object Style extends CommonParserMethodes {
     }
 
     /*create the instance of the actual new Style*/
-    val newStyle = Style(name, description, transparency, background_color, line_color, line_style, line_width, font_color,
+    val newStyle = new Style(name, description, transparency, background_color, line_color, line_style, line_width, font_color,
       font_name, font_size, font_bold, font_italic, gradient_orientation, gradient_area_color, gradient_area_offset,
       selected_highlighting, multiselected_highlighting, allowed_highlighting, unallowed_highlighting, extendedStyle)
 
@@ -242,6 +248,6 @@ object Style extends CommonParserMethodes {
    * @param attribute is the attribute, that was not matchable
    * @param name is the name of the class
    * @param className is the type (e.G. Style, Shape ...)*/
-  def messageIgnored(attribute: String, name: String, className: String) = println("[util.StringToObjectParser|toShape]: attribute -> " +
+  def messageIgnored(attribute: String, name: String, className: String) = println("Styleparsing: attribute -> " +
     attribute + " in " + className + " '" + name + "' was ignored") /*TODO replace with call to Logger*/
 }

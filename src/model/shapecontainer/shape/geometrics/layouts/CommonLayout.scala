@@ -42,8 +42,8 @@ object CommonLayoutParser extends CommonParserMethodes{
           size_w = Some(newSize.get._1)
           size_h = Some(newSize.get._2)
         }
-      case x if x.matches("style.+") & geoModel.style.isEmpty =>
-        styl = Style.makeLove(cache, parentStyle, Some(Style.parse(x))) //generate anonymous style
+      case x if x.matches("style.+") =>
+        styl = Style.makeLove(cache, styl, Some(Style(x, cache))) //generate anonymous style
       case _ =>
     }
 

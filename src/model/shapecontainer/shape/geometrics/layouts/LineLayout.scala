@@ -28,7 +28,9 @@ object LineLayoutParser{
         else {
           point2 = PointParser(x)
         }
-      case x if x.matches("style.+") & styl.isEmpty => styl = Style.makeLove(hierarchyContainer, parentStyle, Some(Style.parse(x)))
+      case x if x.matches("style.+") =>
+        styl = Style.makeLove(hierarchyContainer, styl, Some(Style(x, hierarchyContainer)))
+      case _ =>
     }
     if(point1.isDefined && point2.isDefined)
       Some(new LineLayout {

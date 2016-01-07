@@ -37,7 +37,7 @@ object Description extends CommonParserMethodes{
         hali = Alignment.parseHAlign("(center|right|left)".r.findFirstIn(x).get)
         vali = Alignment.parseVAlign("(top|middle|bottom)".r.findFirstIn(x).get)
       case x if x.matches("id.*") => id = parse(idAsString, x).get
-      case x if x.matches("style.+") & styl.isEmpty => styl = Some(Style.parse(x))
+      case x if x.matches("style.+") & styl.isEmpty => styl = Some(Style(x, hierarchyContainer))
       case _ =>
     }
     if(id != "")

@@ -35,7 +35,7 @@ object Connection extends CommonParserMethodes{
     var style:Option[Style] = if(styleRef isDefined) styleRef.get else None
     val connection_type:Option[ConnectionStyle] = if(typ isDefined) Some(parse(connectionType, typ.get).get) else None
     if(anonymousStyle.isDefined && style.isEmpty) {
-      style = Some(Style(anonymousStyle.get))
+      style = Some( Style(anonymousStyle.get, cache))
     }
     val placingList = placings.map{Placing(_, style, cache.shapeHierarchy.root.data)}
 

@@ -13,7 +13,7 @@ import model.style.Style
 package object CacheEvaluation {
   implicit def IDtoStyle(id:String)(implicit c:Cache): Style = c.styleHierarchy(id).data
   implicit def IDtoOptionStyle(id:String)(implicit c:Cache): Option[Style] = c.styleHierarchy.get(id)
-  implicit def OptionToStyle(id:Option[String])(implicit c:Cache): Option[Style] = c.styleHierarchy(id)
+  implicit def OptionToStyle(id:Option[String])(implicit c:Cache): Option[Style] = if(id isDefined)c.styleHierarchy.get(id.get)else None
 
   implicit def IDtoShape(id:String)(implicit c:Cache): Shape = c.shapeHierarchy(id).data
   implicit def IDtoOptionShape(id:String)(implicit c:Cache): Option[Shape] = c.shapeHierarchy.get(id)

@@ -17,16 +17,17 @@ trait TextLayout extends CommonLayout {
 }
 
 object TextLayoutParser extends CommonParserMethodes{
-  def apply(geoModel: GeoModel, parentStyle:Option[Style], hierarchyContainer:Cache): Option[TextLayout] = {
+  def apply(geoModel: GeoModel, parentStyle:Option[Style], cache:Cache): Option[TextLayout] = {
     val attributes = geoModel.attributes
 
     /*mapping*/
-    val commonLayout = CommonLayoutParser.parse(geoModel, parentStyle, hierarchyContainer)
+    val commonLayout = CommonLayoutParser.parse(geoModel, parentStyle, cache)
     if (commonLayout.isEmpty)
       return None
     var hali: Option[HAlign] = None
     var vali: Option[VAlign] = None
     var txt = ""
+    var styl:Option[Style] = commonLayout.get.style
 
     attributes.foreach {
       case x: String if x.matches("align\\s*\\((horizontal=)?(center|left|right),\\s*(vertical=)?(top|middle|bottom)\\)") =>
@@ -34,6 +35,8 @@ object TextLayoutParser extends CommonParserMethodes{
         vali = Alignment.parseVAlign("(top|middle|bottom)".r.findFirstIn(x).get)
       case x: String if x.matches("(?s)textBody.*") =>
         txt = parse(planeText, x).get
+      case x if x.matches("style.*") =>
+        styl = Style.makeLove(cache, styl, Some(Style(x, cache))) //generate anonymous style
       case _ =>
     }
     Some(new TextLayout {

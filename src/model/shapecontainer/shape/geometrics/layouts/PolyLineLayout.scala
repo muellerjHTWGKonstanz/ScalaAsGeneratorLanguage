@@ -25,7 +25,9 @@ object PolyLineLayoutParser{
       case x if x.matches("point.+") =>
         val newPoint = PointParser(x)
         if(newPoint.isDefined)collectedPoints = collectedPoints.::(newPoint.get)
-      case x if x.matches("style.+") & geoModel.style.isEmpty => styl = Style.makeLove(hierarchyContainer, parentStyle, Some(Style.parse(x)))
+      case x if x.matches("style.+") =>
+        styl = Style.makeLove(hierarchyContainer, styl, Some(Style(x, hierarchyContainer)))
+      case _ =>
     }
     if(collectedPoints.length > 1)
       Some(new PolyLineLayout {
