@@ -1,4 +1,4 @@
-package model.shapecontainer.shape.geometrics.compartment
+package model.shapecontainer.shape
 
 import util.CommonParserMethodes
 
@@ -6,15 +6,15 @@ import util.CommonParserMethodes
  * Created by julian on 19.10.15.
  * representation of CompartmentInfo
  */
-trait CompartmentInfo {
-  val compartment_layout:Option[CompartmentLayout] = None
-  val compartment_stretching_horizontal:Option[Boolean] = None
-  val compartment_stretching_vertical:Option[Boolean] = None
-  val compartment_spacing:Option[Int] = None
-  val compartment_margin:Option[Int] = None
+class Compartment(
+  val compartment_id:String,
+  val compartment_layout:Option[CompartmentLayout] = None,
+  val compartment_stretching_horizontal:Option[Boolean] = None,
+  val compartment_stretching_vertical:Option[Boolean] = None,
+  val compartment_spacing:Option[Int] = None,
+  val compartment_margin:Option[Int] = None,
   val compartment_invisible:Option[Boolean] = None
-  val compartment_id:Option[String] = None
-}
+)
 
 abstract sealed class CompartmentLayout
   case object FIXED extends CompartmentLayout
@@ -22,10 +22,10 @@ abstract sealed class CompartmentLayout
   case object HORIZONTAL extends CompartmentLayout
   case object FIT extends CompartmentLayout
 
-object CompartmentInfoParser extends CommonParserMethodes {
+object CompartmentParser extends CommonParserMethodes {
 
-  def apply(attributes: List[String]): Option[CompartmentInfo] = parse(attributes)
-  def parse(attributes: List[String]): Option[CompartmentInfo] = {
+  def apply(attributes: List[String]): Option[Compartment] = parse(attributes)
+  def parse(attributes: List[String]): Option[Compartment] = {
 
     var layout: Option[CompartmentLayout] = None
     var margin: Option[Int] = None
@@ -55,16 +55,8 @@ object CompartmentInfoParser extends CommonParserMethodes {
       case x if x.startsWith("id") => id = Some(parse(parse_id, x).get)
     }
 
-    if(layout.isDefined) {
-      Some(new CompartmentInfo {
-        override val compartment_layout: Option[CompartmentLayout] = layout
-        override val compartment_margin: Option[Int] = margin
-        override val compartment_spacing: Option[Int] = spacing
-        override val compartment_stretching_horizontal: Option[Boolean] = stretching_horizontal
-        override val compartment_stretching_vertical: Option[Boolean] = stretching_vertical
-        override val compartment_id: Option[String] = id
-        override val compartment_invisible: Option[Boolean] = invisible
-      })
+    if(id.isDefined && layout.isDefined) {
+      Some(new Compartment (id.get, layout, stretching_horizontal, stretching_vertical, spacing, margin, invisible))
     }
     else
       None

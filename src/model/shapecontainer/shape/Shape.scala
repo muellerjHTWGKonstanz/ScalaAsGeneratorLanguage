@@ -1,7 +1,6 @@
 package model.shapecontainer.shape
 
 import model.CacheEvaluation._
-import model.shapecontainer.shape.geometrics.compartment.CompartmentInfo
 import model.{ClassHierarchy, Cache}
 import model.shapecontainer.ShapeContainerElement
 import model.shapecontainer.shape.anchor.Anchor
@@ -31,7 +30,7 @@ class Shape(val name:String = "no name",
 
                   parentShapes:Option[List[GeometricModel]] = None,
                   parentTextMap:Option[Map[String, Text]]   = None, /*necessary addition*/
-                  parentCompartmentMap:Option[Map[String, CompartmentInfo]]= None, /*necessary addition*/
+                  parentCompartmentMap:Option[Map[String, Compartment]]= None, /*necessary addition*/
                   geos:List[GeoModel]                       = List(),
 
                   val description:Option[Description]       = None,
@@ -64,9 +63,9 @@ class Shape(val name:String = "no name",
     /*first check for new CompartmentInfo*/
     val comparts = if (shapes isDefined) {
       rCompartment(shapes.get)
-    } else List[CompartmentInfo]()
+    } else List[Compartment]()
     if(comparts nonEmpty)
-      Some(comparts.map(i => i.compartment_id.get -> i).toMap)
+      Some(comparts.map(i => i.compartment_id -> i).toMap)
     else None
   }
 
@@ -88,24 +87,25 @@ class Shape(val name:String = "no name",
                        /*"; anchor: "                 +*/", " + anchor +
                        /*"; parentShapes: "           +*/", " + extendedShape +")"
 
-  /*for generating shape-attribute specific content*/
+  /**for generating shape-attribute specific content*/
   private def parseGeometricModels(geoModels:List[GeoModel], parentStyle:Option[Style]) =
     Some(geoModels.map{_.parse(None, parentStyle)}.
       foldLeft(List[GeometricModel]())((r, c:Option[GeometricModel])=>if(c.isDefined)r.::(c.get) else r))
 
-  /*recursively searches for Compartments in the geometricModels*/
-  private def rCompartment(g:List[GeometricModel], compartments:List[CompartmentInfo] = List[CompartmentInfo]()):List[CompartmentInfo] = {
-    var ret:List[CompartmentInfo] = compartments
+  /**recursively searches for Compartments in the geometricModels*/
+  private def rCompartment(g:List[GeometricModel], compartments:List[Compartment] = List[Compartment]()):List[Compartment] = {
+    var ret:List[Compartment] = compartments
     g foreach{
-      case e: Ellipse if e.compartmentInfo.isDefined =>
-        ret = e.compartmentInfo.get :: ret
-      case e: Rectangle if e.compartmentInfo.isDefined =>
-        ret = e.compartmentInfo.get :: ret
+      case e: Ellipse if e.compartment.isDefined =>
+        ret = e.compartment.get :: ret
+      case e: Rectangle if e.compartment.isDefined =>
+        ret = e.compartment.get :: ret
       case _ =>
     }
     g foreach {
       case e: Wrapper =>
-        ret = ret ::: rCompartment(e.children, ret) case _ =>
+        ret = ret ::: rCompartment(e.children, ret)
+      case _ =>
     }
     ret
   }
@@ -154,7 +154,7 @@ object Shape extends CommonParserMethodes{
     var anchor:Option[AnchorType]             = relevant {_.anchor}
     val shapes:Option[List[GeometricModel]]   = relevant {_.shapes}
     val textMap:Option[Map[String, Text]]     = relevant {_.textMap}
-    val compartmentMap:Option[Map[String, CompartmentInfo]]= relevant {_.compartmentMap}
+    val compartmentMap:Option[Map[String, Compartment]]= relevant {_.compartmentMap}
 
     /*initialize the mapping-variables with the actual parameter-values, if they exist*/
     if(styleArgument isDefined){

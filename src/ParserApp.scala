@@ -4,7 +4,7 @@ import util.SprayParser
 
 /**
  * Created by julian on 9/3/15.
- * Diverse Tests für die Klassen StringToObjectParser ClassHierarchy Diagram Style
+ * Diverse Tests für die Klassen parser ClassHierarchy Diagram Style
  */
 object ParserApp extends App {
 
@@ -31,41 +31,37 @@ object ParserApp extends App {
 
   val parser = new SprayParser(hierarchyContainer)
 
-  //val newStyle = StringToObjectParser toStyle(classUno, hierarchyContainer)
-  //val anotherStyle = StringToObjectParser toStyle(classDuo, hierarchyContainer)
-  val newStyle = parser.parseRawStyle(classUno)
-  val anotherStyle = parser.parseRawStyle(classDuo)
+  val newStyle = parser.parseRawStyle(classUno).head
+  val anotherStyle = parser.parseRawStyle(classDuo).head
 
   hierarchyContainer.styleHierarchy.root.rPrint()
-  //println(hierarchyContainer.styleHierarchy(newStyle).data.lineColor)
-  //println(hierarchyContainer.styleHierarchy(anotherStyle).data.lineColor)
+  println(hierarchyContainer.styleHierarchy(newStyle).data.line_color)
+  println(hierarchyContainer.styleHierarchy(anotherStyle).data.line_color)
 
   val classTres =
     """style yetAnotherStyle extends BpmnExtending{
       font-size = 10
       }"""
-  //val yetAnotherStyle = StringToObjectParser toStyle(classTres, hierarchyContainer)
-  val yetAnotherStyle = parser.parseRawStyle(classTres)
-  //println(hierarchyContainer.styleHierarchy(newStyle).data.       fontSize)
-  //println(hierarchyContainer.styleHierarchy(anotherStyle).data.   fontSize)
-  //println(hierarchyContainer.styleHierarchy(yetAnotherStyle).data.fontSize)
+  val yetAnotherStyle = parser.parseRawStyle(classTres).head
+  println(hierarchyContainer.styleHierarchy(newStyle).data.       font_size)
+  println(hierarchyContainer.styleHierarchy(anotherStyle).data.   font_size)
+  println(hierarchyContainer.styleHierarchy(yetAnotherStyle).data.font_size)
 
   hierarchyContainer.styleHierarchy.root.rPrint()
 
 
-  var differentStyle =
+  val styleA =
     """style A{
       font-size = 20
+      highlighting (allowed = blue)
       }""".stripMargin
-  val A = parser.parseRawStyle(differentStyle)
 
-  differentStyle =
+  val styleB =
   """style B extends A{
     line-color = blue
     }"""
-  val B = parser.parseRawStyle(differentStyle)
 
-  differentStyle =
+  val styleC =
     """style C extends B{
       description = "The default style of the petrinet hierarchyContainer type."
       transparency = 0.95
@@ -79,15 +75,17 @@ object ParserApp extends App {
       font-italic = yes
       gradient-orientation = horizontal
       }"""
-  val C = parser.parseRawStyle(differentStyle)
+  val A = parser.parseRawStyle(styleA).head
+  val B = parser.parseRawStyle(styleB).head
+  val C = parser.parseRawStyle(styleC).head
 
-  //println(hierarchyContainer.styleHierarchy(A).data.line_color)
-  //println(hierarchyContainer.styleHierarchy(B).data.line_color)
-  //println(hierarchyContainer.styleHierarchy(C).data.line_color)
+  println(hierarchyContainer.styleHierarchy(A).data.line_color)
+  println(hierarchyContainer.styleHierarchy(B).data.line_color)
+  println(hierarchyContainer.styleHierarchy(C).data.line_color)
 
-  //println(hierarchyContainer.styleHierarchy(A).data.font_size)
-  //println(hierarchyContainer.styleHierarchy(B).data.font_size)
-  //println(hierarchyContainer.styleHierarchy(C).data.font_size)
+  println(hierarchyContainer.styleHierarchy(A).data.font_size)
+  println(hierarchyContainer.styleHierarchy(B).data.font_size)
+  println(hierarchyContainer.styleHierarchy(C).data.font_size)
 
   println(StyleGenerator.compileDia(A))
 }

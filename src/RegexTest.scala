@@ -5,7 +5,11 @@ import util.SprayParser
 object RegexTest extends App {
   val hierarchyContainer = Cache()
   val parser = new SprayParser(hierarchyContainer)
-  val styleUno = """style BpmnDefaultStyle {
+
+
+  println("Style\n\n")
+
+  parser.parseRawStyle("""style BpmnDefaultStyle {
                   description = "The default style of the petrinet hierarchyContainer type."
                   transparency = 0.95
                   background-color = green
@@ -19,8 +23,7 @@ object RegexTest extends App {
                   font-italic = yes
                   gradient-orientation = horizontal
                   gradient-area-offset = 10
-                 }"""
-  parser.parseRawStyle(styleUno)
+                 }""")
 
   parser.parseRawStyle(
     """style aicaramba {
@@ -36,23 +39,26 @@ object RegexTest extends App {
 
   parser.parseRawStyle(
     """style A {
-      line-color = green
-      font-size = 10
+      line-color = blue
+      font-size = 5
       }""")
 
   parser.parseRawStyle(
     """style B {
       line-color = green
-      font-size = 10
+      font-size = 7
       }""")
 
-  parser.parseRawStyle(
+  val testStyle = parser.parseRawStyle(
     """style C extends A, B {
-      line-color = green
       font-size = 10
       }""")
+  println("NOTICE line-color will be green(from style B) and font-size will be 10 -> latest Bound proven")
+  println("testStyle.font_size: " + testStyle.head.font_size)
+  println("testStyle.line-color: " + testStyle.head.line_color)
 
-  val shapeWithText = """shape EClassShape style B{
+  println("\n\nShape")
+  parser.parseRawShape("""shape EClassShape style B{
                             size-min (width=4, height=6)
                             size-max (width=10, height=11)
                             stretching (horizontal=true, vertical=false)
@@ -76,9 +82,9 @@ object RegexTest extends App {
                               id = BABABA
                             }
                             anchor = center
-                        }"""
+                        }""")
 
-  val nonfailingShape = """//Messages
+  parser.parseRawShape("""//Messages
                        shape BPMN_EventMail  style BpmnDefaultStyle{
                            ellipse style aicaramba{
                                compartment(
@@ -105,13 +111,9 @@ object RegexTest extends App {
                                    }
                                }
                            }
-                       }"""
-  parser.parseRawShape(shapeWithText)
-  val shapesList = parser.parseRawShape(nonfailingShape)
-  println(shapesList)
+                       }""")
 
-
-  val connectionUno = """connection BPMN_DataAssoziation style aicaramba{
+  parser.parseRawConnection("""connection BPMN_DataAssoziation style aicaramba{
                             placing {
                                 position (offset=1.0, distance = 1)
                                 polygon {
@@ -121,14 +123,9 @@ object RegexTest extends App {
                                     style (font-color = white )
                                 }
                             }
-                        }"""
+                        }""")
 
-  val conni = parser.parseRawConnection(connectionUno)
-  println(conni)
-
-
-  val shapeA =
-    """
+  parser.parseRawShape("""
       shape A style aicaramba{
         size-min (width=4, height=6)
         polygon style B{
@@ -138,30 +135,32 @@ object RegexTest extends App {
             style { font-color = green }
         }
       }
-    """
+    """)
 
-  val shapeB =
-    """shape B extends A style B{
+  parser.parseRawShape("""shape B extends A style B{
         stretching (horizontal=true, vertical=false)
-      }"""
-  val shapeC =
-    """shape C extends B style A{
+      }""")
+
+  val C = parser.parseRawShape("""shape C extends B style A{
            text{
              size(width=10, height=40)
              id = Hallo1
              textBody = "hallo Julian"
-             style { font-color = green }
+             style {
+              font-color = green
+              font-size = 7
+             }
            }
-      }"""
+           ellipse {
+             compartment{
+              id = C_ellipse_compartment
+              layout = fixed
+             }
+             size (width=50, height=50)
+           }
+      }""")
 
-  val A = parser.parseRawShape(shapeA)
-  parser.parseRawShape(shapeB)
-  val C = parser.parseRawShape(shapeC)
-  val testShapes = parser.parseRawShape(nonfailingShape)
-  println(testShapes)
-
-  val diagramA =
-    """diagram DIAGRAM_A for FOO {
+  parser.parseRawDiagram("""diagram DIAGRAM_A for FOO {
        actionGroup actGrp1 {
           action act1 ( label : foo.foo.foo , method : fooImpl1, class : Foo)
           action act2 ( label : foo.foo.foo , method : fooImpl2, class : Foo)
@@ -192,7 +191,7 @@ object RegexTest extends App {
           }
        }
        node fooNode for mock {
-          shape : C ( val testReference -> Hallo1 )
+          shape : C ( var test -> Hallo1, nest testCompartmentReference -> C_ellipse_compartment, val testText -> Hallo1)
           palette : fooPalette;
           container : fooContainer;
           onCreate{
@@ -215,8 +214,5 @@ object RegexTest extends App {
           }
        }
       }
-    """
-
-  val testDiagram = parser.parseRawDiagram(diagramA)
-  println(testDiagram)
+    """)
 }

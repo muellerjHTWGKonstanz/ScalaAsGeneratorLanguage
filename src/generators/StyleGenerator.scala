@@ -5,7 +5,6 @@ package generators
  * the generator object for style.js
  */
 
-import model._
 import model.style._
 
 object StyleGenerator {
@@ -25,11 +24,11 @@ object StyleGenerator {
     val (selected, multiselected, allowed, unallowed) =
       (s.selected_highlighting, s.multiselected_highlighting, s.allowed_highlighting, s.unallowed_highlighting)
     val name = s.name
-
-    if (selected.isDefined)
+    val highlighting:String = ""+selected.getOrElse(multiselected.getOrElse(allowed.getOrElse(unallowed.getOrElse(""))))
+    if (!highlighting.isEmpty)
       raw"""  case "$name":
 
-    var highlighting = '$selected$multiselected$allowed$unallowed';
+    var highlighting = '$highlighting';
 
   break;
       """
@@ -120,7 +119,7 @@ object StyleGenerator {
                """
 
   def createFontAttributes(s: Style) = {
-    //TODO s.name can never be null - ask Markus
+    //TODO s.name can never be null??
     raw"""
           /*
           Generated Text style attributes

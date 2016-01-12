@@ -32,7 +32,7 @@ trait CommonParserMethodes extends JavaTokenParsers{
   def compartmentinfo_attribute_id:Parser[String] = "id\\s*=\\s*.+".r ^^ {_.toString}
 
   /*Some explicit usages*/
-  def split_compartment = "compartment\\s*\\(".r ~> rep(compartmentinfo_attribute) <~ ")" ^^ {
+  def split_compartment = "compartment\\s*[\\{\\(]".r ~> rep(compartmentinfo_attribute) <~ "[\\)\\}]".r ^^ {
     case list => list
   }
   def position:Parser[Option[(Int, Int)]] = "[Pp]osition\\s*\\(\\s*(x=)?".r ~> argument ~ ((",\\s*(y=)?".r ~> argument) <~")") ^^ {

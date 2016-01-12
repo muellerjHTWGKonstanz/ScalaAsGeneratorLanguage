@@ -1,8 +1,7 @@
 package model.shapecontainer.shape.geometrics
 
 import model.Cache
-import model.shapecontainer.shape.Shape
-import model.shapecontainer.shape.geometrics.compartment.{CompartmentInfoParser, CompartmentLayout, CompartmentInfo}
+import model.shapecontainer.shape.{CompartmentParser, CompartmentLayout, Compartment, Shape}
 import model.shapecontainer.shape.geometrics.layouts.{CommonLayoutParser, RectangleEllipseLayout, CommonLayout}
 import model.style.Style
 import util.GeoModel
@@ -13,22 +12,15 @@ import util.GeoModel
  */
 class Rectangle(parent:Option[GeometricModel] = None,
                 commonLayout: CommonLayout,
-                val compartmentInfo:Option[CompartmentInfo],
+                val compartment:Option[Compartment],
                 parentOf:List[GeometricModel] = List[GeometricModel]()
-                 ) extends GeometricModel(parent) with RectangleEllipseLayout with Wrapper with CompartmentInfo{
+                 ) extends GeometricModel(parent) with RectangleEllipseLayout with Wrapper{
 
   override val style:Option[Style] = commonLayout.style
   override val position:Option[(Int, Int)] = commonLayout.position
   override val size_width: Int = commonLayout.size_width
   override val size_height: Int = commonLayout.size_height
   override var children:List[GeometricModel] = parentOf
-  override val compartment_layout:Option[CompartmentLayout] = if(compartmentInfo isDefined)compartmentInfo.get.compartment_layout else None
-  override val compartment_stretching_horizontal: Option[Boolean] = if(compartmentInfo isDefined)compartmentInfo.get.compartment_stretching_horizontal else None
-  override val compartment_stretching_vertical: Option[Boolean] = if(compartmentInfo isDefined)compartmentInfo.get.compartment_stretching_vertical else None
-  override val compartment_spacing: Option[Int] = if(compartmentInfo isDefined)compartmentInfo.get.compartment_spacing else None
-  override val compartment_margin: Option[Int] = if(compartmentInfo isDefined)compartmentInfo.get.compartment_margin else None
-  override val compartment_invisible: Option[Boolean] = if(compartmentInfo isDefined)compartmentInfo.get.compartment_invisible else None
-  override val compartment_id: Option[String] = if(compartmentInfo isDefined)compartmentInfo.get.compartment_id else None
 
 }
 
@@ -41,7 +33,7 @@ object Rectangle{
   def parse(geoModel:GeoModel, parent:Option[GeometricModel] = None, parentStyle:Option[Style], diagram:Cache): Option[Rectangle] = {
     /*mapping*/
     val commonLayout:Option[CommonLayout] = CommonLayoutParser.parse(geoModel, parentStyle, diagram)
-    val compartmentInfo:Option[CompartmentInfo] = CompartmentInfoParser.parse(geoModel.attributes)
+    val compartmentInfo:Option[Compartment] = CompartmentParser.parse(geoModel.attributes)
 
     if(commonLayout.isEmpty)
       return None

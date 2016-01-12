@@ -1,8 +1,7 @@
 package model.shapecontainer.shape.geometrics
 
 import model.Cache
-import model.shapecontainer.shape.Shape
-import model.shapecontainer.shape.geometrics.compartment.{CompartmentInfoParser, CompartmentInfo}
+import model.shapecontainer.shape.{CompartmentParser, Compartment, Shape}
 import model.shapecontainer.shape.geometrics.layouts.{CommonLayoutParser, CommonLayout}
 import model.style.Style
 import util.GeoModel
@@ -16,9 +15,9 @@ import util.GeoModel
  */
 class Ellipse(parent: Option[GeometricModel] = None,
               commonLayout: CommonLayout,
-              compartmentInfo:Option[CompartmentInfo],
+              compartment:Option[Compartment],
               parentOf: List[GeometricModel] = List[GeometricModel]()
-               ) extends Rectangle(parent, commonLayout, compartmentInfo, parentOf)
+               ) extends Rectangle(parent, commonLayout, compartment, parentOf)
 
 object Ellipse {
   /**
@@ -29,12 +28,12 @@ object Ellipse {
   def parse(geoModel: GeoModel, parent: Option[GeometricModel], parentStyle:Option[Style], hierarchyContainer:Cache): Option[Ellipse] = {
     /*mapping*/
     val commonLayout: Option[CommonLayout] = CommonLayoutParser.parse(geoModel, parentStyle, hierarchyContainer)
-    val compartmentInfo: Option[CompartmentInfo] = CompartmentInfoParser.parse(geoModel.attributes)
+    val compartment: Option[Compartment] = CompartmentParser.parse(geoModel.attributes)
 
     if (commonLayout.isEmpty)
       return None
 
-    val ret = new Ellipse(parent, commonLayout.get, compartmentInfo)
+    val ret = new Ellipse(parent, commonLayout.get, compartment)
     ret.children = for (i <- geoModel.children) yield {i.parse(Some(ret), ret.style).get}
     Some(ret)
   }

@@ -4,14 +4,15 @@ import model.diagram.action.{ActionGroup, ActionInclude, Action}
 import model.diagram.edge.Edge
 import model.diagram.methodes.{ActionBlock, OnDelete, OnCreate, OnUpdate}
 import model.diagram.node.Node
-import model.shapecontainer.shape.geometrics.compartment.{Compartment, CompartmentInfo}
 import model.Cache
 import model.diagram.Diagram
 import model.shapecontainer.connection.Connection
-import model.shapecontainer.shape.Shape
+import model.shapecontainer.shape.{Compartment, Shape}
 import model.shapecontainer.shape.geometrics._
 import model.style.Style
 import model.CacheEvaluation._
+
+import scala.util.Random
 
 
 /**
@@ -31,7 +32,12 @@ class SprayParser(c: Cache = Cache()) extends CommonParserMethodes {
     ("style" ~> ident) ~ (("extends" ~> rep(ident <~ ",?".r))?) ~ ("{" ~> rep(styleAttribute)) <~ "}" ^^ {
       case name ~ parents ~ attributes => Style(name, parents, attributes, cache)
     }
-  def parseRawStyle(input: String) = parseAll(style, trimRight(input)).get
+  private def anonymousStyle =
+    "style" ~> (("extends" ~> rep(ident <~ ",?".r))?) ~ ("{" ~> rep(styleAttribute)) <~ "}" ^^ {
+      case parents ~ attributes => Style("Anonymous_Style"+Random.nextString(5), parents, attributes, cache)
+    }
+  private def styles = rep(style)
+  def parseRawStyle(input: String) = parseAll(styles, trimRight(input)).get
   /*------------------------------------------------------------------------------------------*/
 
 
@@ -190,14 +196,14 @@ class SprayParser(c: Cache = Cache()) extends CommonParserMethodes {
 
   private def shapeVALPropertie = ("val" ~> ident) ~ ("->" ~> ident) ^^ {case key ~ value => ("val", key/*TODO eigentlich ecoreAttribute*/ -> value) }
   private def shapeVARPropertie = ("var" ~> ident) ~ ("->" ~> ident) ^^ {case key ~ value => ("var", key -> value) }
-  private def shapePropertie = shapeVALPropertie|shapeVARPropertie <~ ",?".r
-  private def shapeCompartment = ("nest" ~> ident) ~ ("->" ~> ident) ^^ {case key ~ value => ("nest",key -> value) }
-  private def diagramShape:Parser[(String, diaShape)] = ("shape" ~ ":" ~> ident) ~ (("(" ~> rep(shapePropertie|shapeCompartment)/*TODO eigentlicher inhalt*/ <~ ")")?) ^^ {
+  private def shapeTextPropertie = shapeVALPropertie|shapeVARPropertie <~ ",?".r
+  private def shapeCompartmentPropertie = ("nest" ~> ident) ~ ("->" ~> ident) <~ ",?".r ^^ {case key ~ value => ("nest",key -> value) }
+  private def diagramShape:Parser[(String, diaShape)] = ("shape" ~ ":" ~> ident) ~ (("(" ~> rep((shapeTextPropertie|shapeCompartmentPropertie) <~ ",?".r)<~ ")")?) ^^ {
     case shapeReference ~ propertiesAndCompartments =>
       val referencedShape:Option[Shape] = shapeReference
       var vars = Map[String, Text]()
       var vals = Map[String, Text]()
-      var nests = Map[String, CompartmentInfo]()
+      var nests = Map[String, Compartment]()
       if(referencedShape isDefined) {
         if(propertiesAndCompartments isDefined) {
           vars = propertiesAndCompartments.get.filter(i => i._1 == "var").map(_._2).map(i => i._1 -> referencedShape.get.textMap.get(i._2)).toMap/*TODO i._1 (at second use) needs to be resolved to an attribute but is not possible at the moment*/
@@ -243,7 +249,7 @@ class SprayParser(c: Cache = Cache()) extends CommonParserMethodes {
   private def diagramConnection = {
     type diaConnection = model.diagram.edge.Connection
     ("connection" ~ ":" ~> ident) ~
-      (("(" ~> rep(shapePropertie) <~ ")") ?) ^^ {
+      (("(" ~> rep(shapeTextPropertie) <~ ")") ?) ^^ {
       case connectionName ~ properties =>
         val referencedConnection:Connection = connectionName
         var vars = Map[String, AnyRef]()

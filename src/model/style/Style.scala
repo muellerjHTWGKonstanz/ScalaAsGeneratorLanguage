@@ -40,14 +40,22 @@ class Style(val name: String = "noName",
 object Style extends CommonParserMethodes {
   val validStyleAttributes = List("description", "transparency", "background-color", "line-color", "line-style", "line-width",
     "font-color", "font-name", "font-size", "font-bold", "font-italic", "gradient-orientation", "gradient-area-color",
-    "gradient-area-offset", "highlighting-allowed", "highlighting-unallowed", "highlighting-selected", "highlighting-multiselected")
+    "gradient-area-offset", "allowed", "unallowed", "selected", "multiselected", "highlighting")
 
   private def parseAttributes(input:String) = parse(attributes, input).get
 
   private def attributes = "style\\s*[\\(\\{]".r ~> rep(styleAttribute) <~ "[\\)\\}]".r ^^ {case attr:List[(String, String)] => attr}
-  private def styleVariable =("""("""+Style.validStyleAttributes.map(_+"|").mkString+""")""").r ^^ {_.toString}
+  private def styleVariable =("""("""+Style.validStyleAttributes.map(i => if(i != validStyleAttributes.last) i+"|").mkString+""")""").r ^^ {_.toString}
   private def styleAttribute = styleVariable ~ (styleArguments <~ ",?".r)^^ {case v ~ a => (v, a)}
   private def styleArguments = styleVariable ~> ("=?\\s*".r ~> argument) ^^ {case arg => arg}
+
+  lazy val validColor = ("("+knownColors.keySet.map(i => if(i != knownColors.keySet.last) i+"|").mkString+")").r
+  private def highlighting_selected       = "selected" ~ "=" ~> validColor ^^ {i => ("selected",knownColors(i))}
+  private def highlighting_multiselected  = "multiselected" ~ "=" ~> validColor ^^ {i => ("multiselected",knownColors(i))}
+  private def highlighting_allowed        = "allowed" ~ "=" ~> validColor ^^ {i => ("allowed",knownColors(i))}
+  private def highlighting_unallowed      = "unallowed" ~ "=" ~> validColor ^^ {i => ("unallowed",knownColors(i))}
+  private def highlightingAttribute = highlighting_selected | highlighting_multiselected | highlighting_allowed | highlighting_unallowed <~ ",?".r
+  private def highlighting = "(" ~> rep1(highlightingAttribute) <~ ")"
 
   /**
    * Methode for creating a child of type Style, by only giving parentStyles
@@ -118,10 +126,12 @@ object Style extends CommonParserMethodes {
        case ("gradient-orientation", x) => gradient_orientation = GradientAlignment.getIfValid(x)
        case ("gradient-area-color", x) => gradient_area_color = Some(knownColors.getOrElse(x, BLACK))
        case ("gradient-area-offset", x:String) => gradient_area_offset= ifValid(x.toDouble)
-       case ("highlighting-allowed", x) => allowed_highlighting = Some(knownColors.getOrElse(x, BLUE))
-       case ("highlighting-unallowed", x) => unallowed_highlighting= Some(knownColors.getOrElse(x, BLUE))
-       case ("highlighting-selected", x) => selected_highlighting = Some(knownColors.getOrElse(x, BLUE))
-       case ("highlighting-multiselected", x) => multiselected_highlighting = Some(knownColors.getOrElse(x, BLUE))
+       case ("highlighting", rest) => parse(highlighting, rest).get.foreach{
+         case h if h._1 == "allowed" => allowed_highlighting = Some(h._2)
+         case h if h._1 == "unallowed" => unallowed_highlighting = Some(h._2)
+         case h if h._1 == "selected" => selected_highlighting = Some(h._2)
+         case h if h._1 == "multiselected" => multiselected_highlighting = Some(h._2)
+       }
      }
     }
 
@@ -197,12 +207,11 @@ object Style extends CommonParserMethodes {
         case `x` if `x`._1.trim.contains("offset") => gradient_area_offset = Some(trimit(x._2).toDouble)
         case _ => messageIgnored(x._1, name, "Style")
       }
-      case x if x._1.trim.contains("highlighting") => x match {
-        case `x` if x._1.trim.contains("selected") => selected_highlighting = Some(knownColors.getOrElse(trimit(x._2), BLUE))
-        case `x` if x._1.trim.contains("multiselected") => multiselected_highlighting = Some(knownColors.getOrElse(trimit(x._2), BLUE)) /*TODO defaults "BLUE" might not be right*/
-        case `x` if x._1.trim.contains("allowed") => allowed_highlighting = Some(knownColors.getOrElse(trimit(x._2), BLUE))
-        case `x` if x._1.trim.contains("unallowed") => unallowed_highlighting = Some(knownColors.getOrElse(trimit(x._2), BLUE))
-        case _ => messageIgnored(x._1, name, "Style")
+      case x if x._1 == "highlighting" =>  parse(highlighting, x._2).get.foreach{
+        case h if h._1 == "allowed" => allowed_highlighting = Some(h._2)
+        case h if h._1 == "unallowed" => unallowed_highlighting = Some(h._2)
+        case h if h._1 == "selected" => selected_highlighting = Some(h._2)
+        case h if h._1 == "multiselected" => multiselected_highlighting = Some(h._2)
       }
       case x => messageIgnored(x._1, name, "Style")
     }
