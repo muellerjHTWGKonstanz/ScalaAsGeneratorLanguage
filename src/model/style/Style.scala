@@ -141,10 +141,10 @@ object Style extends CommonParserMethodes {
         case ("gradient-area-color", x) => gradient_area_color = Some(knownColors.getOrElse(x, BLACK))
         case ("gradient-area-offset", x:String) => gradient_area_offset= ifValid(x.toDouble)
         case ("highlighting", rest) => parse(highlighting, rest).get.foreach{
-          case h if h._1 == "allowed" => allowed_highlighting = Some(h._2)
-          case h if h._1 == "unallowed" => unallowed_highlighting = Some(h._2)
-          case h if h._1 == "selected" => selected_highlighting = Some(h._2)
-          case h if h._1 == "multiselected" => multiselected_highlighting = Some(h._2)
+          case ("allowed", h) => allowed_highlighting = Some(h)
+          case ("unallowed", h) => unallowed_highlighting = Some(h)
+          case ("selected", h) => selected_highlighting = Some(h)
+          case ("multiselected", h) => multiselected_highlighting = Some(h)
         }
       }
     }

@@ -49,6 +49,11 @@ object RegexTest extends App {
       font-size = 7
       }""")
 
+  parser.parseRawStyle(
+    """style C {
+      font-size = 1000
+      }""")
+
   val testStyle = parser.parseRawStyle(
     """style C extends A, B {
       font-size = 10
@@ -147,9 +152,8 @@ object RegexTest extends App {
              size(width=10, height=40)
              id = Hallo1
              textBody = "hallo Julian"
-             style {
+             style extends C{
               font-color = green
-              font-size = 7
              }
            }
            ellipse {
