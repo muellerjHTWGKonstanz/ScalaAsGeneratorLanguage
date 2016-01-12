@@ -4,6 +4,7 @@ import model.Cache
 import model.shapecontainer.shape.geometrics.{PointParser, Point}
 import model.style.Style
 import util.GeoModel
+import model.CacheEvaluation._
 
 /**
  * Created by julian on 20.10.15.
@@ -16,6 +17,7 @@ trait PolyLineLayout extends Layout{
 object PolyLineLayoutParser{
   def apply(geoModel: GeoModel, parentStyle:Option[Style], hierarchyContainer:Cache):Option[PolyLineLayout] = parse(geoModel, parentStyle, hierarchyContainer)
   def parse(geoModel:GeoModel, parentStyle:Option[Style], hierarchyContainer:Cache):Option[PolyLineLayout] ={
+    implicit val cache = hierarchyContainer
     val attributes = geoModel.attributes
 
     /*mapping*/
@@ -25,8 +27,8 @@ object PolyLineLayoutParser{
       case x if x.matches("point.+") =>
         val newPoint = PointParser(x)
         if(newPoint.isDefined)collectedPoints = collectedPoints.::(newPoint.get)
-      case x if x.matches("style.+") =>
-        styl = Style.makeLove(hierarchyContainer, styl, Some(Style(x, hierarchyContainer)))
+      case anonymousStyle:String if hierarchyContainer.styleHierarchy.contains(anonymousStyle) =>
+        styl = Style.makeLove(hierarchyContainer, styl, Some(anonymousStyle))
       case _ =>
     }
     if(collectedPoints.length > 1)

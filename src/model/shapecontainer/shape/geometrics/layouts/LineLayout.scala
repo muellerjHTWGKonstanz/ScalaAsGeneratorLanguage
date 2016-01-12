@@ -4,6 +4,7 @@ import model.Cache
 import model.shapecontainer.shape.geometrics.{PointParser, Point}
 import model.style.Style
 import util.GeoModel
+import model.CacheEvaluation._
 
 /**
  * Created by julian on 20.10.15.
@@ -15,6 +16,7 @@ trait LineLayout extends Layout{
 
 object LineLayoutParser{
   def parse(geoModel:GeoModel, parentStyle:Option[Style], hierarchyContainer: Cache):Option[LineLayout]={
+    implicit val cache = hierarchyContainer
     val attributes = geoModel.attributes
 
     /*mapping*/
@@ -28,8 +30,8 @@ object LineLayoutParser{
         else {
           point2 = PointParser(x)
         }
-      case x if x.matches("style.+") =>
-        styl = Style.makeLove(hierarchyContainer, styl, Some(Style(x, hierarchyContainer)))
+      case anonymousStyle:String if hierarchyContainer.styleHierarchy.contains(anonymousStyle) =>
+        styl = Style.makeLove(hierarchyContainer, styl, Some(anonymousStyle))
       case _ =>
     }
     if(point1.isDefined && point2.isDefined)

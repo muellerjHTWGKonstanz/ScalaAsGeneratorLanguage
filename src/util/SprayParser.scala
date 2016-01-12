@@ -33,8 +33,8 @@ class SprayParser(c: Cache = Cache()) extends CommonParserMethodes {
       case name ~ parents ~ attributes => Style(name, parents, attributes, cache)
     }
   private def anonymousStyle =
-    "style" ~> (("extends" ~> rep(ident <~ ",?".r))?) ~ ("{" ~> rep(styleAttribute)) <~ "}" ^^ {
-      case parents ~ attributes => Style("Anonymous_Style"+Random.nextString(5), parents, attributes, cache)
+    "style" ~> (("extends" ~> rep(ident <~ ",?".r))?) ~ ("[\\{\\(]".r ~> rep(styleAttribute)) <~ "[\\}\\)]".r ^^ {
+      case parents ~ attributes => Style("Anonymous_Style"+Random.nextString(5), parents, attributes, cache).name
     }
   private def styles = rep(style)
   def parseRawStyle(input: String) = parseAll(styles, trimRight(input)).get
@@ -45,7 +45,7 @@ class SprayParser(c: Cache = Cache()) extends CommonParserMethodes {
 
 
   /*GeometricModel-specific-------------------------------------------------------------------*/
-  private def geoVariable:Parser[String] = "(position|size|style|point|curve|align|id|textBody|compartment)".r ^^ {_.toString}
+  private def geoVariable:Parser[String] = "(position|size|point|curve|align|id|textBody|compartment)".r ^^ {_.toString}
   private def geoAttribute = geoVariable ~ (arguments | compartmentinfo) ^^ {case v ~ a => v+a}
   private def geoIdentifier:Parser[String] = "(ellipse|line|polygon|polyline|rectangle|rounded-rectangle|text|wrapped-text)".r ^^ {_.toString}
 
@@ -53,7 +53,7 @@ class SprayParser(c: Cache = Cache()) extends CommonParserMethodes {
   private def geoModel: Parser[GeoModel] =
     geoIdentifier ~
     ((("style" ~> ident)?) <~ "{") ~
-    rep(geoAttribute) ~
+    rep(geoAttribute|anonymousStyle) ~
     (rep(geoModel) <~ "}") ^^ {
       case name ~ style ~ attr ~ children =>
         GeoModel(name, {if(style.isDefined) Some(style.get) else None }, attr, children, cache)
@@ -68,7 +68,8 @@ class SprayParser(c: Cache = Cache()) extends CommonParserMethodes {
   /*Shape-specific----------------------------------------------------------------------------*/
   private def shapeVariable = ("""("""+Shape.validShapeVariables.map(_+"|").mkString+""")""").r ^^ {_.toString}
   private def shapeAttribute = shapeVariable ~ arguments ^^ {case v ~ a => (v, a)}
-  private def descriptionAttribute = "description\\s*(style ([a-zA-ZüäöÜÄÖ][-_]?)+)?".r ~ argument_wrapped ^^ {case des ~ arg => (des, arg)}
+  private def descriptionAttribute:Parser[(String, String)] =
+    "description" ~> "(style\\s*([a-zA-ZüäöÜÄÖ][-_]?)+)?".r ~ argument_wrapped ^^ {case desStyl ~ args => (desStyl, args)}
   private def anchorAttribute = "anchor" ~> arguments ^^ {_.toString}
 
   private def shape:Parser[Shape] =
@@ -109,7 +110,7 @@ class SprayParser(c: Cache = Cache()) extends CommonParserMethodes {
     ("connection" ~> ident) ~
     (("style" ~> ident)?) ~
     ("{" ~> (c_type?)) ~
-    (c_style?) ~
+    (anonymousStyle?) ~
     rep(c_placing) <~ "}" ^^ {
       case name ~ style ~ typ ~ anonymousStyle ~ placings => Connection(name, style, typ, anonymousStyle, placings, cache).get
     }

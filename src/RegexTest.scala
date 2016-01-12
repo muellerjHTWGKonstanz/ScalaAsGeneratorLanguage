@@ -138,7 +138,8 @@ object RegexTest extends App {
     """)
 
   parser.parseRawShape("""shape B extends A style B{
-        stretching (horizontal=true, vertical=false)
+        size-min (10, 10)
+        stretching (true, false)
       }""")
 
   val C = parser.parseRawShape("""shape C extends B style A{
@@ -160,6 +161,7 @@ object RegexTest extends App {
            }
       }""")
 
+  println("Diagram")
   parser.parseRawDiagram("""diagram DIAGRAM_A for FOO {
        actionGroup actGrp1 {
           action act1 ( label : foo.foo.foo , method : fooImpl1, class : Foo)

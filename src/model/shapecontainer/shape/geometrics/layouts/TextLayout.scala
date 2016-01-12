@@ -1,5 +1,6 @@
 package model.shapecontainer.shape.geometrics.layouts
 
+import model.CacheEvaluation._
 import model.Cache
 import model.shapecontainer.shape.geometrics.Alignment
 import model.shapecontainer.shape.geometrics.Alignment.{VAlign, HAlign}
@@ -17,11 +18,12 @@ trait TextLayout extends CommonLayout {
 }
 
 object TextLayoutParser extends CommonParserMethodes{
-  def apply(geoModel: GeoModel, parentStyle:Option[Style], cache:Cache): Option[TextLayout] = {
+  def apply(geoModel: GeoModel, parentStyle:Option[Style], hierarchyContainer:Cache): Option[TextLayout] = {
+    implicit val cache = hierarchyContainer
     val attributes = geoModel.attributes
 
     /*mapping*/
-    val commonLayout = CommonLayoutParser.parse(geoModel, parentStyle, cache)
+    val commonLayout = CommonLayoutParser.parse(geoModel, parentStyle, hierarchyContainer)
     if (commonLayout.isEmpty)
       return None
     var hali: Option[HAlign] = None
@@ -35,8 +37,8 @@ object TextLayoutParser extends CommonParserMethodes{
         vali = Alignment.parseVAlign("(top|middle|bottom)".r.findFirstIn(x).get)
       case x: String if x.matches("(?s)textBody.*") =>
         txt = parse(planeText, x).get
-      case x if x.matches("style.*") =>
-        styl = Style.makeLove(cache, styl, Some(Style(x, cache))) //generate anonymous style
+      case anonymousStyle:String if hierarchyContainer.styleHierarchy.contains(anonymousStyle) =>
+        styl = Style.makeLove(hierarchyContainer, styl, Some(anonymousStyle))
       case _ =>
     }
     Some(new TextLayout {

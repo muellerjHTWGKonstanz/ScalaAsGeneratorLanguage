@@ -3,6 +3,7 @@ package model.shapecontainer.shape.geometrics.layouts
 import model.Cache
 import model.style.Style
 import util.{CommonParserMethodes, GeoModel}
+import model.CacheEvaluation._
 
 /**
  * Created by julian on 15.10.15.
@@ -20,6 +21,7 @@ trait CommonLayout extends Layout{
 
 object CommonLayoutParser extends CommonParserMethodes{
   def parse(geoModel:GeoModel, parentStyle:Option[Style], cache: Cache):Option[CommonLayout] = {
+    implicit val hierarchyContainer = cache
     val attributes = geoModel.attributes
 
     /*mapping*/
@@ -42,8 +44,8 @@ object CommonLayoutParser extends CommonParserMethodes{
           size_w = Some(newSize.get._1)
           size_h = Some(newSize.get._2)
         }
-      case x if x.matches("style.+") =>
-        styl = Style.makeLove(cache, styl, Some(Style(x, cache))) //generate anonymous style
+      case anonymousStyle:String if cache.styleHierarchy.contains(anonymousStyle) =>
+        styl = Style.makeLove(cache, styl, Some(anonymousStyle)) //generate anonymous style
       case _ =>
     }
 

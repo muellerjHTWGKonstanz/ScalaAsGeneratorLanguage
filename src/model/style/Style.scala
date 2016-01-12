@@ -75,77 +75,6 @@ object Style extends CommonParserMethodes {
   }
 
   /**
-   * parse an anonymous Style
-   * @param attributes is the string containing all the information needed to generate the attributes to generate an anonymous Style instance
-   */
-  def apply(attributes:List[(String, String)], cache: Cache) = parse(attributes, cache)
-  def apply(attributes:String, cache: Cache) = parse(parseAttributes(attributes), cache)
-  def parse(attributes:List[(String, String)], cache: Cache):Style = {
-    var description: Option[String]                        = None
-    var transparency: Option[Double]                       = None
-    var background_color: Option[ColorOrGradient]          = None
-    var line_color: Option[Color]                          = None
-    var line_style: Option[LineStyle]                      = None
-    var line_width: Option[Int]                            = None
-    var font_color: Option[ColorOrGradient]                = None
-    var font_name: Option[String]                          = None
-    var font_size: Option[Int]                             = None
-    var font_bold: Option[Boolean]                         = None
-    var font_italic: Option[Boolean]                       = None
-    var gradient_orientation: Option[GradientAlignment]    = None
-    var gradient_area_color: Option[ColorOrGradient]       = None
-    var gradient_area_offset: Option[Double]               = None
-    var selected_highlighting: Option[ColorOrGradient]     = None
-    var multiselected_highlighting: Option[ColorOrGradient]= None
-    var allowed_highlighting: Option[ColorOrGradient]      = None
-    var unallowed_highlighting: Option[ColorOrGradient]    = None
-
-
-    def ifValid[T](f: => T):Option[T] = {
-      var ret:Option[T] = None
-      try { ret = Some(f)
-        ret
-      }finally {
-        ret
-      }}
-
-    //val attrList = parseAttributes(attributes)
-    if(attributes.nonEmpty){
-     attributes.foreach{
-       case tuple:(String, String) if tuple._1 == "description" => description = Some(tuple._2)
-       case ("transparency", x:String) => transparency = ifValid(x.toDouble)
-       case ("background-color", x) => background_color = Some(knownColors.getOrElse(x, GRAY))
-       case ("line-color", x) => line_color = Some(knownColors.getOrElse(x, WHITE))
-       case ("line-style", x) => line_style= LineStyle.getIfValid(x)
-       case ("line-width", x:String) => line_width= ifValid(x.toInt)
-       case ("font-color", x) => font_color= Some(knownColors.getOrElse(x, BLACK))
-       case ("font-name", x) => font_name= Some(x)
-       case ("font-size", x:String) => font_size= ifValid(x.toInt)
-       case ("font-bold", x) => font_bold = Some(matchBoolean(x))
-       case ("font-italic", x) => font_italic = Some(matchBoolean(x))
-       case ("gradient-orientation", x) => gradient_orientation = GradientAlignment.getIfValid(x)
-       case ("gradient-area-color", x) => gradient_area_color = Some(knownColors.getOrElse(x, BLACK))
-       case ("gradient-area-offset", x:String) => gradient_area_offset= ifValid(x.toDouble)
-       case ("highlighting", rest) => parse(highlighting, rest).get.foreach{
-         case h if h._1 == "allowed" => allowed_highlighting = Some(h._2)
-         case h if h._1 == "unallowed" => unallowed_highlighting = Some(h._2)
-         case h if h._1 == "selected" => selected_highlighting = Some(h._2)
-         case h if h._1 == "multiselected" => multiselected_highlighting = Some(h._2)
-       }
-     }
-    }
-
-    /*create the instance of the actual new Style*/
-    val ret = new Style("Anonymous_Style"+Random.nextString(5), description, transparency, background_color, line_color, line_style, line_width, font_color,
-      font_name, font_size, font_bold, font_italic, gradient_orientation, gradient_area_color, gradient_area_offset,
-      selected_highlighting, multiselected_highlighting, allowed_highlighting, unallowed_highlighting, List())
-
-    /*include new style instance in stylehierarchie*/
-    cache.styleHierarchy.newBaseClass(ret)
-    ret
-  }
-
-  /**
    * @param name the name of the ne Style instance
    * @param parents the style instance's names from which the new Style will inherit information
    * @param attributes List of Tuples of Strings -> List[(String, String)] consist of tuple._1 = attribute's name and tuple._2 the according value
@@ -187,33 +116,37 @@ object Style extends CommonParserMethodes {
     var allowed_highlighting: Option[ColorOrGradient]      = relevant { _.allowed_highlighting }
     var unallowed_highlighting: Option[ColorOrGradient]    = relevant { _.unallowed_highlighting }
 
-    /*filter the inputString and override attributes accordingly*/
-    def trimit(arg:String) = arg.replace("=","").trim
-    attributes.foreach{
-      case x if x._1.trim == "description" => description = Some(trimit(x._2))
-      case x if x._1.trim == "transparency" => transparency = Some(trimit(x._2).toDouble)
-      case x if x._1.trim.matches("background.?color") => background_color = Some(knownColors.getOrElse(trimit(x._2), GRAY))
-      case x if x._1.trim.matches("line[\\-\\_]?color") => line_color = Some(knownColors.getOrElse(trimit(x._2), WHITE))
-      case x if x._1.trim.matches("line[\\-\\_]?style") => line_style = LineStyle.getIfValid(trimit(x._2))
-      case x if x._1.trim.matches("line[\\-\\_]?width") => line_width = Some(trimit(x._2).toInt)
-      case x if x._1.trim.matches("font[\\-\\_]?color") => font_color = Some(knownColors.getOrElse(trimit(x._2), BLACK))
-      case x if x._1.trim.matches("font[\\-\\_]?name") => font_name = Some(trimit(x._2))
-      case x if x._1.trim.matches("font[\\-\\_]?size") => font_size = Some(trimit(x._2)toInt)
-      case x if x._1.trim.matches("font[\\-\\_]?bold") => font_bold = Some(matchBoolean(trimit(x._2)))
-      case x if x._1.trim.matches("font[\\-\\_]?italic") => font_italic = Some(matchBoolean(trimit(x._2)))
-      case x if x._1.trim.matches("gradient[\\-\\_]?orientation") => gradient_orientation = GradientAlignment.getIfValid(trimit(x._2))
-      case x if x._1.trim.contains("gradient-area") => x match {
-        case `x` if `x`._1.trim.contains("color") => gradient_area_color = Some(knownColors.getOrElse(trimit(x._2), BLACK))
-        case `x` if `x`._1.trim.contains("offset") => gradient_area_offset = Some(trimit(x._2).toDouble)
-        case _ => messageIgnored(x._1, name, "Style")
+    def ifValid[T](f: => T):Option[T] = {
+      var ret:Option[T] = None
+      try { ret = Some(f)
+      ret
+      }finally {
+        ret
+      }}
+
+    if(attributes.nonEmpty){
+      attributes.foreach{
+        case ("description", x) => description = Some(x)
+        case ("transparency", x:String) => transparency = ifValid(x.toDouble)
+        case ("background-color", x) => background_color = Some(knownColors.getOrElse(x, GRAY))
+        case ("line-color", x) => line_color = Some(knownColors.getOrElse(x, WHITE))
+        case ("line-style", x) => line_style= LineStyle.getIfValid(x)
+        case ("line-width", x:String) => line_width= ifValid(x.toInt)
+        case ("font-color", x) => font_color= Some(knownColors.getOrElse(x, BLACK))
+        case ("font-name", x) => font_name= Some(x)
+        case ("font-size", x:String) => font_size= ifValid(x.toInt)
+        case ("font-bold", x) => font_bold = Some(matchBoolean(x))
+        case ("font-italic", x) => font_italic = Some(matchBoolean(x))
+        case ("gradient-orientation", x) => gradient_orientation = GradientAlignment.getIfValid(x)
+        case ("gradient-area-color", x) => gradient_area_color = Some(knownColors.getOrElse(x, BLACK))
+        case ("gradient-area-offset", x:String) => gradient_area_offset= ifValid(x.toDouble)
+        case ("highlighting", rest) => parse(highlighting, rest).get.foreach{
+          case h if h._1 == "allowed" => allowed_highlighting = Some(h._2)
+          case h if h._1 == "unallowed" => unallowed_highlighting = Some(h._2)
+          case h if h._1 == "selected" => selected_highlighting = Some(h._2)
+          case h if h._1 == "multiselected" => multiselected_highlighting = Some(h._2)
+        }
       }
-      case x if x._1 == "highlighting" =>  parse(highlighting, x._2).get.foreach{
-        case h if h._1 == "allowed" => allowed_highlighting = Some(h._2)
-        case h if h._1 == "unallowed" => unallowed_highlighting = Some(h._2)
-        case h if h._1 == "selected" => selected_highlighting = Some(h._2)
-        case h if h._1 == "multiselected" => multiselected_highlighting = Some(h._2)
-      }
-      case x => messageIgnored(x._1, name, "Style")
     }
 
     /*create the instance of the actual new Style*/

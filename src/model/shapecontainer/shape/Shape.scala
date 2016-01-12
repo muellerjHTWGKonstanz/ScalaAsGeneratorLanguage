@@ -167,26 +167,26 @@ object Shape extends CommonParserMethodes{
       }
     }
     attributes.foreach{
-      case x if x._1 == "size-min" =>
-        val opt = parse(width_height, x._2).get
+      case ("size-min", x) =>
+        val opt = parse(width_height, x).get
         if(opt.isDefined){
           size_width_min = Some(opt.get._1)
           size_height_min = Some(opt.get._2)
         }
-      case x if x._1 == "size-max" =>
-        val opt = parse(width_height, x._2).get
+      case ("size-max", x) =>
+        val opt = parse(width_height, x).get
         if(opt.isDefined){
           size_width_max = Some(opt.get._1)
           size_height_max = Some(opt.get._2)
         }
-      case x if x._1 == "stretching" =>
-        val opt = parse(stretching, x._2).get
+      case ("stretching", x) =>
+        val opt = parse(stretching, x).get
         if(opt.isDefined){
           stretching_horizontal = Some(opt.get._1)
           stretching_vertical = Some(opt.get._2)
         }
-      case x if x._1 == "proportional" =>
-        prop = parse(proportional, x._2).get
+      case ("proportional", x) =>
+        prop = parse(proportional, x).get
       case x if x._1 == "anchor" => anchor = {
         val anch = Anchor.parse(Anchor.anchor, x._2)
         if(anch isEmpty)
@@ -194,7 +194,6 @@ object Shape extends CommonParserMethodes{
         else
           Some(anch.get)
       }
-      case x if x._1.matches("description.*") => description = Description.parse(x, style, cache)
       case _ =>
     }
     if(desc nonEmpty)
@@ -225,7 +224,7 @@ object Shape extends CommonParserMethodes{
     case hor ~ ver => Some(matchBoolean(hor), matchBoolean(ver))
     case _ => None
   }
-  def width_height:Parser[Option[(Int, Int)]] = "\\(\\s*(width=)?".r ~> argument ~ (",\\s*(height=)?".r ~> argument) <~ ")" ^^ {
+  def width_height:Parser[Option[(Int, Int)]] = "\\(\\s*(width=)?".r ~> argument_int ~ (",\\s*(height=)?".r ~> argument_int) <~ ")" ^^ {
     case width ~ height => Some((width.toInt, height.toInt))
     case _ => None }
 }
