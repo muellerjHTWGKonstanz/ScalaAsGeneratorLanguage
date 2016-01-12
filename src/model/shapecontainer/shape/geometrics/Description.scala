@@ -1,9 +1,8 @@
 package model.shapecontainer.shape.geometrics
 
-import model.Cache
 import model.shapecontainer.shape.geometrics.Alignment.{VAlign, HAlign}
 import model.style.Style
-import util.CommonParserMethodes
+import util.{Cache, CommonParserMethodes}
 import model.CacheEvaluation._
 
 /**

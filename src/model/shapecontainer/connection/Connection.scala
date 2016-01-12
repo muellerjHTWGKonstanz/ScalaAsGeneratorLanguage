@@ -1,9 +1,8 @@
 package model.shapecontainer.connection
 
-import model.Cache
 import model.shapecontainer.ShapeContainerElement
 import model.style.Style
-import util.{PlacingSketch, CommonParserMethodes}
+import util.{Cache, PlacingSketch, CommonParserMethodes}
 import model.CacheEvaluation._
 
 /**

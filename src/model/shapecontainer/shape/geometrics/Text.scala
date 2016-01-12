@@ -1,11 +1,10 @@
 package model.shapecontainer.shape.geometrics
 
-import model.Cache
 import model.shapecontainer.shape.Shape
 import model.shapecontainer.shape.geometrics.layouts.{TextLayoutParser, TextLayout}
 import model.style.Style
 import Alignment._
-import util.{CommonParserMethodes, GeoModel}
+import util.{Cache, CommonParserMethodes, GeoModel}
 
 /**
  * Created by julian on 19.10.15.

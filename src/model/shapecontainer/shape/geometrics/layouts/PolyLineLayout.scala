@@ -1,9 +1,8 @@
 package model.shapecontainer.shape.geometrics.layouts
 
-import model.Cache
 import model.shapecontainer.shape.geometrics.{PointParser, Point}
 import model.style.Style
-import util.GeoModel
+import util.{Cache, GeoModel}
 import model.CacheEvaluation._
 
 /**

@@ -11,7 +11,7 @@ import model.style.{Style, HasStyle}
  */
 case class Edge(name:String,
                 ecoreElement:AnyRef,
-                override val style: Option[Style] = None,
+                var style: Option[Style] = None,
                             /*edge-Block*/
                 connection:Connection,
                 from:AnyRef, //TODO from and to are actually ecoreAttributes
@@ -23,4 +23,4 @@ case class Edge(name:String,
                 override val onDelete:Option[OnDelete] = None,
                 override val actions:List[Action]      = List(),
                 override val actionIncludes:Option[ActionInclude] = None
-                ) extends HasStyle with Palette with Container with Methodes with Actions
+                ) extends  Palette with Container with Methodes with Actions

@@ -11,7 +11,7 @@ import model.style.{Style, HasStyle}
  */
 case class Node(name:String,
                 ecoreElement:AnyRef,/*TODO this is a mock, replace with actual ecoreElement*/
-                override val style:Option[Style]      = None,
+                var style:Option[Style]      = None,
                                 /*node-block*/
                 shape:Option[Shape]                   = None,
                 override val palette:Option[String]   = None,
@@ -21,7 +21,7 @@ case class Node(name:String,
                 override val onDelete:Option[OnDelete]= None,
                 override val actions:List[Action]     = List(),
                 override val actionIncludes: Option[ActionInclude] = None
-               ) extends HasStyle with Palette with Container with Methodes with Actions
+               ) extends Palette with Container with Methodes with Actions
 
 
 

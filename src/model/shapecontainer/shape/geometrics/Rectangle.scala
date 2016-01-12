@@ -1,10 +1,9 @@
 package model.shapecontainer.shape.geometrics
 
-import model.Cache
 import model.shapecontainer.shape.{CompartmentParser, CompartmentLayout, Compartment, Shape}
 import model.shapecontainer.shape.geometrics.layouts.{CommonLayoutParser, RectangleEllipseLayout, CommonLayout}
 import model.style.Style
-import util.GeoModel
+import util.{Cache, GeoModel}
 
 /**
  * Created by julian on 19.10.15.

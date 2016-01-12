@@ -5,6 +5,7 @@ import model.diagram.action.{Action, ActionGroup}
 import model.shapecontainer.connection.Connection
 import model.shapecontainer.shape.Shape
 import model.style.Style
+import util.Cache
 
 /**
  * Created by julian on 06.01.16.

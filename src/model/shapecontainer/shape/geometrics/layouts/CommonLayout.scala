@@ -1,8 +1,7 @@
 package model.shapecontainer.shape.geometrics.layouts
 
-import model.Cache
 import model.style.Style
-import util.{CommonParserMethodes, GeoModel}
+import util.{Cache, CommonParserMethodes, GeoModel}
 import model.CacheEvaluation._
 
 /**

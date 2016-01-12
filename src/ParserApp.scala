@@ -1,6 +1,5 @@
 import generators.StyleGenerator
-import model.Cache
-import util.SprayParser
+import util.{Cache, SprayParser}
 
 /**
  * Created by julian on 9/3/15.

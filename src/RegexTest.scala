@@ -1,6 +1,5 @@
 
-import model.Cache
-import util.SprayParser
+import util.{Cache, SprayParser}
 
 object RegexTest extends App {
   val hierarchyContainer = Cache()
@@ -165,8 +164,7 @@ object RegexTest extends App {
            }
       }""")
 
-  println("Diagram")
-  parser.parseRawDiagram("""diagram DIAGRAM_A for FOO {
+  val diagram = parser.parseRawDiagram("""diagram DIAGRAM_A for FOO (style:A){
        actionGroup actGrp1 {
           action act1 ( label : foo.foo.foo , method : fooImpl1, class : Foo)
           action act2 ( label : foo.foo.foo , method : fooImpl2, class : Foo)
@@ -196,7 +194,7 @@ object RegexTest extends App {
             action act3 ( label : foo.foo.foo , method : fooImpl3, class : Foo)
           }
        }
-       node fooNode for mock {
+       node fooNode for mock (style:B){
           shape : C ( var test -> Hallo1, nest testCompartmentReference -> C_ellipse_compartment, val testText -> Hallo1)
           palette : fooPalette;
           container : fooContainer;
@@ -221,4 +219,5 @@ object RegexTest extends App {
        }
       }
     """)
+  println("Diagram")
 }

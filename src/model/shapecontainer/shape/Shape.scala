@@ -1,13 +1,13 @@
 package model.shapecontainer.shape
 
 import model.CacheEvaluation._
-import model.{ClassHierarchy, Cache}
+import model.ClassHierarchy
 import model.shapecontainer.ShapeContainerElement
 import model.shapecontainer.shape.anchor.Anchor
 import model.shapecontainer.shape.anchor.Anchor.AnchorType
 import model.shapecontainer.shape.geometrics._
 import model.style.Style
-import util.{GeoModel, CommonParserMethodes}
+import util.{Cache, GeoModel, CommonParserMethodes}
 
 /**
  * Created by julian on 29.09.15.

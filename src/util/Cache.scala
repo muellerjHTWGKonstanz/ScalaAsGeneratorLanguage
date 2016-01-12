@@ -1,7 +1,8 @@
-package model
+package util
 
+import model.ClassHierarchy
 import model.diagram.Diagram
-import model.diagram.action.{ActionGroup, Action}
+import model.diagram.action.{Action, ActionGroup}
 import model.shapecontainer.connection.Connection
 import model.shapecontainer.shape.Shape
 import model.style.Style

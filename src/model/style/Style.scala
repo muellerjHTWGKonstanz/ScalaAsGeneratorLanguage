@@ -1,7 +1,7 @@
 package model.style
 
-import model.{ClassHierarchy, Cache}
-import util.CommonParserMethodes
+import model.ClassHierarchy
+import util.{Cache, CommonParserMethodes}
 
 import scala.util.Random
 

@@ -1,10 +1,9 @@
 package model.shapecontainer.shape.geometrics
 
-import model.Cache
 import model.shapecontainer.shape.Shape
 import model.shapecontainer.shape.geometrics.layouts.{PolyLineLayoutParser, PolyLineLayout}
 import model.style.Style
-import util.GeoModel
+import util.{Cache, GeoModel}
 
 /**
  * Created by julian on 20.10.15.

@@ -1,11 +1,10 @@
 package model.shapecontainer.shape.geometrics.layouts
 
 import model.CacheEvaluation._
-import model.Cache
 import model.shapecontainer.shape.geometrics.Alignment
 import model.shapecontainer.shape.geometrics.Alignment.{VAlign, HAlign}
 import model.style.Style
-import util.{CommonParserMethodes, GeoModel}
+import util.{Cache, CommonParserMethodes, GeoModel}
 
 /**
  * Created by julian on 20.10.15.

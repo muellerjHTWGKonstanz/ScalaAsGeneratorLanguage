@@ -4,7 +4,6 @@ import model.diagram.action.{ActionGroup, ActionInclude, Action}
 import model.diagram.edge.Edge
 import model.diagram.methodes.{ActionBlock, OnDelete, OnCreate, OnUpdate}
 import model.diagram.node.Node
-import model.Cache
 import model.diagram.Diagram
 import model.shapecontainer.connection.Connection
 import model.shapecontainer.shape.{Compartment, Shape}
@@ -291,9 +290,11 @@ class SprayParser(c: Cache = Cache()) extends CommonParserMethodes {
       ("{" ~> rep(actionGroup|nodeOrEdge) <~ "}") ^^ {
         case name ~ ecoreElement ~ style ~ arguments =>
           val actionGroups = arguments.filter(i => i._1 == "actionGroup").map(i => i._2.asInstanceOf[ActionGroup].name -> i._2.asInstanceOf[ActionGroup]).toMap
-          val nodes = arguments.filter(i => i._1 == "node").map(i => i._2.asInstanceOf[Node].name -> i._2.asInstanceOf[Node]).toMap
-          val edges = arguments.filter(i => i._1 == "edge").map(i => i._2.asInstanceOf[Edge].name -> i._2.asInstanceOf[Edge]).toMap
-          Diagram(name, actionGroups, nodes, edges, style, ecoreElement/*TODO convert to actual EcoreElement*/)
+          //val nodes = arguments.filter(i => i._1 == "node").map(i => i._2.asInstanceOf[Node].name -> i._2.asInstanceOf[Node]).toMap
+          //val edges = arguments.filter(i => i._1 == "edge").map(i => i._2.asInstanceOf[Edge].name -> i._2.asInstanceOf[Edge]).toMap
+          val nodes = arguments.filter(i => i._1 == "node").map(i => i._2.asInstanceOf[Node])
+          val edges = arguments.filter(i => i._1 == "edge").map(i => i._2.asInstanceOf[Edge])
+          Diagram(name, actionGroups, nodes, edges, style, ecoreElement/*TODO convert to actual EcoreElement*/, cache)
       }
   }
 
