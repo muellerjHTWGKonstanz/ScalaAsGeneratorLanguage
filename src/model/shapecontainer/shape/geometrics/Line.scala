@@ -1,6 +1,5 @@
 package model.shapecontainer.shape.geometrics
 
-import model.shapecontainer.shape.Shape
 import model.shapecontainer.shape.geometrics.layouts.{LineLayoutParser, LineLayout}
 import model.style.Style
 import util.{Cache, GeoModel}
@@ -11,8 +10,13 @@ import util.{Cache, GeoModel}
  */
 class Line(parent:Option[GeometricModel]=None,
            override val style:Option[Style] = None,
-           override val position:(Point, Point))
-  extends GeometricModel(parent) with LineLayout
+           override val points:(Point, Point))
+  extends GeometricModel(parent) with LineLayout {
+  def x1 = points._1.x
+  def y1 = points._1.y
+  def x2 = points._2.x
+  def y2 = points._2.y
+}
 
 object Line{
   def apply(geoModel: GeoModel, parent:Option[GeometricModel], parentStyle:Option[Style], hierarchyContainer: Cache) = parse(geoModel, parent, parentStyle, hierarchyContainer)
@@ -21,6 +25,6 @@ object Line{
     if(lineLayout.isEmpty)
       None
     else
-      Some(new Line(parent, lineLayout.get.style, lineLayout.get.position))
+      Some(new Line(parent, lineLayout.get.style, lineLayout.get.points))
   }
 }

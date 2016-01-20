@@ -1,4 +1,4 @@
-import generators.StyleGenerator
+import generators.style.StyleGenerator
 import util.{Cache, SprayParser}
 
 /**

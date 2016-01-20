@@ -13,7 +13,7 @@ import model.CacheEvaluation._
  * @param placing outstanding
  * TODO
  */
-case class Connection(name:String,
+case class Connection(override val name:String,
                  connection_type:Option[ConnectionStyle] = None,
                  style:Option[Style] = None,
                  placing:List[Placing] = List[Placing]()) extends ShapeContainerElement

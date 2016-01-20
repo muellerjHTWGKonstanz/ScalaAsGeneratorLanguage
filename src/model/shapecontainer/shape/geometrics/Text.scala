@@ -1,6 +1,5 @@
 package model.shapecontainer.shape.geometrics
 
-import model.shapecontainer.shape.Shape
 import model.shapecontainer.shape.geometrics.layouts.{TextLayoutParser, TextLayout}
 import model.style.Style
 import Alignment._

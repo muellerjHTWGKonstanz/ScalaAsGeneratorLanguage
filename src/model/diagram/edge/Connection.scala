@@ -1,7 +1,5 @@
 package model.diagram.edge
 
-import model.shapecontainer.shape.geometrics.Text
-
 /**
  * Created by julian on 11.12.15.
  * representation of diagramm connection

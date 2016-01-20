@@ -1,4 +1,4 @@
-package generators
+package generators.style
 
 /**
  * Created by julian on 07.10.15.
@@ -13,7 +13,9 @@ object StyleGenerator {
 
   def compile(s: Style) = body(s)
 
-  def headDia = raw"""function getDiagramHighlighting(stylename) {
+  def headDia =
+    raw"""function getDiagramHighlighting(stylename) {
+
                       var highlighting;
 
                       switch(stylename) {
@@ -24,19 +26,19 @@ object StyleGenerator {
     val (selected, multiselected, allowed, unallowed) =
       (s.selected_highlighting, s.multiselected_highlighting, s.allowed_highlighting, s.unallowed_highlighting)
     val name = s.name
-    val highlighting:String = ""+selected.getOrElse(multiselected.getOrElse(allowed.getOrElse(unallowed.getOrElse(""))))
+    val highlighting = ""+selected.getOrElse(multiselected.getOrElse(allowed.getOrElse(unallowed.getOrElse(""))))
     if (!highlighting.isEmpty)
-      raw"""  case "$name":
+      raw"""case "$name":
 
-    var highlighting = '$highlighting';
+              var highlighting = '$highlighting';
 
-  break;
+            break;
       """
     else ""
   }
 
   def selected(s: Style) =
-    if (s.selected_highlighting isDefined) {
+    if (s.selected_highlighting isDefined) {//TODO check if getRGBValue and getColorValue do the same things
       raw""".free-transform { border: 2px dashed """ + s.selected_highlighting.get.getRGBValue + """; }"""
     } else ""
 
@@ -80,7 +82,7 @@ object StyleGenerator {
     /*
     This is a generated JavaScript file for the spray JointJS online editor.
     The """ + s.name + raw""" function will be called when the shapes are created, setting style attributes.
-    """ + s.description + raw"""
+    """ + s.description.getOrElse("") + raw"""
     */
     case """ + s.name + raw""":
       style = {
@@ -126,7 +128,7 @@ object StyleGenerator {
           */
             text: {
               """ + fontAttributes(s) + raw"""
-                                          },
+            },
     """
   }
 
@@ -134,13 +136,15 @@ object StyleGenerator {
     raw"""
        'font-family': '""" + s.font_name.getOrElse("sans-serif") + """',
        'font-size': '""" + s.font_size.getOrElse("11px") + """',
-       fill': '""" + {
-      val c = s.font_color
-      if (c.isDefined) c.get.getRGBValue else "#000000"
-    } + """',
-       'font-weight': '""" + {
-      if (s.font_bold.getOrElse(false)) "700" else "400"
-    } + """',
+       fill': '""" +
+      {
+        val c = s.font_color
+        if (c.isDefined) c.get.getRGBValue else "#000000"
+      } + """',
+       'font-weight': '""" +
+      {
+        if (s.font_bold.getOrElse(false)) "700" else "400"
+      } + """',
         """ + {
       if (s.font_italic.getOrElse(false))
         raw"""'font-style': 'italic',
@@ -266,7 +270,9 @@ object StyleGenerator {
 
           """
 
-   ret+=raw"""    """+
+   ret+=
+     raw"""
+       """+
      createLineAttributes(s)+
         raw"""
 
@@ -275,12 +281,7 @@ object StyleGenerator {
   }
 
 
-  def checkBackgroundGradientNecessary(s: Style) = {
-    s.background_color.get match {
-      case x: GradientRef => true
-      case _ => false
-    }
-  }
+  def checkBackgroundGradientNecessary(s: Style) = if(!s.background_color.get.isInstanceOf[GradientRef]) false else true
 
   def createGradientAttributes(gr: GradientRef, horizontal: Boolean) = {
     val areas = for (area <- gr.area)yield{"{ offset: '"+area.offset+"', color: '"+area.color.getRGBValue+"' },"}
@@ -317,6 +318,7 @@ object StyleGenerator {
           'fill.opacity': """ + bg_color.createOpacityValue+raw""",
         """
     }
+    else ""
   }
 
   def createLineAttributesFromLayout(s:Style) = {
@@ -338,7 +340,7 @@ object StyleGenerator {
       				stroke: '"""+s.line_color.get.getRGBValue+"""',"""
           if(s.line_width.get > 0)
             ret += """'stroke-width':"""+s.line_width.get+""","""
-          if(s.line_style.get != null)
+          if(s.line_style isDefined)
             s.line_style.get match {
               case DASH => ret +=
                            """
@@ -365,8 +367,12 @@ object StyleGenerator {
     ret
   }
 
-  def gradientOrientation(s:Style)= s.gradient_orientation.get match {
+  def gradientOrientation(s:Style)=
+    if(s.gradient_orientation isDefined)s.gradient_orientation.get match {
     case HORIZONTAL => true
     case _ => false
   }
+  else false
+
+  /*The rest of the methodes (refering to styleGEnerator.xtext from MoDiGenV2) is defined in the Color classes directly*/
 }

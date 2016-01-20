@@ -10,7 +10,7 @@ import model.CacheEvaluation._
  * representation of a LineLayout
  */
 trait LineLayout extends Layout{
-  val position:(Point, Point)
+  val points:(Point, Point)
 }
 
 object LineLayoutParser{
@@ -36,7 +36,7 @@ object LineLayoutParser{
     if(point1.isDefined && point2.isDefined)
       Some(new LineLayout {
       override val style = styl
-      override val position: (Point, Point) = (point1.get, point2.get)
+      override val points: (Point, Point) = (point1.get, point2.get)
     })
     else
       None

@@ -20,7 +20,6 @@ class Rectangle(parent:Option[GeometricModel] = None,
   override val size_width: Int = commonLayout.size_width
   override val size_height: Int = commonLayout.size_height
   override var children:List[GeometricModel] = parentOf
-
 }
 
 object Rectangle{

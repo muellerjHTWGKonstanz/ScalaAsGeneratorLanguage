@@ -33,7 +33,7 @@ class SprayParser(c: Cache = Cache()) extends CommonParserMethodes {
     }
   private def anonymousStyle =
     "style" ~> (("extends" ~> rep(ident <~ ",?".r))?) ~ ("[\\{\\(]".r ~> rep(styleAttribute)) <~ "[\\}\\)]".r ^^ {
-      case parents ~ attributes => Style("Anonymous_Style"+Random.nextString(5), parents, attributes, cache).name
+      case parents ~ attributes => Style("Anonymous_Style"+java.util.UUID.randomUUID(), parents, attributes, cache).name
     }
   private def styles = rep(style)
   def parseRawStyle(input: String) = parseAll(styles, trimRight(input)).get

@@ -18,7 +18,7 @@ import util.{Cache, GeoModel, CommonParserMethodes}
  * @param parentShapes are the shapes that this new shape will inherit its attributes of
  * @param geos is a list of GeoModels kind of like sketch-GeometricModels, which will be converted into real GeometricModels inside the constructor
  */
-class Shape(val name:String = "no name",
+class Shape(override val name:String = "no name",
                   val style:Option[Style]                   = None,
                   val size_width_min:Option[Int]            = None, /*from ShapeLayout*/
                   val size_height_min:Option[Int]           = None, /*from ShapeLayout*/
