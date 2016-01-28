@@ -2,8 +2,7 @@ package model.shapecontainer.shape.geometrics.layouts
 
 import model.shapecontainer.shape.geometrics.{PointParser, Point}
 import model.style.Style
-import util.{Cache, GeoModel}
-import model.CacheEvaluation._
+import parser._
 
 /**
  * Created by julian on 20.10.15.

@@ -3,7 +3,7 @@ package model.shapecontainer.shape.geometrics
 import model.shapecontainer.shape.geometrics.layouts.{TextLayoutParser, TextLayout}
 import model.style.Style
 import Alignment._
-import util.{Cache, CommonParserMethodes, GeoModel}
+import parser.{Cache, CommonParserMethods, GeoModel}
 
 /**
  * Created by julian on 19.10.15.
@@ -28,7 +28,7 @@ abstract class TextType
   case object Multiline extends TextType
 
 
-object Text extends CommonParserMethodes{
+object Text extends CommonParserMethods{
   def apply(geoModel:GeoModel, parent:Option[GeometricModel], textType:TextType, parentStyle:Option[Style], hierarchyContainer:Cache) =
     parse(geoModel, parent, textType, parentStyle, hierarchyContainer)
   def parse(geoModel:GeoModel, parent:Option[GeometricModel], textType:TextType, parentStyle:Option[Style], hierarchyContainer:Cache):Option[Text] = {

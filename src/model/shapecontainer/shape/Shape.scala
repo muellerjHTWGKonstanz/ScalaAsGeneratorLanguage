@@ -1,13 +1,12 @@
 package model.shapecontainer.shape
 
-import model.CacheEvaluation._
 import model.ClassHierarchy
 import model.shapecontainer.ShapeContainerElement
 import model.shapecontainer.shape.anchor.Anchor
 import model.shapecontainer.shape.anchor.Anchor.AnchorType
 import model.shapecontainer.shape.geometrics._
 import model.style.Style
-import util.{Cache, GeoModel, CommonParserMethodes}
+import parser._
 
 /**
  * Created by julian on 29.09.15.
@@ -18,7 +17,7 @@ import util.{Cache, GeoModel, CommonParserMethodes}
  * @param parentShapes are the shapes that this new shape will inherit its attributes of
  * @param geos is a list of GeoModels kind of like sketch-GeometricModels, which will be converted into real GeometricModels inside the constructor
  */
-class Shape(override val name:String = "no name",
+sealed class Shape private (override val name:String = "no name",
                   val style:Option[Style]                   = None,
                   val size_width_min:Option[Int]            = None, /*from ShapeLayout*/
                   val size_height_min:Option[Int]           = None, /*from ShapeLayout*/
@@ -111,15 +110,16 @@ class Shape(override val name:String = "no name",
   }
 }
 
-object Shape extends CommonParserMethodes{
+object Shape extends CommonParserMethods{
   val validShapeVariables = List("size-min", "size-max", "stretching", "proportional", "anchor", "description(\\s*style\\s*[a-zA-ZüäöÜÄÖ]+([-_][a-zA-ZüäöÜÄÖ])*)?\\s*")
 
-  def apply(name:String, parents:Option[List[String]], style:Option[String], attributes:List[(String, String)], geos:List[GeoModel], description:Option[(String, String)], anchor:Option[String], hierarchyContainer:Cache) =
+  def apply(n:String) = new Shape(name = n)
+  def apply(name:String, parents:Option[List[String]], style:Option[Style], attributes:List[(String, String)], geos:List[GeoModel], description:Option[(String, String)], anchor:Option[String], hierarchyContainer:Cache) =
     parse(name, parents, style, attributes, geos, description, anchor, hierarchyContainer)
 
   def parse(name:String,
             parentShapes:Option[List[String]],
-            styleArgument:Option[String],
+            styleArgument:Option[Style],
             attributes:List[(String, String)],
             geos:List[GeoModel],
             desc:Option[(String, String)],
@@ -158,7 +158,7 @@ object Shape extends CommonParserMethodes{
 
     /*initialize the mapping-variables with the actual parameter-values, if they exist*/
     if(styleArgument isDefined){
-      val newStyle: Option[Style] = styleArgument.get
+      val newStyle: Option[Style] = styleArgument
       if(newStyle isDefined) {
         if(style isDefined){
           style = Style.makeLove(cache, style, newStyle)

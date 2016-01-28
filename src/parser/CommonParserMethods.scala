@@ -1,4 +1,4 @@
-package util
+package parser
 
 import scala.util.parsing.combinator.JavaTokenParsers
 
@@ -6,22 +6,28 @@ import scala.util.parsing.combinator.JavaTokenParsers
  * Created by julian on 03.11.15.
  * commonly used parsing methodes
  */
-trait CommonParserMethodes extends JavaTokenParsers{
+trait CommonParserMethods extends JavaTokenParsers{
   /*basic stuff*/
   def attribute:Parser[(String, String)] = variable ~ argument <~ ",?".r ^^ {case v ~ a => (v.toString,a.toString)}
   def variable:Parser[String] = "[a-züäöA-ZÜÄÖ]+([-_][a-züäöA-ZÜÄÖ]+)*".r <~ "\\s*".r  ^^ {_.toString} //<~ "=?\\s*".r
   def argument_double:Parser[Double] = "[+-]?\\d+(\\.\\d+)?".r ^^ {case dou => dou.toDouble}
   def argument_int:Parser[Int] = "[+-]?\\d+".r ^^ {case dou => dou.toInt}
-  def argument:Parser[String] = "((([a-züäöA-ZÜÄÖ]|[0-9])+(\\.([a-züäöA-ZÜÄÖ]|[0-9])+)*)|(\".*\")|([+-]?\\d+(\\.\\d+)?))".r ^^ {_.toString}
+  def argument:Parser[String] =
+    "((([a-züäöA-ZÜÄÖ]|[0-9])+(\\.([a-züäöA-ZÜÄÖ]|[0-9])+)*)|(\".*\")|([+-]?\\d+(\\.\\d+)?))".r ^^ {_.toString}
+  def argument_string:Parser[String] =
+    "\".*\"".r ^^ {_.toString}
   def argument_classic: Parser[String] = """\s*\=\s*""".r ~> argument^^ { _.toString }
-  def argument_advanced_explicit: Parser[String] = """(?s)\((\w+([-_]\w+)*\s*=\s*([a-zA-ZüäöÜÄÖ]+|(\".*\")|([+-]?\d+(\.\d+)?)),?[\s\n]*)+\)""".r ^^ { _.toString }
-  def argument_advanced_implicit: Parser[String] = """(?s)\((([a-zA-ZüäöÜÄÖ]+|(\".*\")|([+-]?\d+(\.\d+)?)),?\s*)+\)""".r ^^ { _.toString }
+  def argument_advanced_explicit: Parser[String] =
+    """(?s)\((\w+([-_]\w+)*\s*=\s*([a-zA-ZüäöÜÄÖ]+|(\".*\")|([+-]?\d+(\.\d+)?)),?[\s\n]*)+\)""".r ^^ { _.toString }
+  def argument_advanced_implicit: Parser[String] =
+    """(?s)\((([a-zA-ZüäöÜÄÖ]+|(\".*\")|([+-]?\d+(\.\d+)?)),?\s*)+\)""".r ^^ { _.toString }
   def argument_wrapped:Parser[String] = "\\{[^\\{\\}]*\\}".r ^^ {_.toString}
-  def arguments: Parser[String] = argument_classic | argument_advanced_explicit | argument_advanced_implicit | argument_wrapped
+  def arguments: Parser[String] =
+    argument_classic | argument_advanced_explicit | argument_advanced_implicit | argument_wrapped
   def attributeAsString: Parser[String] = variable ~ arguments ^^ { case v ~ arg => v + arg }
   def attributePair: Parser[(String, String)] = variable ~ arguments ^^ { case v ~ a => (v, a) }
 
-  /*special case - grammar is nasty.. */
+  /*special cases - grammar is nasty.. */
   def compartmentinfo:Parser[String] = "(" ~ rep(compartmentinfo_attribute) ~ ")" ^^ { case c1 ~ list ~ c2 => c1+"\n"+list.map(i => i+"\n").mkString+c2 }
   def compartmentinfo_attribute:Parser[String] = compartmentinfo_attribute_layout | compartmentinfo_attribute_stretching | compartmentinfo_attribute_spacing | compartmentinfo_attribute_margin | compartmentinfo_attribute_invisible | compartmentinfo_attribute_id
   def compartmentinfo_attribute_layout:Parser[String] = "layout\\s*=\\s*(fixed|vertical|horizontal|fit)".r ^^ {_.toString}

@@ -1,8 +1,7 @@
 package model.shapecontainer.shape.geometrics.layouts
 
 import model.style.Style
-import util.{Cache, CommonParserMethodes, GeoModel}
-import model.CacheEvaluation._
+import parser._
 
 /**
  * Created by julian on 15.10.15.
@@ -18,7 +17,7 @@ trait CommonLayout extends Layout{
   def y = position.get._2
 }
 
-object CommonLayoutParser extends CommonParserMethodes{
+object CommonLayoutParser extends CommonParserMethods{
   def parse(geoModel:GeoModel, parentStyle:Option[Style], cache: Cache):Option[CommonLayout] = {
     implicit val hierarchyContainer = cache
     val attributes = geoModel.attributes

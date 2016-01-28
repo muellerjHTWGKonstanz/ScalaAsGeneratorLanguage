@@ -140,9 +140,10 @@ object GeneratorConnectionDefinition {
     ];
     break;
     """
+  }.mkString
     labelCache.clear()
     labels
-  }}
+  }
 
   protected def generateLabel(placing:Placing)={
     raw"""

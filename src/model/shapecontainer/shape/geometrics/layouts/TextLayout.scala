@@ -1,11 +1,9 @@
 package model.shapecontainer.shape.geometrics.layouts
 
-import model.CacheEvaluation._
 import model.shapecontainer.shape.geometrics.Alignment
 import model.shapecontainer.shape.geometrics.Alignment.{VAlign, HAlign}
 import model.style.Style
-import util.{Cache, CommonParserMethodes, GeoModel}
-
+import parser._
 /**
  * Created by julian on 20.10.15.
  * representation of a textlayout and its parser
@@ -16,7 +14,7 @@ trait TextLayout extends CommonLayout {
   val vAlign: Option[VAlign]
 }
 
-object TextLayoutParser extends CommonParserMethodes{
+object TextLayoutParser extends CommonParserMethods{
   def apply(geoModel: GeoModel, parentStyle:Option[Style], hierarchyContainer:Cache): Option[TextLayout] = {
     implicit val cache = hierarchyContainer
     val attributes = geoModel.attributes

@@ -1,7 +1,7 @@
 package model.shapecontainer.shape.geometrics.layouts
 
 import model.style.Style
-import util.{Cache, CommonParserMethodes, GeoModel}
+import parser.{Cache, CommonParserMethods, GeoModel}
 
 /**
  * Created by julian on 20.10.15.
@@ -12,7 +12,7 @@ trait RoundedRectangleLayout extends CommonLayout{
   val curve_height:Int
 }
 
-object RoundedRectangleLayoutParser extends CommonParserMethodes{
+object RoundedRectangleLayoutParser extends CommonParserMethods{
   def apply(geoModel: GeoModel, parentStyle:Option[Style], hierarchyContainer:Cache) = parse(geoModel, parentStyle, hierarchyContainer)
   def parse(geoModel:GeoModel, parentStyle:Option[Style], hierarchyContainer:Cache):Option[RoundedRectangleLayout]={
    val attributes = geoModel.attributes

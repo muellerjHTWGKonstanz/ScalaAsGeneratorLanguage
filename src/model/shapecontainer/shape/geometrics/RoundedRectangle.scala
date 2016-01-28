@@ -3,13 +3,13 @@ package model.shapecontainer.shape.geometrics
 import model.shapecontainer.shape.Shape
 import model.shapecontainer.shape.geometrics.layouts.{RoundedRectangleLayoutParser, RoundedRectangleLayout}
 import model.style.Style
-import util.{Cache, GeoModel}
+import parser.{Cache, GeoModel}
 
 /**
  * Created by julian on 19.10.15.
  * represents a rounded rectangle
  */
-class RoundedRectangle(parent:Option[GeometricModel] = None,
+sealed class RoundedRectangle private (parent:Option[GeometricModel] = None,
                        rrLayout:RoundedRectangleLayout,
                        parentOf:List[GeometricModel] = List[GeometricModel]()
                         ) extends GeometricModel(parent) with RoundedRectangleLayout with Wrapper{

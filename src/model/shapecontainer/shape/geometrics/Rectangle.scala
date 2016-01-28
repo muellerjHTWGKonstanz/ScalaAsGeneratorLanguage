@@ -1,9 +1,9 @@
 package model.shapecontainer.shape.geometrics
 
-import model.shapecontainer.shape.{CompartmentParser, CompartmentLayout, Compartment, Shape}
+import model.shapecontainer.shape.{Compartment}
 import model.shapecontainer.shape.geometrics.layouts.{CommonLayoutParser, RectangleEllipseLayout, CommonLayout}
 import model.style.Style
-import util.{Cache, GeoModel}
+import parser.{Cache, GeoModel}
 
 /**
  * Created by julian on 19.10.15.
@@ -31,7 +31,7 @@ object Rectangle{
   def parse(geoModel:GeoModel, parent:Option[GeometricModel] = None, parentStyle:Option[Style], diagram:Cache): Option[Rectangle] = {
     /*mapping*/
     val commonLayout:Option[CommonLayout] = CommonLayoutParser.parse(geoModel, parentStyle, diagram)
-    val compartmentInfo:Option[Compartment] = CompartmentParser.parse(geoModel.attributes)
+    val compartmentInfo:Option[Compartment] = Compartment.parse(geoModel.attributes)
 
     if(commonLayout.isEmpty)
       return None

@@ -1,9 +1,9 @@
 package model.shapecontainer.shape.geometrics
 
-import model.shapecontainer.shape.{CompartmentParser, Compartment, Shape}
+import model.shapecontainer.shape.{Compartment}
 import model.shapecontainer.shape.geometrics.layouts.{CommonLayoutParser, CommonLayout}
 import model.style.Style
-import util.{Cache, GeoModel}
+import parser.{Cache, GeoModel}
 
 /**
  * Created by julian on 20.10.15.
@@ -12,7 +12,7 @@ import util.{Cache, GeoModel}
  * Vorsicht Ellipse erbt zwar von Rectangle, aber eine Ellipse als ein Rectangle zu benutzen ist nicht der eigentliche Sinn
  * rein pragmatisch, da Ellipse und Rectangle die selben Attribute haben
  */
-class Ellipse(parent: Option[GeometricModel] = None,
+sealed class Ellipse private (parent: Option[GeometricModel] = None,
               commonLayout: CommonLayout,
               compartment:Option[Compartment],
               parentOf: List[GeometricModel] = List[GeometricModel]()
@@ -27,7 +27,7 @@ object Ellipse {
   def parse(geoModel: GeoModel, parent: Option[GeometricModel], parentStyle:Option[Style], hierarchyContainer:Cache): Option[Ellipse] = {
     /*mapping*/
     val commonLayout: Option[CommonLayout] = CommonLayoutParser.parse(geoModel, parentStyle, hierarchyContainer)
-    val compartment: Option[Compartment] = CompartmentParser.parse(geoModel.attributes)
+    val compartment: Option[Compartment] = Compartment.parse(geoModel.attributes)
 
     if (commonLayout.isEmpty)
       return None

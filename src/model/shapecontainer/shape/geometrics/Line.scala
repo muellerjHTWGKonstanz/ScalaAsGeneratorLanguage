@@ -2,13 +2,13 @@ package model.shapecontainer.shape.geometrics
 
 import model.shapecontainer.shape.geometrics.layouts.{LineLayoutParser, LineLayout}
 import model.style.Style
-import util.{Cache, GeoModel}
+import parser.{Cache, GeoModel}
 
 /**
  * Created by julian on 15.10.15.
  * Representation of a simple Line
  */
-class Line(parent:Option[GeometricModel]=None,
+sealed class Line private (parent:Option[GeometricModel]=None,
            override val style:Option[Style] = None,
            override val points:(Point, Point))
   extends GeometricModel(parent) with LineLayout {

@@ -1,4 +1,4 @@
-package model.style
+package model.style.gradient
 
 /**
  * Created by julian on 29.10.15.
@@ -8,7 +8,7 @@ case object HORIZONTAL extends GradientAlignment
 case object VERTICAL extends GradientAlignment
 
 object GradientAlignment {
-  def getIfValid(s: String) = {
+  def ifValid(s: String) = {
     s match {
       case "horizontal" => Some(HORIZONTAL)
       case "vertical" => Some(VERTICAL)
