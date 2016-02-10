@@ -1,17 +1,17 @@
 package model.diagram.node
 
+import generators.MclassMock
 import model.diagram.action.{ActionInclude, Action, Actions}
 import model.diagram.methodes.{Methodes, OnCreate, OnUpdate, OnDelete}
 import model.diagram.traits.{Container, Palette}
 import model.style.Style
-import parser.{PropsAndComps, Cache}
 
 /**
  * Created by julian on 24.11.15.
  * representation of a node
  */
 case class Node(name:String,
-                ecoreElement:AnyRef,/*TODO this is a mock, replace with actual ecoreElement*/
+                mcoreElement:MclassMock,/*TODO this is a mock, replace with actual ecoreElement*/
                 style:Option[Style]      = None,
                                 /*node-block*/
                 shape:Option[DiaShape]                   = None,

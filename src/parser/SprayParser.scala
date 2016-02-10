@@ -1,7 +1,7 @@
 package parser
 
 import model.diagram.action.{ActionGroup, ActionInclude, Action}
-import model.diagram.edge.Edge
+import model.diagram.edge.{DiaConnection, Edge}
 import model.diagram.methodes.{ActionBlock, OnDelete, OnCreate, OnUpdate}
 import model.diagram.node.{DiaShape, Node}
 import model.diagram.Diagram
@@ -17,8 +17,6 @@ import model.style.Style
  */
 class SprayParser(c: Cache = Cache()) extends CommonParserMethods {
   implicit val cache = c
-  type diaConnection = model.diagram.edge.Connection
-
 
   /*Style-specific----------------------------------------------------------------------------*/
   private def styleVariable =("""("""+Style.validStyleAttributes.map(_+"|").mkString+""")""").r ^^ {_.toString}
@@ -78,9 +76,7 @@ class SprayParser(c: Cache = Cache()) extends CommonParserMethods {
     (descriptionAttribute?) ~
     (anchorAttribute?) <~ "}" ^^
     {case name ~ parent ~ style ~ attrs ~ geos ~ desc ~ anch =>
-      val newShapeSketch = ShapeSketch(name, parent, style, attrs, geos, desc, anch, cache)
-      cache + newShapeSketch
-      newShapeSketch
+      ShapeSketch(name, parent, style, attrs, geos, desc, anch, cache)
     }
   private def abstractShape:Parser[Shape] = shapeSketch ^^ {case sketch => sketch.toShape(None)}
 
@@ -165,10 +161,10 @@ class SprayParser(c: Cache = Cache()) extends CommonParserMethods {
   }
 
   private def palette = "palette" ~ ":" ~> argument <~ ";" ^^ {
-    case arg => ("palette", arg.toString)
+    case arg => ("palette", arg.toString)//TODO eigentlich mcore::MReference
   }
   private def container = "container" ~ ":" ~> argument <~ ";" ^^ {
-    case arg => ("container", arg.toString)//TODO eigentlich ecore::EReference
+    case arg => ("container", arg.toString)//TODO eigentlich mcore::MReference
   }
   private def actionBlock = rep(("call"?) ~ "(?!actionGroup)action".r ~> ident) ~ rep(("call"?) ~ "actionGroup" ~> ident) ^^ {
     case actions ~ actionGroups =>
@@ -177,20 +173,20 @@ class SprayParser(c: Cache = Cache()) extends CommonParserMethods {
       ActionBlock(acts, actGrps)
   }
   private def askFor = "askFor" ~ ":" ~> ident ^^ {
-    case identifier => identifier +" is a Mock, change this line!!!!"/*TODO this is only a mock, actually ecoreAttribute*/
+    case identifier => identifier +" is a Mock, change this line!!!!"/*TODO this is only a mock, actually mcoreAttribute*/
   }
 
   private def onCreate = "onCreate" ~ "{" ~> (actionBlock?) ~ (askFor?) <~ "}" ^^ {
-    case actblock ~ askfor => ("onCreate", OnCreate(actblock, askfor))//TODO eigentlich ecore::EAttribute
+    case actblock ~ askfor => ("onCreate", OnCreate(actblock, askfor))//TODO eigentlich mcore::MAttribute
   }
   private def onUpdate = "onUpdate" ~ "{" ~> (actionBlock?) <~ "}" ^^ {
-    case actBlock => ("onUpdate", OnUpdate(actBlock))//TODO eigentlich ecore::EAttribute
+    case actBlock => ("onUpdate", OnUpdate(actBlock))//TODO eigentlich mcore::MAttribute
   }
   private def onDelete = "onDelete" ~ "{" ~> (actionBlock?) <~ "}" ^^ {
-      case actBlock => ("onDelete", OnDelete(actBlock))//TODO eigentlich ecore::EAttribute
+      case actBlock => ("onDelete", OnDelete(actBlock))//TODO eigentlich mcore::MAttribute
     }
 
-  private def shapeVALPropertie = ("val" ~> ident) ~ ("->" ~> ident) ^^ {case key ~ value => ("val", key/*TODO eigentlich ecoreAttribute*/ -> value) }
+  private def shapeVALPropertie = ("val" ~> ident) ~ ("->" ~> ident) ^^ {case key ~ value => ("val", key/*TODO eigentlich mcoreAttribute*/ -> value) }
   private def shapeVARPropertie = ("var" ~> ident) ~ ("->" ~> ident) ^^ {case key ~ value => ("var", key -> value) }
   private def shapeTextPropertie = shapeVALPropertie|shapeVARPropertie <~ ",?".r
   private def shapeCompartmentPropertie = ("nest" ~> ident) ~ ("->" ~> ident) <~ ",?".r ^^ {case key ~ value => ("nest",key -> value) }
@@ -204,8 +200,8 @@ class SprayParser(c: Cache = Cache()) extends CommonParserMethods {
     ("for" ~> ident) ~
     (("(" ~ "style" ~ ":" ~> ident <~ ")")?) ~
     ("{" ~> rep(diagramShape|palette|container|onCreate|onUpdate|onDelete|actions) <~ "}") ^^ {
-      case name ~ ecoreElement ~ corporatestyle ~ args =>
-        //TODO ecoreElement should be resolved ... -> "for Type=[ecore:Class|QualifiedName]"
+      case name ~ mcoreElement ~ corporatestyle ~ args =>
+        //TODO mcoreElement should be resolved ... -> "for Type=[mcore:Class|QualifiedName]"
         val corporateStyle:Option[Style] = if(corporatestyle.isDefined)corporatestyle.get else None
         var shap:Option[PropsAndComps] = None
         var pal:Option[String] = None
@@ -227,11 +223,11 @@ class SprayParser(c: Cache = Cache()) extends CommonParserMethods {
             actionIncludes = Some(i._2.asInstanceOf[(ActionInclude, List[Action])]._1)
           case _ =>
         }
-        ("node", NodeSketch(name, ecoreElement, corporateStyle, shap, pal, con, onCr, onUp, onDe, actions, actionIncludes))
+        ("node", NodeSketch(name, mcoreElement, corporateStyle, shap, pal, con, onCr, onUp, onDe, actions, actionIncludes))
     }
   }
   case class NodeSketch(name:String,
-                        ecoreElement:AnyRef,/*TODO this is a mock, replace with actual ecoreElement*/
+                        mcoreElement:AnyRef,/*TODO this is a mock, replace with actual mcoreElement*/
                         style:Option[Style]      = None,
                         /*node-block*/
                         shape:Option[PropsAndComps]= None,
@@ -247,26 +243,26 @@ class SprayParser(c: Cache = Cache()) extends CommonParserMethods {
       val diagramShape:Option[DiaShape] =
         if(shape isDefined) Some(new DiaShape(corporateStyle, shape.get.ref, shape.get.propertiesAndCompartments, cache))
         else None
-      Node(name, ecoreElement, corporateStyle, diagramShape, palette, container, onCreate, onUpdate, onDelete, actions, actionIncludes)
+      Node(name, mcoreElement, corporateStyle, diagramShape, palette, container, onCreate, onUpdate, onDelete, actions, actionIncludes)
     }
   }
 
   private def diagramConnection = {
-    type diaConnection = model.diagram.edge.Connection
+    type diaConnection = model.diagram.edge.DiaConnection
     ("connection" ~ ":" ~> ident) ~
       (("(" ~> rep(shapeTextPropertie) <~ ")") ?) ^^ {
       case connectionName ~ properties => PropsAndComps(connectionName, properties)
     }
   }
   private def edge:Parser[(String, EdgeSketch)] = {
-    type diaConnection = model.diagram.edge.Connection
+    type diaConnection = model.diagram.edge.DiaConnection
     ("edge" ~> ident) ~
       ("for" ~> ident) ~
       (("(" ~ "style" ~ ":" ~> ident <~ ")") ?) ~
       ("{" ~> diagramConnection) ~
       ("from" ~ ":" ~> ident) ~
       ("to" ~ ":" ~> ident) ~ (palette?) ~ (container?) ~ (onCreate?) ~ (onUpdate?) ~ (onDelete?) ~ (actions?) <~ "}" ^^ {
-      case edgeName ~ ecoreElement ~ styleOpt ~ diaCon ~ from ~ to ~ pal ~ cont ~ oncr ~ onup ~ onde ~ acts =>
+      case edgeName ~ mcoreElement ~ styleOpt ~ diaCon ~ from ~ to ~ pal ~ cont ~ oncr ~ onup ~ onde ~ acts =>
         val style: Option[Style] = if(styleOpt isDefined)styleOpt.get else None
         val ret_palette = if(pal isDefined)Some(pal.get._2) else None
         val ret_container = if(cont isDefined)Some(cont.get._2) else None
@@ -275,15 +271,15 @@ class SprayParser(c: Cache = Cache()) extends CommonParserMethods {
         val onDe = if(onde isDefined) Some(onde.get._2) else None
         val ret_actions = if(acts isDefined)Some(acts.get._2._2)else None
         val ret_actionIncludes = if(acts isDefined)Some(acts.get._2._1)else None
-        ("edge", EdgeSketch(edgeName, ecoreElement, style, diaCon, from, to, ret_palette, ret_container, onCr, onUp, onDe, ret_actions.getOrElse(List()), ret_actionIncludes))
+        ("edge", EdgeSketch(edgeName, mcoreElement, style, diaCon, from, to, ret_palette, ret_container, onCr, onUp, onDe, ret_actions.getOrElse(List()), ret_actionIncludes))
     }
   }
   case class EdgeSketch(name:String,
-                  ecoreElement:AnyRef,
+                  mcoreElement:AnyRef,
                   style: Option[Style] = None,
                   /*edge-Block*/
-                  connection:PropsAndComps,
-                  from:AnyRef, //TODO from and to are actually ecoreAttributes
+                  propsAndComps:PropsAndComps,
+                  from:AnyRef, //TODO from and to are actually mcoreAttributes
                   to:AnyRef,
                   palette:Option[String] = None,
                   container:Option[String] = None,
@@ -294,8 +290,8 @@ class SprayParser(c: Cache = Cache()) extends CommonParserMethods {
                   actionIncludes:Option[ActionInclude] = None){
     def toEdge(diagramStyle:Option[Style], cache:Cache) = {
       val corporateStyle:Option[Style] = Style.makeLove(cache, diagramStyle, style)
-      val diagramConnection:diaConnection = new diaConnection(corporateStyle, connection, cache)
-      Edge(name, ecoreElement, corporateStyle, diagramConnection, from, to, palette, container, onCreate, onUpdate, onDelete, actions, actionIncludes)
+      val diagramConnection:DiaConnection = new DiaConnection(corporateStyle, propsAndComps, cache)
+      Edge(name, mcoreElement, corporateStyle, diagramConnection, from, to, palette, container, onCreate, onUpdate, onDelete, actions, actionIncludes)
     }
   }
 
@@ -306,13 +302,15 @@ class SprayParser(c: Cache = Cache()) extends CommonParserMethods {
       ("for" ~> ident) ~
       (("(" ~ "style" ~ ":" ~> ident <~ ")")?) ~
       ("{" ~> rep(actionGroup|nodeOrEdge) <~ "}") ^^ {
-        case name ~ ecoreElement ~ style ~ arguments =>
+        case name ~ mcoreElement ~ style ~ arguments =>
           val actionGroups = arguments.filter(i => i._1 == "actionGroup").map(i => i._2.asInstanceOf[ActionGroup].name -> i._2.asInstanceOf[ActionGroup]).toMap
           //val nodes = arguments.filter(i => i._1 == "node").map(i => i._2.asInstanceOf[Node].name -> i._2.asInstanceOf[Node]).toMap
           //val edges = arguments.filter(i => i._1 == "edge").map(i => i._2.asInstanceOf[Edge].name -> i._2.asInstanceOf[Edge]).toMap
           val nodes = arguments.filter(i => i._1 == "node").map(i => i._2.asInstanceOf[NodeSketch].toNode(style, cache))
           val edges = arguments.filter(i => i._1 == "edge").map(i => i._2.asInstanceOf[EdgeSketch].toEdge(style, cache))
-          Diagram(name, actionGroups, nodes, edges, style, ecoreElement/*TODO convert to actual EcoreElement*/, cache)
+          val newDiagram = Diagram(name, actionGroups, nodes, edges, style, mcoreElement/*TODO convert to actual McoreElement*/, cache)
+          cache + newDiagram
+          newDiagram
       }
   }
 
@@ -335,6 +333,7 @@ case class ShapeSketch(name:String,
                        descr:Option[(String, String)],
                        anch:Option[String],
                        cache: Cache){
+  cache + this
   def toShape(corporateStyle:Option[Style]) = Shape(name, parents, Style.makeLove(cache, corporateStyle, style), attrs, geos, descr, anch, cache)
 }
 

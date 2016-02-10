@@ -23,7 +23,6 @@ sealed class Style private (val name: String = "noName",
             val multiselected_highlighting: Option[ColorOrGradient] = None,
             val allowed_highlighting: Option[ColorOrGradient] = None,
             val unallowed_highlighting: Option[ColorOrGradient] = None,
-
             val parents: List[Style] = List()) extends StyleContainerElement{
   override def toString = name
 }
@@ -75,15 +74,9 @@ object Style extends CommonParserMethods {
   def parse(name:String, parents:Option[List[String]], attributes: List[(String, String)], hierarchyContainer: Cache):Style ={
 
     implicit val cache = hierarchyContainer
-    var extendedStyle:List[Style] = List[Style]()
+    val extendedStyle = parents.getOrElse(List()).foldLeft(List[Style]())((styles, s_name) =>
+      if(cache.styleHierarchy.contains(s_name.trim)) s_name.trim :: styles else styles)
 
-    if(parents.nonEmpty)
-      parents.get.foreach{parent => {
-        val parentName = parent.trim
-        if(cache.styleHierarchy.contains(parentName))
-          extendedStyle = parentName :: extendedStyle
-        }
-      }/*TODO if class was not found, to be inherited tell Logger*/
     /*mapping and defaults*/
     /*fill the "mapping and defaults" with extended information or with None values if necessary*/
     /** relevant is a help-methode, which shortens the actual call to mostRelevant of ClassHierarchy by ensuring the collection-parameter

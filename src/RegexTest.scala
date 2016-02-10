@@ -120,7 +120,7 @@ object RegexTest extends App {
                            }
                        }""")
 
-  parser.parseRawConnectionSketch("""connection BPMN_DataAssoziation style aicaramba{
+  parser.parseRawAbstractConnection("""connection BPMN_DataAssoziation style aicaramba{
                             placing {
                                 position (offset=1.0, distance = 1)
                                 polygon {

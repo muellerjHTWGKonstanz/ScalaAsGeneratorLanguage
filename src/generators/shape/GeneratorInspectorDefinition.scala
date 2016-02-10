@@ -49,29 +49,24 @@ object GeneratorInspectorDefinition {
     }
   }
 
-  def head()={
-
+  def head=
     """
     var InspectorDefs = {
       // FSA
       // ---
       """
-    }
 
-    def
-    footer()={
+    def footer=
       """
       «linkAttributes»
     };
     """
-  }
 
   private def getRightAttributes(shape:GeometricModel, shapeClass:String, last:Boolean, maxWidth:Int, maxHeight:Int)= shape match {
+    case e:Ellipse => getAttributes(e, shapeClass, last, maxWidth, maxHeight)
     case r:Rectangle => getAttributes(r, shapeClass, last, maxWidth, maxHeight)
     case t:Text => getAttributes(t, shapeClass, last, maxWidth, maxHeight)
-    case t:Text => getAttributes(t, shapeClass, last, maxWidth, maxHeight)
     case l:Line => getAttributes(l, shapeClass, last, maxWidth, maxHeight)
-    case e:Ellipse => getAttributes(e, shapeClass, last, maxWidth, maxHeight)
     case p:Polygon => getAttributes(p, shapeClass, last, maxWidth, maxHeight)
     case pl:PolyLine => getAttributes(pl, shapeClass, last, maxWidth, maxHeight)
     case rr:RoundedRectangle => getAttributes(rr, shapeClass, last, maxWidth, maxHeight)

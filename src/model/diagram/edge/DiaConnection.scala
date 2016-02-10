@@ -7,7 +7,7 @@ import parser._
  * Created by julian on 11.12.15.
  * representation of diagramm connection
  */
-class Connection(corporateStyle:Option[Style], propsAndComps: PropsAndComps, c:Cache){
+class DiaConnection(corporateStyle:Option[Style], propsAndComps: PropsAndComps, c:Cache){
   implicit val cache = c
   val referencedConnection:Option[model.shapecontainer.connection.Connection] = {
     val connectionSketch:ConnectionSketch = propsAndComps.ref

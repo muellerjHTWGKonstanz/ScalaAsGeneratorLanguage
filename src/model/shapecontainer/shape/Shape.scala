@@ -38,9 +38,8 @@ sealed class Shape private (override val name:String = "no name",
 
   /*if parentShape had GeometricModels in 'shapes'-attribute, both the lists (parents and new List of GeometricModels) need to be merged*/
   val shapes = {
-    val geometricModels = parseGeometricModels(geos, style).getOrElse(List())
-    val inherited_and_new_geometrics = {if(parentShapes isDefined) parentShapes.get else List()} ::: geometricModels
-    if(inherited_and_new_geometrics nonEmpty)Some(inherited_and_new_geometrics)else None
+    val inheritet_and_new_geometrics = parentShapes.getOrElse(List()) ::: parseGeometricModels(geos, style).getOrElse(List())
+    if(inheritet_and_new_geometrics nonEmpty)Some(inheritet_and_new_geometrics)else None
   }
 
   /*if parentShape had TextOutputFields (Text) and if new TextFields(in geos) were parsed, create a new Map[String, Text]*/
@@ -127,15 +126,8 @@ object Shape extends CommonParserMethods{
             hierarchyContainer:Cache):Shape = {
     implicit val cache = hierarchyContainer
 
-    val parents = if(parentShapes isDefined) parentShapes.get else List()
-    var extendedShapes:List[Shape] = List[Shape]()
-    if(parents.nonEmpty)
-      parents.foreach{parent => {
-        val parentName = parent.trim //trim just to make sure, could probably be removed
-        if(cache.shapeHierarchy.contains(parentName))
-          extendedShapes = parentName :: extendedShapes
-      }
-     }
+    val extendedShapes = parentShapes.getOrElse(List[String]()).foldLeft(List[Shape]())((shapes, s_name) =>
+      if(cache.shapeHierarchy.contains(s_name.trim)) s_name.trim :: shapes else shapes)
 
     /*mapping*/
     /** relevant is a help-methode, which shortens the actual call to mostRelevant of ClassHierarchy by ensuring the collection-parameter

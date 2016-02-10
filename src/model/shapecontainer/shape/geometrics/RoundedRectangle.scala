@@ -11,7 +11,7 @@ import parser.{Cache, GeoModel}
  */
 sealed class RoundedRectangle private (parent:Option[GeometricModel] = None,
                        rrLayout:RoundedRectangleLayout,
-                       parentOf:List[GeometricModel] = List[GeometricModel]()
+                       wrapping:List[GeoModel] = List[GeoModel]()
                         ) extends GeometricModel(parent) with RoundedRectangleLayout with Wrapper{
   override val style:Option[Style] = rrLayout.style
   override val curve_width:Int = rrLayout.curve_width/*from RoundedRectangleLayout*/
@@ -19,7 +19,7 @@ sealed class RoundedRectangle private (parent:Option[GeometricModel] = None,
   override val position: Option[(Int, Int)] = rrLayout.position
   override val size_width: Int = rrLayout.size_width
   override val size_height: Int= rrLayout.size_height
-  override var children:List[GeometricModel] = parentOf
+  override val children: List[GeometricModel] = wrapping.map(_.parse(Some(this), style).get)
 
 }
 
@@ -38,11 +38,6 @@ object RoundedRectangle{
     if (rrLayout.isEmpty)
       return None
 
-    val ret:RoundedRectangle = new RoundedRectangle(parent, rrLayout.get)
-    ret.children = for (i <- geoModel.children) yield {
-      val re = i.parse(Some(ret), ret.style)
-        re.get
-    }
-    Some(ret)
+    Some( new RoundedRectangle(parent, rrLayout.get, geoModel.children))
   }
 }
