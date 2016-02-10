@@ -28,7 +28,7 @@ sealed class Style private (val name: String = "noName",
 }
 
 /**
- * StyleParser
+ * StyleParser 
  * either parses a complete style or just generates an anonymous Style out of only a list of attributes*/
 object Style extends CommonParserMethods {
   import ColorConstant.knownColors
